@@ -1,0 +1,82 @@
+[
+  {
+    "brand": "Toyota",
+    "model": "Camry",
+    "year": 2023,
+    "color": "WHITE",
+    "price": 35000,
+    "auction": "Marhaba Auction"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry",
+    "year": 2022,
+    "color": "SILVER",
+    "price": 28000,
+    "auction": "Nojoom Cars Auction"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Highlander",
+    "year": 2023,
+    "color": "WHITE",
+    "price": 52000,
+    "auction": "Marhaba Auction"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Sienna",
+    "year": 2022,
+    "color": "WHITE",
+    "price": 48000,
+    "auction": "Emirates Auction"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra",
+    "year": 2023,
+    "color": "WHITE",
+    "price": 22000,
+    "auction": "Al Qaryah Auctions"
+  },
+  {
+    "brand": "Kia",
+    "model": "Sportage",
+    "year": 2022,
+    "color": "SILVER",
+    "price": 31000,
+    "auction": "Nojoom Cars Auction"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Hilux",
+    "year": 2023,
+    "color": "WHITE",
+    "price": 65000,
+    "auction": "Marhaba Auction"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Altima",
+    "year": 2022,
+    "color": "WHITE",
+    "price": 26000,
+    "auction": "Emirates Auction"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla",
+    "year": 2023,
+    "color": "WHITE",
+    "price": 24000,
+    "auction": "Al Qaryah Auctions"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Tucson",
+    "year": 2023,
+    "color": "SILVER",
+    "price": 38000,
+    "auction": "Marhaba Auction"
+  }
+]
