@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
 Dubai Auksion TEK WAY MOTORS — Telegram Bot
+Surat + maglumat ugradýar
 """
 
 import json
 import logging
+import os
 from pathlib import Path
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -20,7 +22,7 @@ from telegram.ext import (
 # SAZLAMALAR
 # ============================================================
 
-TOKEN = "8991271537:AAF1_NDfd1IwmlMuRPSOAixRQBROWEUqFbQ"
+TOKEN = os.environ.get("BOT_TOKEN", "")
 TEKWAY_WHATSAPP = "https://wa.me/971522371195"
 TEKWAY_TELEGRAM = "https://t.me/+971522371195"
 
@@ -38,24 +40,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ============================================================
-# HABARLAŞMAK DÜWMELERI
+# DÜWMELER
 # ============================================================
 
 def contact_keyboard():
-    """WhatsApp + Telegram düwmeleri"""
     return InlineKeyboardMarkup([[
         InlineKeyboardButton("📱 WhatsApp", url=TEKWAY_WHATSAPP),
         InlineKeyboardButton("✈️ Telegram", url=TEKWAY_TELEGRAM),
     ]])
 
 def auction_keyboard():
-    """Auksiona gatnaşyp ber düwmesi"""
     return InlineKeyboardMarkup([[
         InlineKeyboardButton("🔨 Auksiona gatnaşyp ber", callback_data="participate"),
     ]])
 
 # ============================================================
-# BAZA FUNKSIÝALARY
+# BAZA
 # ============================================================
 
 def load_cars():
@@ -64,37 +64,59 @@ def load_cars():
             return json.load(f)
     return []
 
-def load_ýatlatmas():
+def load_yatlatmas():
     if ALERTS_FILE.exists():
         with open(ALERTS_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return {}
 
-def save_ýatlatmas(ýatlatmas):
+def save_yatlatmas(yatlatmas):
     with open(ALERTS_FILE, "w", encoding="utf-8") as f:
-        json.dump(ýatlatmas, f, ensure_ascii=False, indent=2)
+        json.dump(yatlatmas, f, ensure_ascii=False, indent=2)
 
 # ============================================================
-# AUKSIONLAR
+# SURAT UGRATMAK
 # ============================================================
 
-AUCTIONS = {
-    "marhaba": "Marhaba Auction",
-    "nojoom": "Nojoom Cars Auction",
-    "emirates": "Emirates Auction",
-    "al qaryah": "Al Qaryah Auctions",
-    "qaryah": "Al Qaryah Auctions",
-}
+async def send_car_with_photo(update_or_message, car, keyboard=None):
+    """Maşyny surat bilen ugrat"""
+    msg = update_or_message if hasattr(update_or_message, 'reply_text') else update_or_message.message
+
+    caption = (
+        f"🚗 *{car.get('year')} {car.get('brand')} {car.get('model')}*\n"
+        f"🏛 {car.get('auction', '')}\n"
+    )
+    if car.get('price'):
+        caption += f"💰 {car.get('price'):,} AED\n"
+
+    image_path = car.get("image_path", "")
+
+    if image_path and Path(image_path).exists():
+        try:
+            with open(image_path, "rb") as photo:
+                await msg.reply_photo(
+                    photo=photo,
+                    caption=caption,
+                    parse_mode="Markdown",
+                    reply_markup=keyboard or auction_keyboard()
+                )
+            return
+        except Exception as e:
+            logger.error(f"Surat ugratmak başartmady: {e}")
+
+    # Surat ýok bolsa — tekst ugrat
+    await msg.reply_text(caption, parse_mode="Markdown", reply_markup=keyboard or auction_keyboard())
+
 
 # ============================================================
-# BOT KOMANDALAR
+# KOMANDALAR
 # ============================================================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🚗 Maşyn gözle", callback_data="search")],
         [InlineKeyboardButton("🏛 Auksion gözle", callback_data="auction")],
-        [InlineKeyboardButton("🔔 Ýatlatma goý", callback_data="ýatlatma")],
+        [InlineKeyboardButton("🔔 Ýatlatma goý", callback_data="yatlatma")],
         [InlineKeyboardButton("📱 Habarlaşmak", callback_data="contact")],
     ])
     await update.message.reply_text(
@@ -102,7 +124,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Salam! Men şu günki Dubaý auksionlarynyň maşynlaryny gözlemäge kömek edýärin.\n\n"
         "📌 Nähili ulanmaly:\n"
         "• Maşyn adyny ýaz — meselem: *Camry*, *Hilux*, *Elantra*\n"
-        "• Auksion adyny ýaz — meselem: *Marhaba*, *Nojoom*\n"
+        "• Auksion adyny ýaz — meselem: *Fadak*, *Marhaba*, *Nojoom*\n"
         "• /help — ähli komandalar",
         parse_mode="Markdown",
         reply_markup=keyboard
@@ -114,11 +136,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🚗 *Maşyn gözlemek:*\n"
         "Göni maşyn adyny ýaz: `Camry`, `Hilux`, `Elantra`\n\n"
         "🏛 *Auksion gözlemek:*\n"
-        "Auksion adyny ýaz: `Marhaba`, `Nojoom`, `Emirates`\n\n"
+        "Auksion adyny ýaz: `Fadak`, `Marhaba`, `Nojoom`\n\n"
         "🔔 *Ýatlatma goýmak:*\n"
         "`/alert Camry` — Camry çykanda habar ber\n\n"
-        "📊 *Şu günki auksionlar:*\n"
-        "/today — şu günki auksion tertibi\n\n"
+        "📊 *Şu günki ýagdaý:*\n"
+        "/today — şu günki auksionlar\n\n"
         "📱 *Habarlaşmak:*\n"
         "/contact — TEK WAY MOTORS bilen habarlaş",
         parse_mode="Markdown"
@@ -153,56 +175,93 @@ async def alert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text(
             "🔔 Ýatlatma goýmak üçin:\n"
-            "`/alert Camry` — Camry çykanda habar ber\n"
-            "`/alert Camry 2023` — 2023 Camry çykanda habar ber",
+            "`/alert Camry` — Camry çykanda habar ber",
             parse_mode="Markdown"
         )
         return
 
     query = " ".join(context.args).upper()
     user_id = str(update.effective_user.id)
-    ýatlatmas = load_ýatlatmas()
-    if user_id not in ýatlatmas:
-        ýatlatmas[user_id] = []
+    yatlatmas = load_yatlatmas()
+    if user_id not in yatlatmas:
+        yatlatmas[user_id] = []
 
-    if query not in ýatlatmas[user_id]:
-        ýatlatmas[user_id].append(query)
-        save_ýatlatmas(ýatlatmas)
-        await update.message.reply_text(f"✅ Ýatlatma goýuldy: *{query}*\nŞol maşyn çykanda habar bereýin!", parse_mode="Markdown")
+    if query not in yatlatmas[user_id]:
+        yatlatmas[user_id].append(query)
+        save_yatlatmas(yatlatmas)
+        await update.message.reply_text(
+            f"✅ Ýatlatma goýuldy: *{query}*\nŞol maşyn çykanda habar bereýin!",
+            parse_mode="Markdown"
+        )
     else:
-        await update.message.reply_text(f"ℹ️ Bu ýatlatma eýýäm bar: *{query}*", parse_mode="Markdown")
+        await update.message.reply_text(
+            f"ℹ️ Bu ýatlatma eýýäm bar: *{query}*",
+            parse_mode="Markdown"
+        )
+
+# ============================================================
+# HABAR IŞLEMEK
+# ============================================================
+
+AUCTIONS = {
+    "fadak": "Fadak Cars Auction",
+    "marhaba": "Marhaba Auction",
+    "nojoom": "Nojoom Cars Auction",
+    "emirates": "Emirates Auction",
+    "qaryah": "Al Qaryah Auctions",
+    "al qaryah": "Al Qaryah Auctions",
+    "west": "West Cars Auctions",
+    "gulf": "Gulf Cars Auction",
+    "burj": "Burj Khaibar Cars Auction",
+}
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
+    text_lower = text.lower()
     text_upper = text.upper()
     cars = load_cars()
 
     # Auksion gözleg
     for key, auction_name in AUCTIONS.items():
-        if key in text.lower():
+        if key in text_lower:
             auction_cars = [c for c in cars if auction_name.upper() in c.get("auction", "").upper()]
-            if auction_cars:
-                result = f"🏛 *{auction_name}* — {len(auction_cars)} maşyn\n\n"
-                for c in auction_cars[:10]:
-                    result += f"🚗 {c.get('year')} {c.get('brand')} {c.get('model')} — {c.get('price', 'N/A')} AED\n"
-                await update.message.reply_text(result, parse_mode="Markdown", reply_markup=auction_keyboard())
-            else:
+            if not auction_cars:
                 await update.message.reply_text(f"📭 {auction_name}-da şu gün maşyn ýok.")
+                return
+
+            # Ilki umumy habar
+            await update.message.reply_text(
+                f"🏛 *{auction_name}* — {len(auction_cars)} maşyn tapyldy:",
+                parse_mode="Markdown"
+            )
+            # Ilkinji 5 maşynyny surat bilen ugrat
+            for car in auction_cars[:5]:
+                await send_car_with_photo(update, car)
             return
 
     # Maşyn gözleg
-    found = [c for c in cars if text_upper in f"{c.get('brand','')} {c.get('model','')}".upper()]
+    found = [
+        c for c in cars
+        if text_upper in f"{c.get('brand','')} {c.get('model','')}".upper()
+    ]
 
-    if found:
-        result = f"🚗 *'{text}'* — {len(found)} maşyn tapyldy:\n\n"
-        for c in found[:10]:
-            result += f"• {c.get('year')} {c.get('brand')} {c.get('model')} — {c.get('price', 'N/A')} AED — {c.get('auction', '')}\n"
-        await update.message.reply_text(result, parse_mode="Markdown", reply_markup=auction_keyboard())
-    else:
+    if not found:
         await update.message.reply_text(
             f"📭 *'{text}'* şu gün ýok.\n\n🔔 Ýatlatma goýaýynmy? `/alert {text}` ýaz",
             parse_mode="Markdown"
         )
+        return
+
+    await update.message.reply_text(
+        f"🚗 *'{text}'* — {len(found)} maşyn tapyldy:",
+        parse_mode="Markdown"
+    )
+    for car in found[:5]:
+        await send_car_with_photo(update, car)
+
+# ============================================================
+# CALLBACK
+# ============================================================
 
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -221,17 +280,30 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=contact_keyboard()
         )
     elif query.data == "search":
-        await query.message.reply_text("🚗 Haýsy maşyny gözleýäň? Adyny ýaz (meselem: *Camry*, *Hilux*)", parse_mode="Markdown")
+        await query.message.reply_text(
+            "🚗 Haýsy maşyny gözleýäň? Adyny ýaz\nMeselem: *Camry*, *Hilux*, *Elantra*",
+            parse_mode="Markdown"
+        )
     elif query.data == "auction":
-        await query.message.reply_text("🏛 Haýsy auksiony gözleýäň? Adyny ýaz (meselem: *Marhaba*, *Nojoom*)", parse_mode="Markdown")
-    elif query.data == "ýatlatma":
-        await query.message.reply_text("🔔 `/alert Camry` ýaz — şol maşyn çykanda habar bereýin", parse_mode="Markdown")
+        await query.message.reply_text(
+            "🏛 Haýsy auksiony gözleýäň? Adyny ýaz\nMeselem: *Fadak*, *Marhaba*, *Nojoom*",
+            parse_mode="Markdown"
+        )
+    elif query.data == "yatlatma":
+        await query.message.reply_text(
+            "🔔 `/alert Camry` ýaz — şol maşyn çykanda habar bereýin",
+            parse_mode="Markdown"
+        )
 
 # ============================================================
-# BOTY IŞLETMEK
+# IŞLET
 # ============================================================
 
 def main():
+    if not TOKEN:
+        print("❌ BOT_TOKEN tapylmady! Railway Environment Variables-a gir.")
+        return
+
     app = Application.builder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))

@@ -1,82 +1,767 @@
 [
   {
     "brand": "Toyota",
-    "model": "Camry",
+    "model": "Grandhighlander Platinum",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_006_TOYOTA_GRANDHIGHLANDER_PLATINUM.jpg",
+    "page": 6
+  },
+  {
+    "brand": "Mercedes-Benz",
+    "model": "Gle 350",
     "year": 2023,
-    "color": "WHITE",
-    "price": 35000,
-    "auction": "Marhaba Auction"
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_009_MERCEDES-BENZ_GLE_350.jpg",
+    "page": 9
   },
   {
     "brand": "Toyota",
-    "model": "Camry",
-    "year": 2022,
-    "color": "SILVER",
-    "price": 28000,
-    "auction": "Nojoom Cars Auction"
+    "model": "Grand Highlander",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_010_TOYOTA_GRAND_HIGHLANDER.jpg",
+    "page": 10
+  },
+  {
+    "brand": "Lexus",
+    "model": "Tx 350",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_011_LEXUS_TX_350.jpg",
+    "page": 11
   },
   {
     "brand": "Toyota",
-    "model": "Highlander",
+    "model": "Tundra Crewmax",
     "year": 2023,
-    "color": "WHITE",
-    "price": 52000,
-    "auction": "Marhaba Auction"
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_012_TOYOTA_TUNDRA_CREWMAX.jpg",
+    "page": 12
   },
   {
-    "brand": "Toyota",
-    "model": "Sienna",
-    "year": 2022,
-    "color": "WHITE",
-    "price": 48000,
-    "auction": "Emirates Auction"
+    "brand": "Mercedes-Benz",
+    "model": "Eqb 300",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_013_MERCEDES-BENZ_EQB_300.jpg",
+    "page": 13
   },
   {
-    "brand": "Hyundai",
-    "model": "Elantra",
+    "brand": "Lexus",
+    "model": "Rx 350H",
     "year": 2023,
-    "color": "WHITE",
-    "price": 22000,
-    "auction": "Al Qaryah Auctions"
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_014_LEXUS_RX_350H.jpg",
+    "page": 14
   },
   {
     "brand": "Kia",
-    "model": "Sportage",
-    "year": 2022,
-    "color": "SILVER",
-    "price": 31000,
-    "auction": "Nojoom Cars Auction"
-  },
-  {
-    "brand": "Toyota",
-    "model": "Hilux",
-    "year": 2023,
-    "color": "WHITE",
-    "price": 65000,
-    "auction": "Marhaba Auction"
-  },
-  {
-    "brand": "Nissan",
-    "model": "Altima",
-    "year": 2022,
-    "color": "WHITE",
-    "price": 26000,
-    "auction": "Emirates Auction"
-  },
-  {
-    "brand": "Toyota",
-    "model": "Corolla",
-    "year": 2023,
-    "color": "WHITE",
-    "price": 24000,
-    "auction": "Al Qaryah Auctions"
+    "model": "Carnival Ex",
+    "year": 2026,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_015_KIA_CARNIVAL_EX.jpg",
+    "page": 15
   },
   {
     "brand": "Hyundai",
-    "model": "Tucson",
+    "model": "Palisade Calligraphy",
+    "year": 2026,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_016_HYUNDAI_PALISADE_CALLIGRAPHY.jpg",
+    "page": 16
+  },
+  {
+    "brand": "Volkswagen",
+    "model": "Taos S",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_017_VOLKSWAGEN_TAOS_S.jpg",
+    "page": 17
+  },
+  {
+    "brand": "Kia",
+    "model": "Seltos S",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_018_KIA_SELTOS_S.jpg",
+    "page": 18
+  },
+  {
+    "brand": "Toyota",
+    "model": "Rav4 Xle",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_019_TOYOTA_RAV4_XLE.jpg",
+    "page": 19
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Kona Limited",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_020_HYUNDAI_KONA_LIMITED.jpg",
+    "page": 20
+  },
+  {
+    "brand": "Nissan",
+    "model": "Kicks Sv",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_021_NISSAN_KICKS_SV.jpg",
+    "page": 21
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Se",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_022_HYUNDAI_ELANTRA_SE.jpg",
+    "page": 22
+  },
+  {
+    "brand": "Mazda",
+    "model": "Cx-30 Select",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_023_MAZDA_CX-30_SELECT.jpg",
+    "page": 23
+  },
+  {
+    "brand": "Kia",
+    "model": "Sportage Ex",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_024_KIA_SPORTAGE_EX.jpg",
+    "page": 24
+  },
+  {
+    "brand": "Nissan",
+    "model": "Sentra Sv",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_025_NISSAN_SENTRA_SV.jpg",
+    "page": 25
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Sonata Se",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_026_HYUNDAI_SONATA_SE.jpg",
+    "page": 26
+  },
+  {
+    "brand": "Kia",
+    "model": "Seltos Lx",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_027_KIA_SELTOS_LX.jpg",
+    "page": 27
+  },
+  {
+    "brand": "Toyota",
+    "model": "Rav4 Xle",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_028_TOYOTA_RAV4_XLE.jpg",
+    "page": 28
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Cross",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_029_TOYOTA_COROLLA_CROSS.jpg",
+    "page": 29
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Tucson Se",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_030_HYUNDAI_TUCSON_SE.jpg",
+    "page": 30
+  },
+  {
+    "brand": "Kia",
+    "model": "K5 Gt",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_031_KIA_K5_GT.jpg",
+    "page": 31
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Blue",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_032_HYUNDAI_ELANTRA_BLUE.jpg",
+    "page": 32
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Tucson Se",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_033_HYUNDAI_TUCSON_SE.jpg",
+    "page": 33
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Venue Sel",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_034_HYUNDAI_VENUE_SEL.jpg",
+    "page": 34
+  },
+  {
+    "brand": "Nissan",
+    "model": "Kicks Sv",
+    "year": 2025,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_035_NISSAN_KICKS_SV.jpg",
+    "page": 35
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Sel",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_036_HYUNDAI_ELANTRA_SEL.jpg",
+    "page": 36
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry Se",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_037_TOYOTA_CAMRY_SE.jpg",
+    "page": 37
+  },
+  {
+    "brand": "Mitsubishi",
+    "model": "Outlander Se",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_038_MITSUBISHI_OUTLANDER_SE.jpg",
+    "page": 38
+  },
+  {
+    "brand": "Toyota",
+    "model": "Tacoma Double",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_039_TOYOTA_TACOMA_DOUBLE.jpg",
+    "page": 39
+  },
+  {
+    "brand": "Ford",
+    "model": "Bronco Sport",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_040_FORD_BRONCO_SPORT.jpg",
+    "page": 40
+  },
+  {
+    "brand": "Honda",
+    "model": "Odyssey Sport",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_041_HONDA_ODYSSEY_SPORT.jpg",
+    "page": 41
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Cross",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_042_TOYOTA_COROLLA_CROSS.jpg",
+    "page": 42
+  },
+  {
+    "brand": "Nissan",
+    "model": "Rogue Sv",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_043_NISSAN_ROGUE_SV.jpg",
+    "page": 43
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry Xse",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_044_TOYOTA_CAMRY_XSE.jpg",
+    "page": 44
+  },
+  {
+    "brand": "Nissan",
+    "model": "Pathfinder Rock",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_045_NISSAN_PATHFINDER_ROCK.jpg",
+    "page": 45
+  },
+  {
+    "brand": "Kia",
+    "model": "Seltos S",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_046_KIA_SELTOS_S.jpg",
+    "page": 46
+  },
+  {
+    "brand": "Kia",
+    "model": "K5 Gt",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_047_KIA_K5_GT.jpg",
+    "page": 47
+  },
+  {
+    "brand": "Kia",
+    "model": "Sportage X-Line",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_048_KIA_SPORTAGE_X-LINE.jpg",
+    "page": 48
+  },
+  {
+    "brand": "Mitsubishi",
+    "model": "Outlander Se",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_049_MITSUBISHI_OUTLANDER_SE.jpg",
+    "page": 49
+  },
+  {
+    "brand": "Kia",
+    "model": "Carnival Ex",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_050_KIA_CARNIVAL_EX.jpg",
+    "page": 50
+  },
+  {
+    "brand": "Kia",
+    "model": "Seltos S",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_051_KIA_SELTOS_S.jpg",
+    "page": 51
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Kona Limited",
+    "year": 2024,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_052_HYUNDAI_KONA_LIMITED.jpg",
+    "page": 52
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Santa Fe",
     "year": 2023,
-    "color": "SILVER",
-    "price": 38000,
-    "auction": "Marhaba Auction"
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_053_HYUNDAI_SANTA_FE.jpg",
+    "page": 53
+  },
+  {
+    "brand": "Honda",
+    "model": "Accord Hybrid",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_054_HONDA_ACCORD_HYBRID.jpg",
+    "page": 54
+  },
+  {
+    "brand": "Toyota",
+    "model": "Rav4 Se",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_055_TOYOTA_RAV4_SE.jpg",
+    "page": 55
+  },
+  {
+    "brand": "Kia",
+    "model": "Soul Lx",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_056_KIA_SOUL_LX.jpg",
+    "page": 56
+  },
+  {
+    "brand": "Nissan",
+    "model": "Rogue Platinum",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_057_NISSAN_ROGUE_PLATINUM.jpg",
+    "page": 57
+  },
+  {
+    "brand": "Nissan",
+    "model": "Rogue Sv",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_058_NISSAN_ROGUE_SV.jpg",
+    "page": 58
+  },
+  {
+    "brand": "Nissan",
+    "model": "Pathfinder Platinum",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_059_NISSAN_PATHFINDER_PLATINUM.jpg",
+    "page": 59
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Limited",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_060_HYUNDAI_ELANTRA_LIMITED.jpg",
+    "page": 60
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Tucson Sel",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_061_HYUNDAI_TUCSON_SEL.jpg",
+    "page": 61
+  },
+  {
+    "brand": "Nissan",
+    "model": "Altima Sr",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_062_NISSAN_ALTIMA_SR.jpg",
+    "page": 62
+  },
+  {
+    "brand": "Nissan",
+    "model": "Altima Sv",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_063_NISSAN_ALTIMA_SV.jpg",
+    "page": 63
+  },
+  {
+    "brand": "Kia",
+    "model": "Sportage Sx",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_064_KIA_SPORTAGE_SX.jpg",
+    "page": 64
+  },
+  {
+    "brand": "Toyota",
+    "model": "Sienna Le",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_065_TOYOTA_SIENNA_LE.jpg",
+    "page": 65
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Cross",
+    "year": 2023,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_066_TOYOTA_COROLLA_CROSS.jpg",
+    "page": 66
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Sel",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_067_HYUNDAI_ELANTRA_SEL.jpg",
+    "page": 67
+  },
+  {
+    "brand": "Honda",
+    "model": "Accord Hybrid",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_068_HONDA_ACCORD_HYBRID.jpg",
+    "page": 68
+  },
+  {
+    "brand": "Toyota",
+    "model": "Sienna Le",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_069_TOYOTA_SIENNA_LE.jpg",
+    "page": 69
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry Le",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_070_TOYOTA_CAMRY_LE.jpg",
+    "page": 70
+  },
+  {
+    "brand": "Lexus",
+    "model": "Gx 460",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_071_LEXUS_GX_460.jpg",
+    "page": 71
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Cross",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_072_TOYOTA_COROLLA_CROSS.jpg",
+    "page": 72
+  },
+  {
+    "brand": "Genesis",
+    "model": "G70 Base",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_074_GENESIS_G70_BASE.jpg",
+    "page": 74
+  },
+  {
+    "brand": "Mercedes-Benz",
+    "model": "C 300",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_075_MERCEDES-BENZ_C_300.jpg",
+    "page": 75
+  },
+  {
+    "brand": "Nissan",
+    "model": "Maxima Sr",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_076_NISSAN_MAXIMA_SR.jpg",
+    "page": 76
+  },
+  {
+    "brand": "Kia",
+    "model": "Stinger Gt",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_077_KIA_STINGER_GT.jpg",
+    "page": 77
+  },
+  {
+    "brand": "Toyota",
+    "model": "Rav4 Hybrid",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_078_TOYOTA_RAV4_HYBRID.jpg",
+    "page": 78
+  },
+  {
+    "brand": "Honda",
+    "model": "Accord Sport",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_079_HONDA_ACCORD_SPORT.jpg",
+    "page": 79
+  },
+  {
+    "brand": "Nissan",
+    "model": "Sentra Sv",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_080_NISSAN_SENTRA_SV.jpg",
+    "page": 80
+  },
+  {
+    "brand": "Toyota",
+    "model": "Sienna Xle",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_081_TOYOTA_SIENNA_XLE.jpg",
+    "page": 81
+  },
+  {
+    "brand": "Chevrolet",
+    "model": "Equinox Lt",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_082_CHEVROLET_EQUINOX_LT.jpg",
+    "page": 82
+  },
+  {
+    "brand": "Kia",
+    "model": "K5 Gt",
+    "year": 2022,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_083_KIA_K5_GT.jpg",
+    "page": 83
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Palisade Sel",
+    "year": 2021,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_084_HYUNDAI_PALISADE_SEL.jpg",
+    "page": 84
+  },
+  {
+    "brand": "Nissan",
+    "model": "Rogue Sl",
+    "year": 2021,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_085_NISSAN_ROGUE_SL.jpg",
+    "page": 85
+  },
+  {
+    "brand": "Lexus",
+    "model": "Ux 250H",
+    "year": 2021,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_086_LEXUS_UX_250H.jpg",
+    "page": 86
+  },
+  {
+    "brand": "Kia",
+    "model": "K5 Gt",
+    "year": 2021,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_087_KIA_K5_GT.jpg",
+    "page": 87
+  },
+  {
+    "brand": "Infiniti",
+    "model": "Qx80 Premium",
+    "year": 2021,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_088_INFINITI_QX80_PREMIUM.jpg",
+    "page": 88
+  },
+  {
+    "brand": "Nissan",
+    "model": "Armada Platinum",
+    "year": 2021,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_089_NISSAN_ARMADA_PLATINUM.jpg",
+    "page": 89
+  },
+  {
+    "brand": "Toyota",
+    "model": "Highlander Hybrid",
+    "year": 2021,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_090_TOYOTA_HIGHLANDER_HYBRID.jpg",
+    "page": 90
+  },
+  {
+    "brand": "Nissan",
+    "model": "Sentra Sv",
+    "year": 2021,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_091_NISSAN_SENTRA_SV.jpg",
+    "page": 91
+  },
+  {
+    "brand": "Kia",
+    "model": "Sorento Sx",
+    "year": 2021,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_092_KIA_SORENTO_SX.jpg",
+    "page": 92
+  },
+  {
+    "brand": "Kia",
+    "model": "Soul Lx",
+    "year": 2021,
+    "price": null,
+    "auction": "Fadak Cars Auction",
+    "image_path": "/home/claude/car_images/car_093_KIA_SOUL_LX.jpg",
+    "page": 93
   }
 ]
