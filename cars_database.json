@@ -1,767 +1,1010 @@
 [
   {
-    "brand": "Toyota",
-    "model": "Grandhighlander Platinum",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_006_TOYOTA_GRANDHIGHLANDER_PLATINUM.jpg",
-    "page": 6
-  },
-  {
     "brand": "Mercedes-Benz",
-    "model": "Gle 350",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_009_MERCEDES-BENZ_GLE_350.jpg",
-    "page": 9
+    "model": "Glc 300",
+    "year": 2025,
+    "price": 128500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 4,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p004.jpg"
   },
   {
-    "brand": "Toyota",
-    "model": "Grand Highlander",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_010_TOYOTA_GRAND_HIGHLANDER.jpg",
-    "page": 10
-  },
-  {
-    "brand": "Lexus",
-    "model": "Tx 350",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_011_LEXUS_TX_350.jpg",
-    "page": 11
-  },
-  {
-    "brand": "Toyota",
-    "model": "Tundra Crewmax",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_012_TOYOTA_TUNDRA_CREWMAX.jpg",
-    "page": 12
-  },
-  {
-    "brand": "Mercedes-Benz",
-    "model": "Eqb 300",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_013_MERCEDES-BENZ_EQB_300.jpg",
-    "page": 13
-  },
-  {
-    "brand": "Lexus",
-    "model": "Rx 350H",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_014_LEXUS_RX_350H.jpg",
-    "page": 14
-  },
-  {
-    "brand": "Kia",
-    "model": "Carnival Ex",
-    "year": 2026,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_015_KIA_CARNIVAL_EX.jpg",
-    "page": 15
+    "brand": "Bmw",
+    "model": "X7 Xdrive40I",
+    "year": 2025,
+    "price": 128500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 5,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p005.jpg"
   },
   {
     "brand": "Hyundai",
     "model": "Palisade Calligraphy",
-    "year": 2026,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_016_HYUNDAI_PALISADE_CALLIGRAPHY.jpg",
-    "page": 16
-  },
-  {
-    "brand": "Volkswagen",
-    "model": "Taos S",
     "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_017_VOLKSWAGEN_TAOS_S.jpg",
-    "page": 17
-  },
-  {
-    "brand": "Kia",
-    "model": "Seltos S",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_018_KIA_SELTOS_S.jpg",
-    "page": 18
-  },
-  {
-    "brand": "Toyota",
-    "model": "Rav4 Xle",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_019_TOYOTA_RAV4_XLE.jpg",
-    "page": 19
-  },
-  {
-    "brand": "Hyundai",
-    "model": "Kona Limited",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_020_HYUNDAI_KONA_LIMITED.jpg",
-    "page": 20
+    "price": 68500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 6,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p006.jpg"
   },
   {
     "brand": "Nissan",
-    "model": "Kicks Sv",
+    "model": "Armada",
+    "year": 2023,
+    "price": 47500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 7,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p007.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry Le",
     "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_021_NISSAN_KICKS_SV.jpg",
-    "page": 21
+    "price": 43500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 16,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p016.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Sonata Sel",
+    "year": 2025,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 17,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p017.jpg"
+  },
+  {
+    "brand": "Volkswagen",
+    "model": "Jetta Se",
+    "year": 2025,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 18,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p018.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Grand Highlander Platinum",
+    "year": 2025,
+    "price": 68500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 19,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p019.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Sportage X Line",
+    "year": 2026,
+    "price": 43500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 20,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p020.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Santa Fe Sel Premium",
+    "year": 2023,
+    "price": 21500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 21,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p021.jpg"
+  },
+  {
+    "brand": "Ford",
+    "model": "Bronco Base",
+    "year": 2023,
+    "price": 48500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 22,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p022.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Telluride S",
+    "year": 2023,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 25,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p025.jpg"
   },
   {
     "brand": "Hyundai",
     "model": "Elantra Se",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_022_HYUNDAI_ELANTRA_SE.jpg",
-    "page": 22
-  },
-  {
-    "brand": "Mazda",
-    "model": "Cx-30 Select",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_023_MAZDA_CX-30_SELECT.jpg",
-    "page": 23
-  },
-  {
-    "brand": "Kia",
-    "model": "Sportage Ex",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_024_KIA_SPORTAGE_EX.jpg",
-    "page": 24
+    "year": 2023,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 26,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p026.jpg"
   },
   {
     "brand": "Nissan",
-    "model": "Sentra Sv",
+    "model": "Kicks Play Sv",
     "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_025_NISSAN_SENTRA_SV.jpg",
-    "page": 25
-  },
-  {
-    "brand": "Hyundai",
-    "model": "Sonata Se",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_026_HYUNDAI_SONATA_SE.jpg",
-    "page": 26
-  },
-  {
-    "brand": "Kia",
-    "model": "Seltos Lx",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_027_KIA_SELTOS_LX.jpg",
-    "page": 27
-  },
-  {
-    "brand": "Toyota",
-    "model": "Rav4 Xle",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_028_TOYOTA_RAV4_XLE.jpg",
-    "page": 28
-  },
-  {
-    "brand": "Toyota",
-    "model": "Corolla Cross",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_029_TOYOTA_COROLLA_CROSS.jpg",
-    "page": 29
-  },
-  {
-    "brand": "Hyundai",
-    "model": "Tucson Se",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_030_HYUNDAI_TUCSON_SE.jpg",
-    "page": 30
-  },
-  {
-    "brand": "Kia",
-    "model": "K5 Gt",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_031_KIA_K5_GT.jpg",
-    "page": 31
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 27,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p027.jpg"
   },
   {
     "brand": "Hyundai",
     "model": "Elantra Blue",
     "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_032_HYUNDAI_ELANTRA_BLUE.jpg",
-    "page": 32
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 28,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p028.jpg"
+  },
+  {
+    "brand": "Mazda",
+    "model": "3 Preferred",
+    "year": 2025,
+    "price": 26500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 29,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p029.jpg"
   },
   {
     "brand": "Hyundai",
-    "model": "Tucson Se",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_033_HYUNDAI_TUCSON_SE.jpg",
-    "page": 33
+    "model": "Venue Se",
+    "year": 2024,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 30,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p030.jpg"
   },
   {
-    "brand": "Hyundai",
-    "model": "Venue Sel",
+    "brand": "Kia",
+    "model": "Sportage Ex",
     "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_034_HYUNDAI_VENUE_SEL.jpg",
-    "page": 34
+    "price": 38500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 31,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p031.jpg"
   },
   {
-    "brand": "Nissan",
-    "model": "Kicks Sv",
-    "year": 2025,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_035_NISSAN_KICKS_SV.jpg",
-    "page": 35
+    "brand": "Kia",
+    "model": "Carnival Ex",
+    "year": 2022,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 32,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p032.jpg"
   },
   {
     "brand": "Hyundai",
     "model": "Elantra Sel",
     "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_036_HYUNDAI_ELANTRA_SEL.jpg",
-    "page": 36
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 33,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p033.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Seltos",
+    "year": 2025,
+    "price": 37500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 34,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p034.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Soul Gt Line",
+    "year": 2023,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 35,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p035.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Le",
+    "year": 2025,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 36,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p036.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Sorento Lx",
+    "year": 2023,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 37,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p037.jpg"
+  },
+  {
+    "brand": "Volkswagen",
+    "model": "Taos 4Motion",
+    "year": 2024,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 38,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p038.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Rogue Sv",
+    "year": 2025,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 39,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p039.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Carnival",
+    "year": 2024,
+    "price": 38500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 41,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p041.jpg"
+  },
+  {
+    "brand": "Chevrolet",
+    "model": "Equinox Ls",
+    "year": 2024,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 47,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p047.jpg"
+  },
+  {
+    "brand": "Audi",
+    "model": "A3 Premium 40 Tfsi",
+    "year": 2022,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 50,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p050.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Frontier Pro-4X",
+    "year": 2023,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 51,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p051.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry Xle",
+    "year": 2025,
+    "price": 48500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 52,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p052.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Rogue Rock Creek",
+    "year": 2025,
+    "price": 27500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 57,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p057.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Sel",
+    "year": 2023,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 58,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p058.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Sonata Sel",
+    "year": 2023,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 62,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p062.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Se",
+    "year": 2025,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 64,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p064.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Seltos Lx",
+    "year": 2026,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 67,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p067.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Seltos S",
+    "year": 2025,
+    "price": 27500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 68,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p068.jpg"
   },
   {
     "brand": "Toyota",
     "model": "Camry Se",
+    "year": 2023,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 69,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p069.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry Le",
+    "year": 2023,
+    "price": 27500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 70,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p070.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Le",
+    "year": 2025,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 71,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p071.jpg"
+  },
+  {
+    "brand": "Chevrolet",
+    "model": "Camaro 1Ls",
+    "year": 2023,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 73,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p073.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "K4 Ex",
+    "year": 2025,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 74,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p074.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "K5 Gt-Line",
+    "year": 2025,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 76,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p076.jpg"
+  },
+  {
+    "brand": "Bmw",
+    "model": "228I Xdrive",
+    "year": 2021,
+    "price": 16500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 78,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p078.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Le",
+    "year": 2022,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 81,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p081.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Sel",
+    "year": 2022,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 82,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p082.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Altima S",
+    "year": 2023,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 84,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p084.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Soul Lx",
+    "year": 2025,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 85,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p085.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Le",
+    "year": 2021,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 86,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p086.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "K5 Lxs",
+    "year": 2022,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 91,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p091.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Se",
     "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_037_TOYOTA_CAMRY_SE.jpg",
-    "page": 37
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 98,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p098.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Le",
+    "year": 2022,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 99,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p099.jpg"
   },
   {
     "brand": "Mitsubishi",
-    "model": "Outlander Se",
+    "model": "Mirage Es",
     "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_038_MITSUBISHI_OUTLANDER_SE.jpg",
-    "page": 38
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 100,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p100.jpg"
   },
   {
     "brand": "Toyota",
-    "model": "Tacoma Double",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_039_TOYOTA_TACOMA_DOUBLE.jpg",
-    "page": 39
-  },
-  {
-    "brand": "Ford",
-    "model": "Bronco Sport",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_040_FORD_BRONCO_SPORT.jpg",
-    "page": 40
-  },
-  {
-    "brand": "Honda",
-    "model": "Odyssey Sport",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_041_HONDA_ODYSSEY_SPORT.jpg",
-    "page": 41
+    "model": "Corolla Se",
+    "year": 2023,
+    "price": 25500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 110,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p110.jpg"
   },
   {
     "brand": "Toyota",
-    "model": "Corolla Cross",
+    "model": "Gr 86",
     "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_042_TOYOTA_COROLLA_CROSS.jpg",
-    "page": 42
+    "price": 51500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 112,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p112.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Kona Sel",
+    "year": 2024,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 113,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p113.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Prius Xle Hybrid",
+    "year": 2022,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 114,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p114.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "K5 Lxs",
+    "year": 2021,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 116,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p116.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Kona Sel",
+    "year": 2025,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 117,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p117.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Sel Sport",
+    "year": 2025,
+    "price": 38500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 118,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p118.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Sentra Sv",
+    "year": 2022,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 119,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p119.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Sel",
+    "year": 2021,
+    "price": 16500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 120,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p120.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Altima S",
+    "year": 2021,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 128,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p128.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Soul Lx",
+    "year": 2022,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 129,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p129.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Sel",
+    "year": 2022,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 130,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p130.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Sentra Sv",
+    "year": 2025,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 133,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p133.jpg"
   },
   {
     "brand": "Nissan",
     "model": "Rogue Sv",
     "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_043_NISSAN_ROGUE_SV.jpg",
-    "page": 43
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 134,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p134.jpg"
   },
   {
-    "brand": "Toyota",
-    "model": "Camry Xse",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_044_TOYOTA_CAMRY_XSE.jpg",
-    "page": 44
+    "brand": "Hyundai",
+    "model": "Santa Cruz Sel",
+    "year": 2022,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 136,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p136.jpg"
   },
   {
     "brand": "Nissan",
-    "model": "Pathfinder Rock",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_045_NISSAN_PATHFINDER_ROCK.jpg",
-    "page": 45
+    "model": "Sentra S",
+    "year": 2025,
+    "price": 16500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 137,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p137.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Corolla Le",
+    "year": 2025,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 138,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p138.jpg"
   },
   {
     "brand": "Kia",
-    "model": "Seltos S",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_046_KIA_SELTOS_S.jpg",
-    "page": 46
-  },
-  {
-    "brand": "Kia",
-    "model": "K5 Gt",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_047_KIA_K5_GT.jpg",
-    "page": 47
-  },
-  {
-    "brand": "Kia",
-    "model": "Sportage X-Line",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_048_KIA_SPORTAGE_X-LINE.jpg",
-    "page": 48
+    "model": "Sedona Lx",
+    "year": 2021,
+    "price": 13500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 139,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p139.jpg"
   },
   {
     "brand": "Mitsubishi",
-    "model": "Outlander Se",
+    "model": "Mirage G4 Es",
     "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_049_MITSUBISHI_OUTLANDER_SE.jpg",
-    "page": 49
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 149,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p149.jpg"
   },
   {
     "brand": "Kia",
-    "model": "Carnival Ex",
-    "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_050_KIA_CARNIVAL_EX.jpg",
-    "page": 50
+    "model": "K5 Gt Line",
+    "year": 2022,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 150,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p150.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Rogue Sv",
+    "year": 2025,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 152,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p152.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Sel Sport",
+    "year": 2025,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 153,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p153.jpg"
+  },
+  {
+    "brand": "Chevrolet",
+    "model": "Malibu 1Lt",
+    "year": 2023,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 154,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p154.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Sentra Sv",
+    "year": 2023,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 156,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p156.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Tucson Sel",
+    "year": 2025,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 157,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p157.jpg"
+  },
+  {
+    "brand": "Volkswagen",
+    "model": "Taos 4Motion S",
+    "year": 2022,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 158,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p158.jpg"
   },
   {
     "brand": "Kia",
-    "model": "Seltos S",
+    "model": "Kx1",
+    "year": 2025,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 160,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p160.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Carnival Sx",
+    "year": 2026,
+    "price": 53500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 162,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p162.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Kona Sel",
     "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_051_KIA_SELTOS_S.jpg",
-    "page": 51
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 163,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p163.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Sonata Sel",
+    "year": 2021,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 166,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p166.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Sonata Sel Plus",
+    "year": 2023,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 169,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p169.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Forte Lx",
+    "year": 2023,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 170,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p170.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Kona Se",
+    "year": 2025,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 173,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p173.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Kicks S",
+    "year": 2023,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 175,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p175.jpg"
+  },
+  {
+    "brand": "Kia",
+    "model": "Sportage Ex",
+    "year": 2025,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 176,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p176.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Rogue S",
+    "year": 2024,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 177,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p177.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Sentra Sv",
+    "year": 2023,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 178,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p178.jpg"
+  },
+  {
+    "brand": "Honda",
+    "model": "Civic Lx",
+    "year": 2024,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 180,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p180.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Altima Sr",
+    "year": 2021,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 182,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p182.jpg"
+  },
+  {
+    "brand": "Chevrolet",
+    "model": "Malibu Lt",
+    "year": 2022,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 183,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p183.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Sonata Sel Plus",
+    "year": 2023,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 185,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p185.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry Le",
+    "year": 2025,
+    "price": 36500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 186,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p186.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Versa Sv",
+    "year": 2025,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 187,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p187.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Sentra Sv",
+    "year": 2025,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 188,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p188.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Versa S",
+    "year": 2023,
+    "price": 0,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 191,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p191.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Sel Sport",
+    "year": 2025,
+    "price": 26500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 193,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p193.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Altima Sv",
+    "year": 2022,
+    "price": 16500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 195,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p195.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Tucson Sel",
+    "year": 2024,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 196,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p196.jpg"
+  },
+  {
+    "brand": "Hyundai",
+    "model": "Elantra Sel",
+    "year": 2023,
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 198,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p198.jpg"
   },
   {
     "brand": "Hyundai",
     "model": "Kona Limited",
     "year": 2024,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_052_HYUNDAI_KONA_LIMITED.jpg",
-    "page": 52
-  },
-  {
-    "brand": "Hyundai",
-    "model": "Santa Fe",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_053_HYUNDAI_SANTA_FE.jpg",
-    "page": 53
-  },
-  {
-    "brand": "Honda",
-    "model": "Accord Hybrid",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_054_HONDA_ACCORD_HYBRID.jpg",
-    "page": 54
-  },
-  {
-    "brand": "Toyota",
-    "model": "Rav4 Se",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_055_TOYOTA_RAV4_SE.jpg",
-    "page": 55
-  },
-  {
-    "brand": "Kia",
-    "model": "Soul Lx",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_056_KIA_SOUL_LX.jpg",
-    "page": 56
-  },
-  {
-    "brand": "Nissan",
-    "model": "Rogue Platinum",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_057_NISSAN_ROGUE_PLATINUM.jpg",
-    "page": 57
-  },
-  {
-    "brand": "Nissan",
-    "model": "Rogue Sv",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_058_NISSAN_ROGUE_SV.jpg",
-    "page": 58
-  },
-  {
-    "brand": "Nissan",
-    "model": "Pathfinder Platinum",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_059_NISSAN_PATHFINDER_PLATINUM.jpg",
-    "page": 59
-  },
-  {
-    "brand": "Hyundai",
-    "model": "Elantra Limited",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_060_HYUNDAI_ELANTRA_LIMITED.jpg",
-    "page": 60
-  },
-  {
-    "brand": "Hyundai",
-    "model": "Tucson Sel",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_061_HYUNDAI_TUCSON_SEL.jpg",
-    "page": 61
-  },
-  {
-    "brand": "Nissan",
-    "model": "Altima Sr",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_062_NISSAN_ALTIMA_SR.jpg",
-    "page": 62
-  },
-  {
-    "brand": "Nissan",
-    "model": "Altima Sv",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_063_NISSAN_ALTIMA_SV.jpg",
-    "page": 63
-  },
-  {
-    "brand": "Kia",
-    "model": "Sportage Sx",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_064_KIA_SPORTAGE_SX.jpg",
-    "page": 64
-  },
-  {
-    "brand": "Toyota",
-    "model": "Sienna Le",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_065_TOYOTA_SIENNA_LE.jpg",
-    "page": 65
-  },
-  {
-    "brand": "Toyota",
-    "model": "Corolla Cross",
-    "year": 2023,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_066_TOYOTA_COROLLA_CROSS.jpg",
-    "page": 66
+    "price": 18500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 199,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p199.jpg"
   },
   {
     "brand": "Hyundai",
     "model": "Elantra Sel",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_067_HYUNDAI_ELANTRA_SEL.jpg",
-    "page": 67
+    "year": 2024,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 200,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p200.jpg"
+  },
+  {
+    "brand": "Chevrolet",
+    "model": "Traverse Ls",
+    "year": 2023,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 201,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p201.jpg"
   },
   {
     "brand": "Honda",
-    "model": "Accord Hybrid",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_068_HONDA_ACCORD_HYBRID.jpg",
-    "page": 68
+    "model": "Accord Exl",
+    "year": 2025,
+    "price": 28500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 202,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p202.jpg"
+  },
+  {
+    "brand": "Chevrolet",
+    "model": "Trax Lt",
+    "year": 2025,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 204,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p204.jpg"
+  },
+  {
+    "brand": "Nissan",
+    "model": "Versa",
+    "year": 2025,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 205,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p205.jpg"
   },
   {
     "brand": "Toyota",
-    "model": "Sienna Le",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_069_TOYOTA_SIENNA_LE.jpg",
-    "page": 69
+    "model": "Corolla Cross L",
+    "year": 2024,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 208,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p208.jpg"
+  },
+  {
+    "brand": "Toyota",
+    "model": "Camry Se",
+    "year": 2021,
+    "price": 23500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 211,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p211.jpg"
   },
   {
     "brand": "Toyota",
     "model": "Camry Le",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_070_TOYOTA_CAMRY_LE.jpg",
-    "page": 70
+    "year": 2025,
+    "price": 37500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 213,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p213.jpg"
   },
   {
-    "brand": "Lexus",
-    "model": "Gx 460",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_071_LEXUS_GX_460.jpg",
-    "page": 71
-  },
-  {
-    "brand": "Toyota",
-    "model": "Corolla Cross",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_072_TOYOTA_COROLLA_CROSS.jpg",
-    "page": 72
-  },
-  {
-    "brand": "Genesis",
-    "model": "G70 Base",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_074_GENESIS_G70_BASE.jpg",
-    "page": 74
-  },
-  {
-    "brand": "Mercedes-Benz",
-    "model": "C 300",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_075_MERCEDES-BENZ_C_300.jpg",
-    "page": 75
-  },
-  {
-    "brand": "Nissan",
-    "model": "Maxima Sr",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_076_NISSAN_MAXIMA_SR.jpg",
-    "page": 76
-  },
-  {
-    "brand": "Kia",
-    "model": "Stinger Gt",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_077_KIA_STINGER_GT.jpg",
-    "page": 77
-  },
-  {
-    "brand": "Toyota",
-    "model": "Rav4 Hybrid",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_078_TOYOTA_RAV4_HYBRID.jpg",
-    "page": 78
-  },
-  {
-    "brand": "Honda",
-    "model": "Accord Sport",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_079_HONDA_ACCORD_SPORT.jpg",
-    "page": 79
-  },
-  {
-    "brand": "Nissan",
-    "model": "Sentra Sv",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_080_NISSAN_SENTRA_SV.jpg",
-    "page": 80
-  },
-  {
-    "brand": "Toyota",
-    "model": "Sienna Xle",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_081_TOYOTA_SIENNA_XLE.jpg",
-    "page": 81
-  },
-  {
-    "brand": "Chevrolet",
-    "model": "Equinox Lt",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_082_CHEVROLET_EQUINOX_LT.jpg",
-    "page": 82
-  },
-  {
-    "brand": "Kia",
-    "model": "K5 Gt",
-    "year": 2022,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_083_KIA_K5_GT.jpg",
-    "page": 83
-  },
-  {
-    "brand": "Hyundai",
-    "model": "Palisade Sel",
-    "year": 2021,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_084_HYUNDAI_PALISADE_SEL.jpg",
-    "page": 84
-  },
-  {
-    "brand": "Nissan",
-    "model": "Rogue Sl",
-    "year": 2021,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_085_NISSAN_ROGUE_SL.jpg",
-    "page": 85
-  },
-  {
-    "brand": "Lexus",
-    "model": "Ux 250H",
-    "year": 2021,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_086_LEXUS_UX_250H.jpg",
-    "page": 86
-  },
-  {
-    "brand": "Kia",
-    "model": "K5 Gt",
-    "year": 2021,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_087_KIA_K5_GT.jpg",
-    "page": 87
-  },
-  {
-    "brand": "Infiniti",
-    "model": "Qx80 Premium",
-    "year": 2021,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_088_INFINITI_QX80_PREMIUM.jpg",
-    "page": 88
-  },
-  {
-    "brand": "Nissan",
-    "model": "Armada Platinum",
-    "year": 2021,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_089_NISSAN_ARMADA_PLATINUM.jpg",
-    "page": 89
-  },
-  {
-    "brand": "Toyota",
-    "model": "Highlander Hybrid",
-    "year": 2021,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_090_TOYOTA_HIGHLANDER_HYBRID.jpg",
-    "page": 90
-  },
-  {
-    "brand": "Nissan",
-    "model": "Sentra Sv",
-    "year": 2021,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_091_NISSAN_SENTRA_SV.jpg",
-    "page": 91
-  },
-  {
-    "brand": "Kia",
-    "model": "Sorento Sx",
-    "year": 2021,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_092_KIA_SORENTO_SX.jpg",
-    "page": 92
-  },
-  {
-    "brand": "Kia",
-    "model": "Soul Lx",
-    "year": 2021,
-    "price": null,
-    "auction": "Fadak Cars Auction",
-    "image_path": "/home/claude/car_images/car_093_KIA_SOUL_LX.jpg",
-    "page": 93
+    "brand": "Bmw",
+    "model": "228I",
+    "year": 2023,
+    "price": 17500,
+    "auction": "Al Qaryah - Saturday 27 June 2026",
+    "page": 214,
+    "image_path": "car_images/SATURDAY_AUCTION_IND_AREA2_27JUN2026_p214.jpg"
   }
 ]
