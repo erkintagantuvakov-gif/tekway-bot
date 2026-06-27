@@ -89,8 +89,22 @@ async def send_car_with_photo(update_or_message, car, keyboard=None):
     if car.get('price'):
         caption += f"💰 {car.get('price'):,} AED\n"
 
-    image_path = car.get("image_path", "")
+    # 1) telegram_file_id bar bolsa ilki şony ulan (iň çalt)
+    file_id = car.get("telegram_file_id", "")
+    if file_id:
+        try:
+            await msg.reply_photo(
+                photo=file_id,
+                caption=caption,
+                parse_mode="Markdown",
+                reply_markup=keyboard or auction_keyboard()
+            )
+            return
+        except Exception as e:
+            logger.error(f"file_id bilen surat başartmady: {e}")
 
+    # 2) Ýerli faýl bar bolsa
+    image_path = car.get("image_path", "")
     if image_path and Path(image_path).exists():
         try:
             with open(image_path, "rb") as photo:
@@ -104,9 +118,8 @@ async def send_car_with_photo(update_or_message, car, keyboard=None):
         except Exception as e:
             logger.error(f"Surat ugratmak başartmady: {e}")
 
-    # Surat ýok bolsa — tekst ugrat
+    # 3) Surat ýok bolsa — tekst ugrat
     await msg.reply_text(caption, parse_mode="Markdown", reply_markup=keyboard or auction_keyboard())
-
 
 # ============================================================
 # KOMANDALAR
@@ -229,12 +242,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(f"📭 {auction_name}-da şu gün maşyn ýok.")
                 return
 
-            # Ilki umumy habar
             await update.message.reply_text(
                 f"🏛 *{auction_name}* — {len(auction_cars)} maşyn tapyldy:",
                 parse_mode="Markdown"
             )
-            # Ilkinji 5 maşynyny surat bilen ugrat
             for car in auction_cars[:5]:
                 await send_car_with_photo(update, car)
             return
