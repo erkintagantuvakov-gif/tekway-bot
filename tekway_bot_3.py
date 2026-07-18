@@ -39,6 +39,44 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+# ============================================================
+# UNIKAL MASYN KODY
+# ============================================================
+AUCTION_CODES = {
+    "Al Qaryah Auctions": "AQ",
+    "Burj Khaibar Cars Auction": "BK",
+    "West Cars Auctions": "WEST",
+    "Marhaba Auctions": "MAR",
+    "Marhaba Auction": "MAR",
+    "Fadak Cars Auction": "FAD",
+    "Nojoom Cars Auction": "NCA",
+    "Al Nukhbah Cars Auction": "NUKH",
+    "Gulf Cars Auction": "GULF",
+    "Al Buraq Cars Auction": "BUR",
+    "Al Bashayera Auction": "BASH",
+    "KHAT AL JAZEERA CARS AUCTION": "KHAT",
+    "HAJI MOHD Cars Auctions": "HAJI",
+    "Emirates Auction": "EM",
+}
+
+
+def get_car_code(car):
+    """Auksion + sene + sahypa -> unikal kod (AQ-0718-052)"""
+    auction = car.get('auction', '')
+    date_str = str(car.get('date', ''))
+    page = car.get('page', 0)
+
+    auction_code = AUCTION_CODES.get(auction, 'AUCT')
+    date_short = date_str[4:8] if len(date_str) == 8 else '????'
+
+    try:
+        page_str = f"{int(page):03d}"
+    except (ValueError, TypeError):
+        page_str = "000"
+
+    return f"{auction_code}-{date_short}-{page_str}"
+
 # ============================================================
 # DÜWMELER
 # ============================================================
@@ -87,7 +125,8 @@ async def send_car_with_photo(update_or_message, car, keyboard=None):
         f"🏛 {car.get('auction', '')}\n"
     )
     if car.get('price'):
-        caption += f"💰 {car.get('price'):,} AED\n"
+        caption += f"💰 Başlangyç baha: {car.get('price'):,} AED\n"
+    caption += f"🔢 Kod: `{get_car_code(car)}`\n"
 
     # 1) telegram_file_id bar bolsa ilki şony ulan (iň çalt)
     file_id = car.get("telegram_file_id", "")
