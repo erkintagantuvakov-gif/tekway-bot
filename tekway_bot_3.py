@@ -246,7 +246,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"🏛 *{auction_name}* — {len(auction_cars)} maşyn tapyldy:",
                 parse_mode="Markdown"
             )
-            for car in auction_cars[:5]:
+            for car in auction_cars[:100]:
                 await send_car_with_photo(update, car)
             return
 
@@ -267,7 +267,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🚗 *'{text}'* — {len(found)} maşyn tapyldy:",
         parse_mode="Markdown"
     )
-    for car in found[:5]:
+    for car in found[:100]:
         await send_car_with_photo(update, car)
 
 # ============================================================
