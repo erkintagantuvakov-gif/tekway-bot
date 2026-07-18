@@ -9,6 +9,7 @@ import logging
 import os
 from pathlib import Path
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
+from urllib.parse import quote
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -96,6 +97,35 @@ def auction_keyboard():
 # BAZA
 # ============================================================
 
+
+def auction_keyboard_for_car(car):
+    """Konkret masyn ucin WhatsApp deep link (prefill text)"""
+    year = car.get('year', '')
+    brand = car.get('brand', '')
+    model = car.get('model', '')
+    auction = car.get('auction', '')
+    price = car.get('price', 0)
+    code = get_car_code(car)
+
+    text = f"Salam! Şu maşyny gyzyklanýan:
+"
+    text += f"🔢 Kod: {code}
+"
+    text += f"🚗 {year} {brand} {model}
+"
+    text += f"🏛 {auction}
+"
+    if price:
+        usd = aed_to_usd(price)
+        text += f"💰 Başlanýan bahasy {price} AED / {usd} USD"
+
+    encoded = quote(text)
+    wa_url = f"https://wa.me/971522371195?text={encoded}"
+
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton("🔨 Bu maşyn üçin ýüz tutmak", url=wa_url),
+    ]])
+
 def load_cars():
     if CARS_DB_FILE.exists():
         with open(CARS_DB_FILE, "r", encoding="utf-8") as f:
@@ -125,7 +155,8 @@ async def send_car_with_photo(update_or_message, car, keyboard=None):
         f"🏛 {car.get('auction', '')}\n"
     )
     if car.get('price'):
-        caption += f"💰 Başlangyç baha: {car.get('price'):,} AED\n"
+        usd = aed_to_usd(car.get('price'))
+        caption += f"💰 Başlanýan bahasy {car.get('price')} AED / {usd} USD\n"
     caption += f"🔢 Kod: `{get_car_code(car)}`\n"
 
     # 1) telegram_file_id bar bolsa ilki şony ulan (iň çalt)
@@ -136,7 +167,7 @@ async def send_car_with_photo(update_or_message, car, keyboard=None):
                 photo=file_id,
                 caption=caption,
                 parse_mode="Markdown",
-                reply_markup=keyboard or auction_keyboard()
+                reply_markup=keyboard or auction_keyboard_for_car(car)
             )
             return
         except Exception as e:
@@ -151,14 +182,14 @@ async def send_car_with_photo(update_or_message, car, keyboard=None):
                     photo=photo,
                     caption=caption,
                     parse_mode="Markdown",
-                    reply_markup=keyboard or auction_keyboard()
+                    reply_markup=keyboard or auction_keyboard_for_car(car)
                 )
             return
         except Exception as e:
             logger.error(f"Surat ugratmak başartmady: {e}")
 
     # 3) Surat ýok bolsa — tekst ugrat
-    await msg.reply_text(caption, parse_mode="Markdown", reply_markup=keyboard or auction_keyboard())
+    await msg.reply_text(caption, parse_mode="Markdown", reply_markup=keyboard or auction_keyboard_for_car(car))
 
 # ============================================================
 # KOMANDALAR
