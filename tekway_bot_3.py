@@ -96,7 +96,12 @@ def auction_keyboard_for_car(car):
     text += f"🏛 {auction}\n"
     if price:
         usd = aed_to_usd(price)
-        text += f"💰 Başlanýan bahasy {price} AED / {usd} USD"
+        text += f"💰 Başlanýan bahasy {price} AED / {usd} USD\n"
+    # GitHub raw URL - WhatsApp preview
+    image_path = car.get("image_path", "")
+    if image_path:
+        img_url = image_path.replace("\\\\", "/")
+        text += f"📸 https://raw.githubusercontent.com/erkintagantuvakov-gif/tekway-bot/main/{img_url}"
 
     encoded = quote(text)
     wa_url = f"https://wa.me/971522371195?text={encoded}"
