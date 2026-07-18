@@ -102,7 +102,7 @@ def auction_keyboard_for_car(car):
     wa_url = f"https://wa.me/971522371195?text={encoded}"
 
     return InlineKeyboardMarkup([[
-        InlineKeyboardButton("🔨 Bu maşyn üçin ýüz tutmak", url=wa_url),
+        InlineKeyboardButton("🔨 Auksiona gatnaşyp ber", url=wa_url),
     ]])
 
 
