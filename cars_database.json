@@ -1090,5 +1090,29 @@
     "page": 208,
     "image_path": "car_images/20260720/MONDAY_AUCTION___IND_AREA_2___20_JULY_2026_260719_205038_p208.jpg",
     "telegram_file_id": ""
+  },
+  {
+    "brand": "Kia",
+    "model": "Sportage Oss 9",
+    "year": 2023,
+    "color": "",
+    "price": 0,
+    "auction": "Marhaba Auctions",
+    "date": "20260720",
+    "page": 6,
+    "image_path": "car_images/20260720/Marhaba_Auctions_Monday_20th_July_2026_Ind_Area_12_Auction_list_pdf_p006.jpg",
+    "telegram_file_id": ""
+  },
+  {
+    "brand": "Kia",
+    "model": "K5",
+    "year": 2021,
+    "color": "",
+    "price": 29500,
+    "auction": "Marhaba Auctions",
+    "date": "20260720",
+    "page": 23,
+    "image_path": "car_images/20260720/Marhaba_Auctions_Monday_20th_July_2026_Ind_Area_12_Auction_list_pdf_p023.jpg",
+    "telegram_file_id": ""
   }
 ]
