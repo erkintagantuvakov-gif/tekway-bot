@@ -7,6 +7,7 @@ import logging
 import os
 from pathlib import Path
 from urllib.parse import quote
+from datetime import datetime, timezone, timedelta
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from telegram.ext import (
     Application,
@@ -29,6 +30,41 @@ USD_RATE = 3.67
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+# ============================================================
+# SENE BARLAGY (Dubai wagty UTC+4)
+# ============================================================
+DUBAI_TZ = timezone(timedelta(hours=4))
+
+
+def get_today():
+    """Dubai wagty boyunca bugungi sene: YYYYMMDD"""
+    return datetime.now(DUBAI_TZ).strftime("%Y%m%d")
+
+
+def db_is_fresh(cars):
+    """DB-daky masynlar bugungi my?"""
+    if not cars:
+        return False
+    today = get_today()
+    # Iň kop gaytalanýan sene
+    dates = {}
+    for c in cars:
+        d = str(c.get("date", ""))
+        dates[d] = dates.get(d, 0) + 1
+    if not dates:
+        return False
+    newest = max(dates.keys())
+    return newest == today
+
+
+NOT_READY_MSG = (
+    "⏳ *Bugünki auksion maglumaty entek taýýar däl*\n\n"
+    "Adatça her gün irden **09:00-11:00** aralygynda täzelenýär.\n"
+    "Biraz soňra ýene synanyşyň.\n\n"
+    "📱 Gyssagly sorag bolsa habarlaşyň:"
+)
 
 # ============================================================
 # AUCTION KODLARY + USD
@@ -187,6 +223,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• /help — ähli komandalar",
         parse_mode="Markdown", reply_markup=keyboard,
     )
+    # Maglumat kone bolsa duydur
+    cars = load_cars()
+    if not db_is_fresh(cars):
+        await update.message.reply_text(NOT_READY_MSG, parse_mode="Markdown")
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -205,6 +245,11 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cars = load_cars()
     if not cars:
         await update.message.reply_text("📭 Şu gün heniz auksion maglumaty ýok.")
+        return
+    if not db_is_fresh(cars):
+        await update.message.reply_text(
+            NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard()
+        )
         return
     auctions_today = {}
     for car in cars:
@@ -269,6 +314,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text_lower = text.lower()
     text_upper = text.upper()
     cars = load_cars()
+
+    # SENE BARLAGY - kone maglumat gorkezmeya
+    if not db_is_fresh(cars):
+        await update.message.reply_text(
+            NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard()
+        )
+        return
 
     # Auksion gozle
     for key, auction_name in AUCTIONS.items():
