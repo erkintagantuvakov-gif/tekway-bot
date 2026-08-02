@@ -539,7 +539,7 @@ def main():
     if not TOKEN:
         print("❌ BOT_TOKEN tapylmady!")
         return
-    app = Application.builder().token(TOKEN).post_init(post_init).build()
+    app = Application.builder().token(TOKEN).post_init(post_init).job_queue(None).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("today", today_command))
