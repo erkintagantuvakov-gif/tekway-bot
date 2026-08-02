@@ -261,6 +261,11 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard()
         )
         return
+    if not db_is_fresh(cars):
+        await update.message.reply_text(
+            NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard()
+        )
+        return
     auctions_today = {}
     for car in cars:
         a = car.get("auction", "Näbelli")
@@ -324,6 +329,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text_lower = text.lower()
     text_upper = text.upper()
     cars = load_cars()
+
+    # SENE BARLAGY - kone maglumat gorkezmeya
+    if not db_is_fresh(cars):
+        await update.message.reply_text(
+            NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard()
+        )
+        return
 
     # SENE BARLAGY - kone maglumat gorkezmeya
     if not db_is_fresh(cars):
