@@ -2,6 +2,7 @@
 """
 Dubai Auksion TEK WAY MOTORS — Telegram Bot v3
 """
+import asyncio
 import json
 import logging
 import os
@@ -481,7 +482,7 @@ async def delalert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ *{arg}* tapylmady.", parse_mode="Markdown")
 
 
-async def check_alerts(context: ContextTypes.DEFAULT_TYPE):
+async def check_alerts(bot):
     """Her N minutda alertleri barlar - taze masyn cyksa habar iberya"""
     try:
         cars = load_cars()
@@ -515,7 +516,7 @@ async def check_alerts(context: ContextTypes.DEFAULT_TYPE):
 
                 # Habar iber
                 try:
-                    await context.bot.send_message(
+                    await bot.send_message(
                         chat_id=int(user_id),
                         text=(
                             f"🔔 *Ýatlatma!*\n\n"
@@ -565,6 +566,25 @@ async def send_car_with_photo_to_chat(bot, chat_id, car):
     )
 
 
+
+
+async def alert_loop(app):
+    """Background task - her 10 minutda alertleri barlar"""
+    await asyncio.sleep(60)  # Ilki 1 min garas
+    while True:
+        try:
+            await check_alerts(app.bot)
+        except Exception as e:
+            logger.error(f"alert_loop hatasy: {e}")
+        await asyncio.sleep(600)  # her 10 min
+
+
+async def post_init(app):
+    """Bot baslandan son background task isledya"""
+    asyncio.create_task(alert_loop(app))
+    logger.info("Alert loop isledildi (her 10 min)")
+
+
 # ============================================================
 # CALLBACK
 # ============================================================
@@ -598,7 +618,7 @@ def main():
     if not TOKEN:
         print("❌ BOT_TOKEN tapylmady!")
         return
-    app = Application.builder().token(TOKEN).build()
+    app = Application.builder().token(TOKEN).post_init(post_init).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("today", today_command))
@@ -608,12 +628,7 @@ def main():
     app.add_handler(CommandHandler("delalert", delalert_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
 
-    # Alert barlaýan job - her 10 minutda
-    try:
-        app.job_queue.run_repeating(check_alerts, interval=600, first=60)
-        print("✅ Alert barlaýan job işledildi (her 10 min)")
-    except Exception as e:
-        print(f"⚠️ JobQueue işlemedi: {e}")
+
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     print("✅ Dubai Auksion TEK WAY MOTORS boty işläp başlady!")
     app.run_polling()
