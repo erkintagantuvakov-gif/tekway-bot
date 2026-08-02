@@ -25,7 +25,9 @@ TOKEN = os.environ.get("BOT_TOKEN", "")
 TEKWAY_WHATSAPP = "https://wa.me/971522371195"
 TEKWAY_TELEGRAM = "https://t.me/+971522371195"
 CARS_DB_FILE = Path("cars_database.json")
-ALERTS_FILE = Path("yatlatmas.json")
+# Alert fayly - Railway Volume bar bolsa /data, yogsa lokal
+_DATA_DIR = Path("/data") if Path("/data").exists() else Path(".")
+ALERTS_FILE = _DATA_DIR / "yatlatmas.json"
 USD_RATE = 3.67
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -169,6 +171,28 @@ def save_yatlatmas(yatlatmas):
         json.dump(yatlatmas, f, ensure_ascii=False, indent=2)
 
 
+
+# Iberilen alertler (gaytalanmaz yaly)
+SENT_FILE = _DATA_DIR / "sent_alerts.json"
+
+
+def load_sent():
+    if SENT_FILE.exists():
+        try:
+            with open(SENT_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def save_sent(sent):
+    try:
+        with open(SENT_FILE, "w", encoding="utf-8") as f:
+            json.dump(sent, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"sent_alerts yazylmady: {e}")
+
 # ============================================================
 # SURAT UGRATMAK
 # ============================================================
@@ -234,7 +258,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📋 *Komandalar:*\n\n"
         "🚗 *Maşyn gözlemek:* `Camry`, `Hilux`, `Elantra`\n"
         "🏛 *Auksion gözlemek:* `Fadak`, `Marhaba`, `Nojoom`\n"
-        "🔔 *Ýatlatma:* `/alert Camry`\n"
+        "🔔 *Ýatlatma:* maşyn tapylmasa — düwme bas\n"
+        "📋 */myalerts* — ýatlatmalarym\n"
+        "❌ */delalert Camry* — ýatlatmany poz\n"
         "📊 */today* — şu günki ýagdaý\n"
         "📱 */contact* — habarlaş",
         parse_mode="Markdown",
@@ -245,6 +271,11 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cars = load_cars()
     if not cars:
         await update.message.reply_text("📭 Şu gün heniz auksion maglumaty ýok.")
+        return
+    if not db_is_fresh(cars):
+        await update.message.reply_text(
+            NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard()
+        )
         return
     if not db_is_fresh(cars):
         await update.message.reply_text(
@@ -358,6 +389,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    # SENE BARLAGY - kone maglumat gorkezmeya
+    if not db_is_fresh(cars):
+        await update.message.reply_text(
+            NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard()
+        )
+        return
+
     # Auksion gozle
     for key, auction_name in AUCTIONS.items():
         if key in text_lower:
@@ -375,9 +413,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Masyn gozle
     found = [c for c in cars if text_upper in f"{c.get('brand','')} {c.get('model','')}".upper()]
     if not found:
+        # Duwme bilen yatlatma goymak (yazmagyn gereklik yok)
+        kb = InlineKeyboardMarkup([[
+            InlineKeyboardButton(
+                f"🔔 '{text}' çykanda habar ber",
+                callback_data=f"alert:{text[:50]}"
+            )
+        ]])
         await update.message.reply_text(
-            f"📭 *'{text}'* şu gün ýok.\n\n🔔 `/alert {text}` ýaz - habar berjek",
+            f"📭 *'{text}'* şu gün ýok.\n\nÇykanda habar bermegimi isleýäňizmi?",
             parse_mode="Markdown",
+            reply_markup=kb,
         )
         return
     await update.message.reply_text(
@@ -385,6 +431,138 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     for car in found[:100]:
         await send_car_with_photo(update, car)
+
+
+
+
+async def myalerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Ulanyjynyn yatlatmalary"""
+    user_id = str(update.effective_user.id)
+    yatlatmas = load_yatlatmas()
+    my = yatlatmas.get(user_id, [])
+    if not my:
+        await update.message.reply_text(
+            "🔔 Sizde ýatlatma ýok.\n\n"
+            "Maşyn gözläniňizde tapylmasa — düwme bilen ýatlatma goýup bilersiňiz.",
+            parse_mode="Markdown",
+        )
+        return
+    text = "🔔 *Siziň ýatlatmalaryňyz:*\n\n"
+    for i, a in enumerate(my, 1):
+        text += f"{i}. {a}\n"
+    text += "\n❌ Pozmak: /delalert <ady>"
+    await update.message.reply_text(text, parse_mode="Markdown")
+
+
+async def delalert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Yatlatmany poz"""
+    if not context.args:
+        await update.message.reply_text(
+            "❌ `/delalert Camry` - şol ýatlatmany pozar\n"
+            "`/delalert all` - hemmesini pozar",
+            parse_mode="Markdown",
+        )
+        return
+    user_id = str(update.effective_user.id)
+    yatlatmas = load_yatlatmas()
+    my = yatlatmas.get(user_id, [])
+    arg = " ".join(context.args).upper()
+    if arg == "ALL":
+        yatlatmas[user_id] = []
+        save_yatlatmas(yatlatmas)
+        await update.message.reply_text("✅ Ähli ýatlatmalar pozuldy.")
+        return
+    if arg in my:
+        my.remove(arg)
+        yatlatmas[user_id] = my
+        save_yatlatmas(yatlatmas)
+        await update.message.reply_text(f"✅ Pozuldy: *{arg}*", parse_mode="Markdown")
+    else:
+        await update.message.reply_text(f"❌ *{arg}* tapylmady.", parse_mode="Markdown")
+
+
+async def check_alerts(context: ContextTypes.DEFAULT_TYPE):
+    """Her N minutda alertleri barlar - taze masyn cyksa habar iberya"""
+    try:
+        cars = load_cars()
+        if not cars or not db_is_fresh(cars):
+            return
+
+        yatlatmas = load_yatlatmas()
+        if not yatlatmas:
+            return
+
+        sent = load_sent()
+        today = get_today()
+
+        for user_id, keywords in yatlatmas.items():
+            if not keywords:
+                continue
+            for kw in keywords:
+                kw_up = kw.upper()
+                # Sol masyn bugun barmy?
+                matches = [
+                    c for c in cars
+                    if kw_up in f"{c.get('brand','')} {c.get('model','')}".upper()
+                ]
+                if not matches:
+                    continue
+
+                # Eyyam iberilipmi? (user + keyword + sene)
+                sent_key = f"{user_id}|{kw_up}|{today}"
+                if sent.get(sent_key):
+                    continue
+
+                # Habar iber
+                try:
+                    await context.bot.send_message(
+                        chat_id=int(user_id),
+                        text=(
+                            f"🔔 *Ýatlatma!*\n\n"
+                            f"Siziň gözlän maşynyňyz *{kw}* şu gün auksionda bar!\n"
+                            f"Jemi: *{len(matches)}* sany"
+                        ),
+                        parse_mode="Markdown",
+                    )
+                    # Ilki 5 sanyny gorkez
+                    for car in matches[:5]:
+                        await send_car_with_photo_to_chat(context.bot, int(user_id), car)
+
+                    sent[sent_key] = True
+                    save_sent(sent)
+                    logger.info(f"Alert iberildi: {user_id} / {kw} / {len(matches)} masyn")
+                except Exception as e:
+                    logger.error(f"Alert iberilmedi ({user_id}/{kw}): {e}")
+    except Exception as e:
+        logger.error(f"check_alerts hatasy: {e}")
+
+
+async def send_car_with_photo_to_chat(bot, chat_id, car):
+    """Masyny gonumel chat_id-e ugrat (alert ucin)"""
+    caption = f"🚗 *{car.get('year')} {car.get('brand')} {car.get('model')}*\n"
+    caption += f"🏛 {car.get('auction', '')}\n"
+    if car.get("price"):
+        usd = aed_to_usd(car.get("price"))
+        caption += f"💰 Başlanýan bahasy {car.get('price')} AED / {usd} USD\n"
+    caption += f"🔢 Kod: `{get_car_code(car)}`"
+
+    kb = auction_keyboard_for_car(car)
+    image_path = car.get("image_path", "")
+
+    try:
+        if image_path and Path(image_path).exists():
+            with open(image_path, "rb") as photo:
+                await bot.send_photo(
+                    chat_id=chat_id, photo=photo, caption=caption,
+                    parse_mode="Markdown", reply_markup=kb
+                )
+                return
+    except Exception as e:
+        logger.error(f"Alert surat ugratmady: {e}")
+
+    await bot.send_message(
+        chat_id=chat_id, text=caption, parse_mode="Markdown", reply_markup=kb
+    )
 
 
 # ============================================================
@@ -426,7 +604,16 @@ def main():
     app.add_handler(CommandHandler("today", today_command))
     app.add_handler(CommandHandler("contact", contact_command))
     app.add_handler(CommandHandler("alert", alert_command))
+    app.add_handler(CommandHandler("myalerts", myalerts_command))
+    app.add_handler(CommandHandler("delalert", delalert_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
+
+    # Alert barlaýan job - her 10 minutda
+    try:
+        app.job_queue.run_repeating(check_alerts, interval=600, first=60)
+        print("✅ Alert barlaýan job işledildi (her 10 min)")
+    except Exception as e:
+        print(f"⚠️ JobQueue işlemedi: {e}")
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     print("✅ Dubai Auksion TEK WAY MOTORS boty işläp başlady!")
     app.run_polling()
