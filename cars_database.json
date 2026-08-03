@@ -1,29 +1,5 @@
 [
   {
-    "brand": "Chevrolet",
-    "model": "Equinox Rs",
-    "year": 2024,
-    "color": "",
-    "price": 830000,
-    "auction": "Marhaba Auctions",
-    "date": "20260803",
-    "page": 5,
-    "image_path": "car_images/20260803/Marhaba_Auctions_Monday_3rd_August_2026_Ind_Area_12_Auction_list_pdf_1_p005.jpg",
-    "telegram_file_id": ""
-  },
-  {
-    "brand": "Kia",
-    "model": "Sportage",
-    "year": 2023,
-    "color": "",
-    "price": 0,
-    "auction": "Marhaba Auctions",
-    "date": "20260803",
-    "page": 31,
-    "image_path": "car_images/20260803/Marhaba_Auctions_Monday_3rd_August_2026_Ind_Area_12_Auction_list_pdf_1_p031.jpg",
-    "telegram_file_id": ""
-  },
-  {
     "brand": "",
     "model": "Pm",
     "year": 2026,
@@ -1353,6 +1329,18 @@
     "date": "20260803",
     "page": 144,
     "image_path": "car_images/20260803/Monday_Auction_03_August_2026_Marhaba_Cars_Auction_Presentation_Souq_Branch_p144.jpg",
+    "telegram_file_id": ""
+  },
+  {
+    "brand": "Chevrolet",
+    "model": "Equinox Rs",
+    "year": 2024,
+    "color": "",
+    "price": 839000,
+    "auction": "Marhaba Auctions",
+    "date": "20260803",
+    "page": 5,
+    "image_path": "car_images/20260803/Marhaba_Auctions_Monday_3rd_August_2026_Ind_Area_12_Auction_list_pdf_1_p005.jpg",
     "telegram_file_id": ""
   }
 ]
