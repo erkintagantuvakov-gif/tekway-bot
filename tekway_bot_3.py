@@ -272,6 +272,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cars = load_cars()
     if not db_is_fresh(cars):
         await update.message.reply_text(NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard())
+    try:
+        asyncio.create_task(check_alerts(context.bot))
+    except Exception:
+        pass
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -372,11 +376,17 @@ async def delalert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def check_alerts(bot):
     try:
         cars = load_cars()
-        if not cars or not db_is_fresh(cars):
+        if not cars:
+            logger.info("check_alerts: DB bos")
+            return
+        if not db_is_fresh(cars):
+            logger.info(f"check_alerts: DB kone (today={get_today()})")
             return
         y = load_yatlatmas()
         if not y:
+            logger.info(f"check_alerts: yatlatma yok ({ALERTS_FILE})")
             return
+        logger.info(f"check_alerts: {len(y)} ulanyjy, {len(cars)} masyn")
         sent = load_sent()
         today = get_today()
 
@@ -423,6 +433,35 @@ async def post_init(app):
     logger.info("Alert loop isledildi (her 10 min)")
 
 
+
+
+async def checkalerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Manual alert barlag + debug maglumat"""
+    uid = str(update.effective_user.id)
+    cars = load_cars()
+    y = load_yatlatmas()
+    my = y.get(uid, [])
+    sent = load_sent()
+    today = get_today()
+
+    txt = "🔍 *Alert debug:*\n\n"
+    txt += f"📅 Bugün: `{today}`\n"
+    txt += f"📦 DB: {len(cars)} maşyn\n"
+    txt += f"✅ DB täze: {db_is_fresh(cars)}\n"
+    txt += f"💾 Alert fayly: `{ALERTS_FILE}`\n"
+    txt += f"🔔 Meniň ýatlatmalarym: {len(my)}\n"
+    if my:
+        for a in my:
+            matches = [c for c in cars if a.upper() in f"{c.get('brand','')} {c.get('model','')}".upper()]
+            key = f"{uid}|{a.upper()}|{today}"
+            was_sent = "iberildi" if sent.get(key) else "iberilmedi"
+            txt += f"   • {a}: {len(matches)} maşyn ({was_sent})\n"
+    await update.message.reply_text(txt, parse_mode="Markdown")
+
+    # Hakyky barlag isle
+    await check_alerts(context.bot)
+
+
 # ============================================================
 # HABAR
 # ============================================================
@@ -449,6 +488,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tl = text.lower()
     tu = text.upper()
     cars = load_cars()
+
+    # Arka planda alertleri barla (blokirlemeya)
+    try:
+        asyncio.create_task(check_alerts(context.bot))
+    except Exception as e:
+        logger.error(f"alert task: {e}")
 
     if not db_is_fresh(cars):
         await update.message.reply_text(NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard())
@@ -547,6 +592,7 @@ def main():
     app.add_handler(CommandHandler("alert", alert_command))
     app.add_handler(CommandHandler("myalerts", myalerts_command))
     app.add_handler(CommandHandler("delalert", delalert_command))
+    app.add_handler(CommandHandler("checkalerts", checkalerts_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     print("✅ Dubai Auksion | TEK AUTO MARKET boty işläp başlady!")
