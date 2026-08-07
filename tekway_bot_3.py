@@ -35,6 +35,10 @@ CARS_DB_FILE = Path("cars_database.json")
 _DATA_DIR = Path("/data") if Path("/data").exists() else Path(".")
 ALERTS_FILE = _DATA_DIR / "yatlatmas.json"
 SENT_FILE = _DATA_DIR / "sent_alerts.json"
+USERS_FILE = _DATA_DIR / "users.json"
+
+# Admin - dine su ulanyjy /stats gorup bilya
+ADMIN_ID = 8997411258
 
 USD_RATE = 3.67
 DUBAI_TZ = timezone(timedelta(hours=4))
@@ -196,6 +200,67 @@ def save_sent(s):
         logger.error(f"sent yazylmady: {e}")
 
 
+
+
+def load_users():
+    if USERS_FILE.exists():
+        try:
+            with open(USERS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def save_users(u):
+    try:
+        with open(USERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(u, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"users yazylmady: {e}")
+
+
+def track_user(update, query_text=""):
+    """Her habar gelende ulanyjyny hasaba al"""
+    try:
+        u = update.effective_user
+        if not u:
+            return
+        uid = str(u.id)
+        users = load_users()
+        now = datetime.now(DUBAI_TZ).strftime("%Y-%m-%d %H:%M")
+        today = get_today()
+
+        if uid not in users:
+            users[uid] = {
+                "name": (u.full_name or "")[:60],
+                "username": u.username or "",
+                "first_seen": now,
+                "last_seen": now,
+                "searches": 0,
+                "days": [],
+            }
+        users[uid]["last_seen"] = now
+        users[uid]["name"] = (u.full_name or "")[:60]
+        if u.username:
+            users[uid]["username"] = u.username
+        if query_text:
+            users[uid]["searches"] = users[uid].get("searches", 0) + 1
+        days = users[uid].get("days", [])
+        if today not in days:
+            days.append(today)
+            users[uid]["days"] = days[-60:]  # sonky 60 gun
+
+        # Gozleg sozleri
+        if query_text:
+            q = users[uid].get("queries", [])
+            q.append(query_text[:30])
+            users[uid]["queries"] = q[-50:]
+
+        save_users(users)
+    except Exception as e:
+        logger.error(f"track_user: {e}")
+
 # ============================================================
 # SURAT UGRATMAK
 # ============================================================
@@ -253,6 +318,7 @@ async def send_car_to_chat(bot, chat_id, car):
 # KOMANDALAR
 # ============================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    track_user(update)
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("🚗 Maşyn gözle", callback_data="search")],
         [InlineKeyboardButton("🏛 Auksion gözle", callback_data="auction")],
@@ -272,6 +338,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cars = load_cars()
     if not db_is_fresh(cars):
         await update.message.reply_text(NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard())
+    try:
+        asyncio.create_task(check_alerts(context.bot))
+    except Exception:
+        pass
     try:
         asyncio.create_task(check_alerts(context.bot))
     except Exception:
@@ -368,6 +438,93 @@ async def delalert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"✅ Pozuldy: *{arg}*", parse_mode="Markdown")
     else:
         await update.message.reply_text(f"❌ *{arg}* tapylmady.", parse_mode="Markdown")
+
+
+
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Bot statistikasy - dine ADMIN ucin"""
+    uid = update.effective_user.id
+    if uid != ADMIN_ID:
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+
+    users = load_users()
+    if not users:
+        await update.message.reply_text("📊 Entek ulanyjy ýok.")
+        return
+
+    today = get_today()
+    from datetime import timedelta as _td
+    now = datetime.now(DUBAI_TZ)
+    week_days = set((now - _td(days=i)).strftime("%Y%m%d") for i in range(7))
+    month_days = set((now - _td(days=i)).strftime("%Y%m%d") for i in range(30))
+
+    total = len(users)
+    today_active = sum(1 for u in users.values() if today in u.get("days", []))
+    week_active = sum(1 for u in users.values() if week_days & set(u.get("days", [])))
+    month_active = sum(1 for u in users.values() if month_days & set(u.get("days", [])))
+    total_searches = sum(u.get("searches", 0) for u in users.values())
+
+    # In kop gozlenen sozler
+    from collections import Counter
+    qc = Counter()
+    for u in users.values():
+        for q in u.get("queries", []):
+            qc[q.upper()] += 1
+
+    # Yatlatmalar
+    y = load_yatlatmas()
+    alert_users = sum(1 for v in y.values() if v)
+    alert_total = sum(len(v) for v in y.values())
+
+    txt = "📊 *BOT STATISTIKASY*\n\n"
+    txt += f"👥 *Jemi ulanyjy:* {total}\n"
+    txt += f"🟢 Bugün aktiw: {today_active}\n"
+    txt += f"📅 Şu hepde: {week_active}\n"
+    txt += f"📆 Şu aý: {month_active}\n\n"
+    txt += f"🔍 Jemi gözleg: {total_searches}\n"
+    txt += f"🔔 Ýatlatma goýan: {alert_users} ({alert_total} sany)\n"
+
+    if qc:
+        txt += "\n🔝 *Iň köp gözlenen:*\n"
+        for w, n in qc.most_common(10):
+            txt += f"   {w} — {n}\n"
+
+    txt += "\n📋 /users — ulanyjylaryň sanawy"
+    await update.message.reply_text(txt, parse_mode="Markdown")
+
+
+async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Ulanyjylaryn sanawy - dine ADMIN"""
+    uid = update.effective_user.id
+    if uid != ADMIN_ID:
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+
+    users = load_users()
+    if not users:
+        await update.message.reply_text("📊 Entek ulanyjy ýok.")
+        return
+
+    # Sonky gelen boyunca sortla
+    items = sorted(users.items(), key=lambda x: x[1].get("last_seen", ""), reverse=True)
+
+    txt = f"👥 *Ulanyjylar ({len(items)}):*\n\n"
+    for i, (uid_s, u) in enumerate(items[:40], 1):
+        name = u.get("name", "?")
+        un = f"@{u['username']}" if u.get("username") else ""
+        s = u.get("searches", 0)
+        last = u.get("last_seen", "")[:10]
+        txt += f"{i}. {name} {un}\n   🔍{s} · {last}\n"
+
+    if len(items) > 40:
+        txt += f"\n... ýene {len(items)-40} sany"
+
+    # Telegram habar cakleri - 4096 simwol
+    if len(txt) > 3900:
+        txt = txt[:3900] + "\n..."
+    await update.message.reply_text(txt, parse_mode="Markdown")
 
 
 # ============================================================
@@ -487,7 +644,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.strip()
     tl = text.lower()
     tu = text.upper()
+    track_user(update, text)
     cars = load_cars()
+
+    # Arka planda alertleri barla (blokirlemeya)
+    try:
+        asyncio.create_task(check_alerts(context.bot))
+    except Exception as e:
+        logger.error(f"alert task: {e}")
 
     # Arka planda alertleri barla (blokirlemeya)
     try:
@@ -592,6 +756,8 @@ def main():
     app.add_handler(CommandHandler("alert", alert_command))
     app.add_handler(CommandHandler("myalerts", myalerts_command))
     app.add_handler(CommandHandler("delalert", delalert_command))
+    app.add_handler(CommandHandler("stats", stats_command))
+    app.add_handler(CommandHandler("users", users_command))
     app.add_handler(CommandHandler("checkalerts", checkalerts_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
