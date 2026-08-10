@@ -41,6 +41,13 @@ USERS_FILE = _DATA_DIR / "users.json"
 ADMIN_ID = 8997411258
 
 USD_RATE = 3.67
+
+# --- Thread B: "Oye cenli baha" (Bugalter formulasy) ---
+# HAZIR OCHUK. Sebabi: mashyn heniz utulmadyk, anyk baha yok.
+# Bugalter anyk formula berende -> SHOW_HOME_PRICE = True et.
+HOME_PRICE_EXTRA_USD = 2300
+SHOW_HOME_PRICE = False   # True -> kartada gorkezer
+
 DUBAI_TZ = timezone(timedelta(hours=4))
 
 logging.basicConfig(
@@ -135,12 +142,14 @@ def auction_keyboard_for_car(car):
     code = get_car_code(car)
 
     text = "Salam! Şu maşyny gyzyklanýan:\n"
-    text += f"🔢 Kod: {code}\n"
+    text += f"🆔 Kod: {code}\n"
     text += f"🚗 {year} {brand} {model}\n"
-    text += f"🏛 {auction}\n"
+    text += f"🏢 {auction}\n"
     if price:
         usd = aed_to_usd(price)
-        text += f"💰 Başlanýan bahasy {price} AED / {usd} USD\n"
+        text += f"💰 Başlanýan bahasy: {usd:,} USD ({price} AED)\n"
+        if SHOW_HOME_PRICE:
+            text += f"\U0001F3E0 Öýe çenli: ~{usd + HOME_PRICE_EXTRA_USD:,} USD-dan\n"
     img = car.get("image_path", "")
     if img:
         text += f"📸 https://raw.githubusercontent.com/erkintagantuvakov-gif/tekway-bot/main/{img}"
@@ -266,11 +275,13 @@ def track_user(update, query_text=""):
 # ============================================================
 def build_caption(car):
     cap = f"🚗 *{car.get('year')} {car.get('brand')} {car.get('model')}*\n"
-    cap += f"🏛 {car.get('auction', '')}\n"
+    cap += f"🏢 {car.get('auction', '')}\n"
     if car.get("price"):
         usd = aed_to_usd(car.get("price"))
-        cap += f"💰 Başlanýan bahasy {car.get('price')} AED / {usd} USD\n"
-    cap += f"🔢 Kod: `{get_car_code(car)}`"
+        cap += f"💰 Başlanýan bahasy: *{usd:,} USD* ({car.get('price')} AED)\n"
+        if SHOW_HOME_PRICE:
+            cap += f"\U0001F3E0 Öýe çenli: ~*{usd + HOME_PRICE_EXTRA_USD:,} USD*-dan\n"
+    cap += f"🆔 Kod: `{get_car_code(car)}`"
     return cap
 
 
@@ -321,7 +332,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     track_user(update)
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("🚗 Maşyn gözle", callback_data="search")],
-        [InlineKeyboardButton("🏛 Auksion gözle", callback_data="auction")],
+        [InlineKeyboardButton("🏢 Auksion gözle", callback_data="auction")],
         [InlineKeyboardButton("🔔 Ýatlatmalarym", callback_data="myalerts")],
         [InlineKeyboardButton("📱 Habarlaşmak", callback_data="contact")],
     ])
@@ -352,7 +363,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "📋 *Komandalar:*\n\n"
         "🚗 *Maşyn gözlemek:* `Camry`, `Hilux`, `Elantra`\n"
-        "🏛 *Auksion gözlemek:* `Fadak`, `Marhaba`, `Nojoom`\n\n"
+        "🏢 *Auksion gözlemek:* `Fadak`, `Marhaba`, `Nojoom`\n\n"
         "🔔 *Ýatlatma:* maşyn tapylmasa — düwmä bas\n"
         "📋 */myalerts* — ýatlatmalarym\n"
         "❌ */delalert Camry* — ýatlatmany poz\n"
@@ -374,7 +385,7 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         counts[a] = counts.get(a, 0) + 1
     text = "📅 *Şu günki auksionlar:*\n\n"
     for a, n in sorted(counts.items(), key=lambda x: -x[1]):
-        text += f"🏛 *{a}* — {n} maşyn\n"
+        text += f"🏢 *{a}* — {n} maşyn\n"
     text += f"\n✅ Jemi: *{len(cars)} maşyn*"
     await update.message.reply_text(text, parse_mode="Markdown")
 
@@ -670,7 +681,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(f"📭 {aname}-da şu gün maşyn ýok.")
                 return
             await update.message.reply_text(
-                f"🏛 *{aname}* — {len(ac)} maşyn tapyldy:", parse_mode="Markdown")
+                f"🏢 *{aname}* — {len(ac)} maşyn tapyldy:", parse_mode="Markdown")
             for car in ac[:100]:
                 await send_car_with_photo(update, car)
             return
@@ -725,7 +736,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown")
     elif d == "auction":
         await q.message.reply_text(
-            "🏛 Haýsy auksiony gözleýäň? Adyny ýaz\nMeselem: *Fadak*, *Marhaba*, *Nojoom*",
+            "🏢 Haýsy auksiony gözleýäň? Adyny ýaz\nMeselem: *Fadak*, *Marhaba*, *Nojoom*",
             parse_mode="Markdown")
     elif d == "myalerts":
         uid = str(q.from_user.id)
