@@ -9,6 +9,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 from pathlib import Path
 from urllib.parse import quote
 from datetime import datetime, timezone, timedelta
@@ -104,16 +105,29 @@ AUCTION_CODES = {
 
 
 def get_car_code(car):
+    """Günüň umumy kody: MMDD-NNN (mysal 0811-013).
+
+    Kody `kod_ber.py` bazasyna ýazýar ("code" meýdany) — şoň üçin
+    TikTok karty bilen Telegram bot DEŇ kody görkezýär.
+    Müşderi "0811-013 gerek" diýse — botda gözlenip tapylýar.
+
+    Bazada kod ýok bolsa (köne maglumat) — auksion prefiksli köne format.
+    """
+    code = car.get("code")
+    if code:
+        return str(code)
+
+    # --- köne format (zapas) ---
     auction = car.get("auction", "")
     date_str = str(car.get("date", ""))
     page = car.get("page", 0)
-    code = AUCTION_CODES.get(auction, "AUCT")
+    ac = AUCTION_CODES.get(auction, "AUCT")
     ds = date_str[4:8] if len(date_str) == 8 else "????"
     try:
         ps = f"{int(page):03d}"
     except (ValueError, TypeError):
         ps = "000"
-    return f"{code}-{ds}-{ps}"
+    return f"{ac}-{ds}-{ps}"
 
 
 def aed_to_usd(aed):
@@ -672,6 +686,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not db_is_fresh(cars):
         await update.message.reply_text(NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard())
+        return
+
+    # --- KOD boýunça gözleg: "0811-013" ýa "13" ýa "TEK 0811-013" ---
+    mcode = re.search(r'\b(\d{4})\s*[-–—/]\s*(\d{1,3})\b', tu)
+    if mcode:
+        want = f"{mcode.group(1)}-{int(mcode.group(2)):03d}"
+        hit = [c for c in cars if str(c.get("code", "")).upper() == want]
+        if hit:
+            await update.message.reply_text(
+                f"🆔 *{want}* — tapyldy:", parse_mode="Markdown")
+            for car in hit:
+                await send_car_with_photo(update, car)
+            return
+        await update.message.reply_text(
+            f"📭 *{want}* kody bilen maşyn tapylmady.\n\n"
+            "Kod her gün täzelenýär — düýnki koda şu gün maşyn ýok bolmagy mümkin.",
+            parse_mode="Markdown", reply_markup=contact_keyboard())
         return
 
     for key, aname in AUCTIONS.items():
