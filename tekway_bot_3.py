@@ -205,6 +205,71 @@ def fuzzy_find(query, cars):
 
 
 # ============================================================
+# TEKLIPLER — şu günki bazadan alynýar
+# Sebäp (Erkin, 13.08): "Hilux" ýaly ÝOK maşyny teklip etsek,
+# müşderi hemişe "tapylmady" görýär -> negatiw duýgy.
+# Şoň üçin diňe HAKYKATDAN BAR maşynlar teklip edilýär.
+# ============================================================
+_JUNK_MODEL = {"cars", "auction", "industrial", "area", "fwd", "awd", "base",
+               "below", "avg", "new", "used", "sel", "le", "se", "lx", "ex"}
+# Iki sozli modeller - birinji soz yeterlik dal ("Santa" -> "Santa Fe")
+_TWO_WORD = {"santa", "land", "grand", "range", "model"}
+
+
+def _model_name(model):
+    parts = (model or "").split()
+    if not parts:
+        return ""
+    if parts[0].lower() in _TWO_WORD and len(parts) > 1:
+        return f"{parts[0]} {parts[1]}"
+    return parts[0]
+
+
+def suggest_models(cars, n=6, per_brand=2):
+    """Şu gün iň köp bolan modelleri gaýtarýar: ['Camry', 'Elantra', ...]"""
+    cnt = {}
+    for c in cars:
+        m = (c.get("model") or "").strip()
+        b = (c.get("brand") or "").strip()
+        if not m or not b:
+            continue
+        first = _model_name(m)
+        if len(first) < 2 or first.split()[0].lower() in _JUNK_MODEL:
+            continue
+        key = (b.title(), first.title())
+        cnt[key] = cnt.get(key, 0) + 1
+
+    out, used = [], {}
+    for (b, m), _ in sorted(cnt.items(), key=lambda x: -x[1]):
+        if used.get(b, 0) >= per_brand:
+            continue
+        used[b] = used.get(b, 0) + 1
+        out.append(m)
+        if len(out) >= n:
+            break
+    return out or ["Camry", "Elantra", "Sonata"]
+
+
+def suggest_text(cars, n=4):
+    s = suggest_models(cars, n)
+    return ", ".join(f"*{x}*" for x in s)
+
+
+def suggest_keyboard(cars, n=6):
+    """Basyp gözlär ýaly düwmeler."""
+    s = suggest_models(cars, n)
+    rows, row = [], []
+    for m in s:
+        row.append(InlineKeyboardButton(f"🚗 {m}", callback_data=f"find:{m[:30]}"))
+        if len(row) == 2:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    return InlineKeyboardMarkup(rows) if rows else None
+
+
+# ============================================================
 # GÖZLEG ÝAZGYSY — näme gözlenýär, näme tapylmaýar
 # Maksat: sinonim sanawyny hakyky müşderi ýazgysyna görä ösdürmek
 # ============================================================
@@ -541,6 +606,8 @@ async def send_car_to_chat(bot, chat_id, car):
 # ============================================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     track_user(update)
+    cars0 = load_cars()
+    ex = suggest_text(cars0, 3)
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("🚗 Maşyn gözle", callback_data="search")],
         [InlineKeyboardButton("🏢 Auksion gözle", callback_data="auction")],
@@ -551,8 +618,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🚗 *Dubai Auksion | TEK AUTO MARKET*\n\n"
         "Salam! Men şu günki Dubaý auksionlarynyň maşynlaryny gözlemäge kömek edýärin.\n\n"
         "📌 Nähili ulanmaly:\n"
-        "• Maşyn adyny ýaz — meselem: *Camry*, *Hilux*, *Elantra*\n"
-        "• Auksion adyny ýaz — meselem: *Fadak*, *Marhaba*, *Nojoom*\n"
+        f"• Maşyn adyny ýaz — meselem: {ex}\n"
+        "• Auksion adyny ýaz — meselem: *Marhaba*, *Nojoom*\n"
+        "• Ýalňyş ýazsaň-da düşünýärin (`kamry`, `hunday`)\n"
         "• Maşyn tapylmasa — düwme bilen ýatlatma goý\n"
         "• /help — ähli komandalar",
         parse_mode="Markdown", reply_markup=kb,
@@ -571,10 +639,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    cars = load_cars()
+    ex = ", ".join(f"`{x}`" for x in suggest_models(cars, 3))
+    auks = sorted({c.get("auction", "").split()[0] for c in cars if c.get("auction")})[:3]
+    exa = ", ".join(f"`{x}`" for x in auks) or "`Marhaba`"
     await update.message.reply_text(
         "📋 *Komandalar:*\n\n"
-        "🚗 *Maşyn gözlemek:* `Camry`, `Hilux`, `Elantra`\n"
-        "🏢 *Auksion gözlemek:* `Fadak`, `Marhaba`, `Nojoom`\n\n"
+        f"🚗 *Maşyn gözlemek:* {ex}\n"
+        f"🏢 *Auksion gözlemek:* {exa}\n"
+        "🔎 Ýalňyş ýazsaň-da düşünýärin: `kamry`, `hunday`\n"
+        "🆔 *Kod boýunça:* `0813-013`\n\n"
         "🔔 *Ýatlatma:* maşyn tapylmasa — düwmä bas\n"
         "📋 */myalerts* — ýatlatmalarym\n"
         "❌ */delalert Camry* — ýatlatmany poz\n"
@@ -1126,13 +1200,43 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await q.message.reply_text("📱 *TEK AUTO MARKET* bilen habarlaş:",
                                    parse_mode="Markdown", reply_markup=contact_keyboard())
     elif d == "search":
+        cars = load_cars()
         await q.message.reply_text(
-            "🚗 Haýsy maşyny gözleýäň? Adyny ýaz\nMeselem: *Camry*, *Hilux*, *Elantra*",
-            parse_mode="Markdown")
+            "🚗 *Haýsy maşyny gözleýäň?*\n\n"
+            "Adyny ýaz ýa aşakdakylardan bir düwmä bas.\n"
+            "_Şu gün iň köp bar bolanlar:_",
+            parse_mode="Markdown", reply_markup=suggest_keyboard(cars, 6))
+
+    elif d.startswith("find:"):
+        want = d[5:].strip()
+        cars = load_cars()
+        if not db_is_fresh(cars):
+            await q.message.reply_text(NOT_READY_MSG, parse_mode="Markdown",
+                                       reply_markup=contact_keyboard())
+            return
+        wu = want.upper()
+        found = [c for c in cars
+                 if wu in f"{c.get('brand','')} {c.get('model','')}".upper()]
+        if not found:
+            _, found = fuzzy_find(want, cars)
+        if not found:
+            await q.message.reply_text(f"📭 *{want}* şu gün ýok.", parse_mode="Markdown")
+            return
+        log_search(want, "found", None, len(found))
+        await q.message.reply_text(
+            f"🚗 *{want}* — {len(found)} maşyn tapyldy:", parse_mode="Markdown")
+        for car in found[:30]:
+            await send_car_with_photo(q.message, car)
+
     elif d == "auction":
-        await q.message.reply_text(
-            "🏢 Haýsy auksiony gözleýäň? Adyny ýaz\nMeselem: *Fadak*, *Marhaba*, *Nojoom*",
-            parse_mode="Markdown")
+        cars = load_cars()
+        names = sorted({c.get("auction", "") for c in cars if c.get("auction")})
+        t = "🏢 *Haýsy auksiony gözleýäň?*\n\nŞu gün bar bolanlar:\n"
+        for a in names:
+            n = sum(1 for c in cars if c.get("auction") == a)
+            t += f"• *{a}* — {n} maşyn\n"
+        t += "\nAdyny ýaz — meselem: `Marhaba`"
+        await q.message.reply_text(t, parse_mode="Markdown")
     elif d == "myalerts":
         uid = str(q.from_user.id)
         my = load_yatlatmas().get(uid, [])
