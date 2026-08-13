@@ -205,6 +205,56 @@ def fuzzy_find(query, cars):
 
 
 # ============================================================
+# GÖZLEG ÝAZGYSY — näme gözlenýär, näme tapylmaýar
+# Maksat: sinonim sanawyny hakyky müşderi ýazgysyna görä ösdürmek
+# ============================================================
+SEARCH_FILE = _DATA_DIR / "searches.json"
+
+
+def _load_searches():
+    try:
+        d = json.loads(SEARCH_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        d = {}
+    d.setdefault("found", {})    # göni tapylan:  "camry": 12
+    d.setdefault("fuzzy", {})    # düzedilen:     "kamry>camry": 5
+    d.setdefault("none", {})     # TAPYLMADY:     "hilux": 8   <- iň gymmatly
+    d.setdefault("last", [])     # soňky 300 gözleg
+    return d
+
+
+def log_search(query, kind, matched=None, n=0):
+    """kind: 'found' | 'fuzzy' | 'none'"""
+    try:
+        q = (query or "").strip()[:40]
+        if not q or q.startswith("/"):
+            return
+        d = _load_searches()
+        if kind == "fuzzy" and matched:
+            key = f"{q.lower()}>{matched}"
+            d["fuzzy"][key] = d["fuzzy"].get(key, 0) + 1
+        elif kind == "none":
+            d["none"][q.lower()] = d["none"].get(q.lower(), 0) + 1
+        else:
+            d["found"][q.lower()] = d["found"].get(q.lower(), 0) + 1
+
+        d["last"].append({
+            "t": datetime.now(DUBAI_TZ).strftime("%d.%m %H:%M"),
+            "q": q, "k": kind, "n": n,
+        })
+        d["last"] = d["last"][-300:]
+
+        # sanawlar çäksiz ösmesin
+        for sec in ("found", "fuzzy", "none"):
+            if len(d[sec]) > 400:
+                d[sec] = dict(sorted(d[sec].items(), key=lambda x: -x[1])[:300])
+
+        SEARCH_FILE.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+    except Exception as e:
+        logger.error(f"log_search: {e}")
+
+
+# ============================================================
 # SENE BARLAGY
 # ============================================================
 def get_today():
@@ -848,6 +898,74 @@ async def post_init(app):
 
 
 
+async def gozleg_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Müşderiler näme gözleýär, näme tapylmaýar (diňe admin)."""
+    if str(update.effective_user.id) != str(ADMIN_ID):
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+
+    d = _load_searches()
+    found, fuzzy, none = d["found"], d["fuzzy"], d["none"]
+    total = sum(found.values()) + sum(fuzzy.values()) + sum(none.values())
+
+    if not total:
+        await update.message.reply_text(
+            "📊 *Gözleg statistikasy*\n\n"
+            "Entek gözleg ýok. Müşderiler ýazyp başlanda şu ýerde görüner:\n"
+            "• iň köp gözlenen maşynlar\n"
+            "• tapylmadyk gözlegler\n"
+            "• ýalňyş ýazylyp düzedilen sözler",
+            parse_mode="Markdown")
+        return
+
+    t = "📊 *GÖZLEG STATISTIKASY*\n\n"
+    t += f"🔢 Jemi gözleg: *{total}*\n"
+    t += f"✅ Tapyldy: {sum(found.values())}  ·  "
+    t += f"🔎 Düzedildi: {sum(fuzzy.values())}  ·  "
+    t += f"📭 Tapylmady: {sum(none.values())}\n\n"
+
+    if none:
+        t += "🔴 *TAPYLMADY* (iň möhüm — bazada ýok ýa bot düşünmedi)\n"
+        for q, n in sorted(none.items(), key=lambda x: -x[1])[:15]:
+            t += f"   `{q}` — {n}×\n"
+        t += "\n"
+
+    if fuzzy:
+        t += "🔎 *ÝALŇYŞ ÝAZYLYP DÜZEDILEN*\n"
+        for k, n in sorted(fuzzy.items(), key=lambda x: -x[1])[:15]:
+            a, _, b = k.partition(">")
+            t += f"   `{a}` → *{b}* — {n}×\n"
+        t += "\n"
+
+    if found:
+        t += "✅ *IŇ KÖP GÖZLENEN*\n"
+        for q, n in sorted(found.items(), key=lambda x: -x[1])[:15]:
+            t += f"   `{q}` — {n}×\n"
+
+    t += "\n_Tapylmadyk sözleri maňa aýt — sinonim sanawyna goşaryn._"
+
+    for i in range(0, len(t), 3800):
+        await update.message.reply_text(t[i:i + 3800], parse_mode="Markdown")
+
+
+async def sonky_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Soňky 30 gözleg — janly görnüş (diňe admin)."""
+    if str(update.effective_user.id) != str(ADMIN_ID):
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+    d = _load_searches()
+    last = d.get("last", [])[-30:]
+    if not last:
+        await update.message.reply_text("📭 Entek gözleg ýok.")
+        return
+    icon = {"found": "✅", "fuzzy": "🔎", "none": "📭"}
+    t = "🕐 *SOŇKY 30 GÖZLEG*\n\n"
+    for r in reversed(last):
+        t += f"{icon.get(r.get('k'), '•')} `{r.get('q')}` — {r.get('n', 0)} maşyn  _{r.get('t')}_\n"
+    for i in range(0, len(t), 3800):
+        await update.message.reply_text(t[i:i + 3800], parse_mode="Markdown")
+
+
 async def checkalerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Manual alert barlag + debug maglumat"""
     uid = str(update.effective_user.id)
@@ -956,6 +1074,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         fuzzy_word, found = fuzzy_find(text, cars)
 
     if not found:
+        log_search(text, "none")
         kb = InlineKeyboardMarkup([[
             InlineKeyboardButton(f"🔔 '{text[:30]}' çykanda habar ber",
                                  callback_data=f"alert:{text[:40]}")
@@ -964,6 +1083,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📭 *'{text}'* şu gün ýok.\n\nÇykanda habar bermegimi isleýäňizmi?",
             parse_mode="Markdown", reply_markup=kb)
         return
+
+    log_search(text, "fuzzy" if fuzzy_word else "found", fuzzy_word, len(found))
 
     if fuzzy_word:
         await update.message.reply_text(
@@ -1044,6 +1165,8 @@ def main():
     app.add_handler(CommandHandler("stats", stats_command))
     app.add_handler(CommandHandler("users", users_command))
     app.add_handler(CommandHandler("checkalerts", checkalerts_command))
+    app.add_handler(CommandHandler("gozleg", gozleg_command))
+    app.add_handler(CommandHandler("sonky", sonky_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     print("✅ Dubai Auksion | TEK AUTO MARKET boty işläp başlady!")
