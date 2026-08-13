@@ -58,6 +58,153 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================
+# FUZZY GÖZLEG — ýalňyş / türkmençe / rusça ýazga çydamly
+# (Erkiniň esasy derdi, board 12.08)
+#   "kamry"  -> Camry      "hunday"  -> Hyundai
+#   "karola" -> Corolla    "камри"   -> Camry
+# ============================================================
+import difflib
+
+# türkmen we rus harplary -> latyn
+_TM_TRANS = str.maketrans({
+    "ý": "y", "Ý": "y", "ş": "s", "Ş": "s", "ç": "c", "Ç": "c",
+    "ň": "n", "Ň": "n", "ä": "a", "Ä": "a", "ö": "o", "Ö": "o",
+    "ü": "u", "Ü": "u", "ž": "z", "Ž": "z", "ı": "i", "İ": "i",
+})
+_CYR = {
+    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e",
+    "ж": "j", "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m",
+    "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
+    "ф": "f", "х": "h", "ц": "c", "ч": "ch", "ш": "sh", "щ": "sh",
+    "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya",
+}
+
+
+def _norm(s):
+    """Ýazgyny deňeşdirmäge taýýarla: kiçi harp, diakritika ýok, diňe harp/san."""
+    s = (s or "").strip().lower().translate(_TM_TRANS)
+    s = "".join(_CYR.get(ch, ch) for ch in s)
+    s = re.sub(r"[^a-z0-9]+", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+# Adam ýazýan görnüş -> hakyky at.  Çepdäki söz NORMALIZE edilen bolmaly.
+SYNONYMS = {
+    # --- markalar ---
+    "hunday": "hyundai", "hunda": "hyundai", "hyunday": "hyundai",
+    "hendai": "hyundai", "handai": "hyundai", "hyndai": "hyundai",
+    "henday": "hyundai", "hyenday": "hyundai", "hunday i": "hyundai",
+    "tayota": "toyota", "toyata": "toyota", "toyot": "toyota",
+    "nisan": "nissan", "nissa": "nissan", "nissan": "nissan",
+    "kiya": "kia", "kija": "kia",
+    "honda": "honda", "honde": "honda",
+    "mersedes": "mercedes", "merc": "mercedes", "mers": "mercedes",
+    "mercedes benz": "mercedes", "benz": "mercedes",
+    "lexsus": "lexus", "leksus": "lexus", "leks": "lexus",
+    "shevrole": "chevrolet", "shevrolye": "chevrolet", "chevrole": "chevrolet", "shevrolet": "chevrolet",
+    "bmv": "bmw", "beemwe": "bmw",
+    "folksvagen": "volkswagen", "folkswagen": "volkswagen", "vw": "volkswagen",
+    "mazde": "mazda", "forud": "ford",
+    # --- modeller ---
+    "kamry": "camry", "kamri": "camry", "camri": "camry", "kemri": "camry",
+    "karola": "corolla", "korolla": "corolla", "karolla": "corolla",
+    "elantre": "elantra", "elantara": "elantra", "elentra": "elantra",
+    "sonate": "sonata", "sanata": "sonata",
+    "tuson": "tucson", "taksan": "tucson", "tukson": "tucson",
+    "santafe": "santa fe", "santa fe": "santa fe", "santafey": "santa fe",
+    "sorenta": "sorento", "sorrento": "sorento",
+    "sportaj": "sportage", "sportage": "sportage",
+    "altime": "altima", "altyma": "altima",
+    "sentre": "sentra", "sentr": "sentra",
+    "rogu": "rogue", "rog": "rogue",
+    "kiks": "kicks",
+    "seltas": "seltos",
+    "forte": "forte", "fortey": "forte",
+    "karnival": "carnival", "carnaval": "carnival",
+    "sivik": "civic", "civik": "civic",
+    "akkord": "accord", "akord": "accord",
+    "malibu": "malibu", "malybu": "malibu",
+    "prius": "prius", "priyus": "prius",
+    "land kruzer": "land cruiser", "landkruzer": "land cruiser",
+    "kruzak": "land cruiser", "krizer": "land cruiser",
+    "prado": "prado", "parado": "prado",
+    "hayls": "hilux", "hilaks": "hilux", "haylaks": "hilux",
+    "rav": "rav4", "rav 4": "rav4", "raf4": "rav4",
+    "haylender": "highlander", "haylander": "highlander",
+    "avalon": "avalon", "awalon": "avalon",
+    "maksima": "maxima",
+    "aksent": "accent", "aksant": "accent",
+    "tellurayd": "telluride",
+}
+
+
+def build_vocab(cars):
+    """Bazadaky ähli marka/model sözlerini ýygna."""
+    vocab = {}
+    for c in cars:
+        b = _norm(c.get("brand"))
+        m = _norm(c.get("model"))
+        for t in ([b] if b else []) + (m.split() if m else []):
+            if len(t) >= 3:
+                vocab[t] = vocab.get(t, 0) + 1
+        if b and m:
+            first = m.split()[0]
+            if len(first) >= 3:
+                key = f"{b} {first}"
+                vocab[key] = vocab.get(key, 0) + 1
+    return vocab
+
+
+def fuzzy_find(query, cars):
+    """(tapylan_soz, masynlar) gaytarya. Tapmasa (None, [])."""
+    q = _norm(query)
+    if not q or len(q) < 3:
+        return None, []
+
+    # 1. Göni sinonim
+    target = SYNONYMS.get(q)
+
+    # 2. Sözme-söz sinonim (mysal "gara kamry" -> "camry")
+    if not target:
+        for w in q.split():
+            if w in SYNONYMS:
+                target = SYNONYMS[w]
+                break
+
+    # 3. Meňzeşlik boýunça (ýalňyş harp, ýitirilen harp)
+    if not target:
+        vocab = build_vocab(cars)
+        if not vocab:
+            return None, []
+        best, score = None, 0.0
+        for cand in vocab:
+            for piece in [q] + q.split():
+                if len(piece) < 3:
+                    continue
+                r = difflib.SequenceMatcher(None, piece, cand).ratio()
+                # sozun basy den gelse - bal gos
+                if cand.startswith(piece[:3]) or piece.startswith(cand[:3]):
+                    r += 0.06
+                if r > score:
+                    best, score = cand, r
+        if score >= 0.78:
+            target = best
+
+    if not target:
+        return None, []
+
+    tn = _norm(target)
+    found = [c for c in cars
+             if tn in _norm(f"{c.get('brand','')} {c.get('model','')}")]
+    if not found:
+        # sinonim marka bolsa - dine markadan gozle
+        found = [c for c in cars if tn in _norm(c.get("brand", ""))]
+    if not found:
+        return None, []
+    return target, found
+
+
+# ============================================================
 # SENE BARLAGY
 # ============================================================
 def get_today():
@@ -610,9 +757,93 @@ async def alert_loop(app):
         await asyncio.sleep(600)
 
 
+# ============================================================
+# MAGLUMAT GOZEGÇILIGI — Erkine duýduryş
+# Sagat 10:00 bolup şu günki maşyn gelmedik bolsa — admin-e habar.
+# (board 12.08, 3-nji priýoritet)
+# ============================================================
+DATA_WARN_HOUR = 10          # sagat näçede duýdursyn (Dubaý wagty)
+WARN_FILE = _DATA_DIR / "data_warn.json"
+
+
+def _load_warn():
+    try:
+        return json.loads(WARN_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _save_warn(d):
+    try:
+        WARN_FILE.write_text(json.dumps(d), encoding="utf-8")
+    except Exception as e:
+        logger.error(f"warn save: {e}")
+
+
+async def data_watch_loop(app):
+    """Her 15 minutda barlaýar. Bir günde bir gezek habar iberýär."""
+    await asyncio.sleep(90)
+    while True:
+        try:
+            now = datetime.now(DUBAI_TZ)
+            today = get_today()
+            st = _load_warn()
+
+            if st.get("day") != today:
+                st = {"day": today, "warned": False, "ok": False}
+
+            cars = load_cars()
+            fresh = db_is_fresh(cars)
+
+            # 1) Maglumat geldi -> bir gezek "taýýar" habary
+            if fresh and not st.get("ok"):
+                st["ok"] = True
+                _save_warn(st)
+                try:
+                    await app.bot.send_message(
+                        ADMIN_ID,
+                        f"✅ *Maglumat taýýar*\n\n"
+                        f"📅 {today[6:8]}.{today[4:6]}\n"
+                        f"🚗 {len(cars)} maşyn\n"
+                        f"🕐 {now.strftime('%H:%M')} (Dubaý)\n\n"
+                        f"Bot işleýär.",
+                        parse_mode="Markdown")
+                except Exception as e:
+                    logger.error(f"data ok msg: {e}")
+
+            # 2) Sagat 10:00 boldy, maglumat ýok -> duýduryş
+            elif (not fresh and not st.get("warned")
+                  and now.hour >= DATA_WARN_HOUR):
+                st["warned"] = True
+                _save_warn(st)
+                try:
+                    await app.bot.send_message(
+                        ADMIN_ID,
+                        f"🔴 *DUÝDURYŞ — bugün maglumat ýok*\n\n"
+                        f"Sagat *{now.strftime('%H:%M')}* (Dubaý), "
+                        f"şu günki auksion maşynlary heniz gelmedi.\n\n"
+                        f"Müşderiler häzir *«entek taýýar däl»* ýazgysyny görýär.\n\n"
+                        f"Barla:\n"
+                        f"• PDF-ler `In` papka atyldymy?\n"
+                        f"• Watcher işleýärmi?\n"
+                        f"• GitHub-a iberildimi?\n\n"
+                        f"Bazadaky soňky sene: `{max((str(c.get('date','')) for c in cars), default='ýok')}`",
+                        parse_mode="Markdown")
+                except Exception as e:
+                    logger.error(f"data warn msg: {e}")
+            else:
+                _save_warn(st)
+
+        except Exception as e:
+            logger.error(f"data_watch_loop: {e}")
+        await asyncio.sleep(900)   # 15 minut
+
+
 async def post_init(app):
     asyncio.create_task(alert_loop(app))
+    asyncio.create_task(data_watch_loop(app))
     logger.info("Alert loop isledildi (her 10 min)")
+    logger.info(f"Maglumat gozegciligi isledildi (duyduryş sagat {DATA_WARN_HOUR}:00)")
 
 
 
@@ -718,6 +949,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
 
     found = [c for c in cars if tu in f"{c.get('brand','')} {c.get('model','')}".upper()]
+
+    # --- Göni tapylmasa: ýalňyş/türkmençe/rusça ýazgy bolmagy mümkin ---
+    fuzzy_word = None
+    if not found:
+        fuzzy_word, found = fuzzy_find(text, cars)
+
     if not found:
         kb = InlineKeyboardMarkup([[
             InlineKeyboardButton(f"🔔 '{text[:30]}' çykanda habar ber",
@@ -728,7 +965,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode="Markdown", reply_markup=kb)
         return
 
-    await update.message.reply_text(f"🚗 *'{text}'* — {len(found)} maşyn tapyldy:", parse_mode="Markdown")
+    if fuzzy_word:
+        await update.message.reply_text(
+            f"🔎 *{fuzzy_word.title()}* diýip düşündim — {len(found)} maşyn tapyldy:",
+            parse_mode="Markdown")
+    else:
+        await update.message.reply_text(
+            f"🚗 *'{text}'* — {len(found)} maşyn tapyldy:", parse_mode="Markdown")
     for car in found[:100]:
         await send_car_with_photo(update, car)
 
