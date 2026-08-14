@@ -1020,6 +1020,56 @@ def _save_warn(d):
         logger.error(f"warn save: {e}")
 
 
+ADMIN_ALERTS_FILE = Path("admin_alerts.json")      # repo-dan gelya
+SENT_ADMIN_FILE = _DATA_DIR / "sent_admin_alerts.json"
+
+
+async def check_parser_alerts(bot):
+    """PDF işlenip 0 maşyn çykan bolsa — Erkine habar ber.
+
+    14.08 KHAT sapagy: auksion şablonyny üýtgetdi, 243 sahypadan 0 maşyn
+    çykdy we HIÇ KIM BILMEDI. Indi şeýle ýagdaýda derrew habar gelýär.
+    """
+    try:
+        if not ADMIN_ALERTS_FILE.exists():
+            return
+        alerts = json.loads(ADMIN_ALERTS_FILE.read_text(encoding="utf-8"))
+        try:
+            sent = set(json.loads(SENT_ADMIN_FILE.read_text(encoding="utf-8")))
+        except Exception:
+            sent = set()
+
+        yeni = [a for a in alerts if a.get("id") and a["id"] not in sent]
+        for a in yeni:
+            d = str(a.get("date", ""))
+            ds = f"{d[6:8]}.{d[4:6]}" if len(d) == 8 else d
+            txt = (
+                f"🔴 *AUKSION IŞLENMEDI*\n\n"
+                f"🏢 {esc(a.get('auction', '?'))}\n"
+                f"📅 {ds}\n"
+                f"📄 {esc(a.get('pdf', ''))}\n\n"
+                f"⚠️ {esc(a.get('msg', ''))}\n\n"
+                f"Sebäbi köplenç: *auksion PDF şablonyny üýtgedipdir* — "
+                f"tekst okalmaýar.\n"
+                f"Şu auksionyň maşynlary botda ÝOK. Pawel-a aýt."
+            )
+            r = a.get("reasons") or {}
+            if r:
+                txt += "\n\n_Aýrylan sebäpler:_\n"
+                for k, v in list(r.items())[:4]:
+                    txt += f"• {esc(k)} — {v}\n"
+            try:
+                await bot.send_message(ADMIN_ID, txt, parse_mode="Markdown")
+                sent.add(a["id"])
+            except Exception as e:
+                logger.error(f"parser alert ugradylmady: {e}")
+
+        if yeni:
+            SENT_ADMIN_FILE.write_text(json.dumps(sorted(sent)), encoding="utf-8")
+    except Exception as e:
+        logger.error(f"check_parser_alerts: {e}")
+
+
 async def data_watch_loop(app):
     """Her 15 minutda barlaýar. Bir günde bir gezek habar iberýär."""
     await asyncio.sleep(90)
@@ -1034,6 +1084,9 @@ async def data_watch_loop(app):
 
             cars = load_cars()
             fresh = db_is_fresh(cars)
+
+            # Parser duyduryşlary (0 masyn cykan auksionlar)
+            await check_parser_alerts(app.bot)
 
             # 1) Maglumat geldi -> bir gezek "taýýar" habary
             if fresh and not st.get("ok"):
