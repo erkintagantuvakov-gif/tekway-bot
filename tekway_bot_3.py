@@ -1270,25 +1270,44 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logger.error(f"alert task: {e}")
 
-    if not db_is_fresh(cars):
-        await update.message.reply_text(NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard())
-        return
+    fresh = db_is_fresh(cars)
 
-    # --- KOD boýunça gözleg: "0811-013" ýa "13" ýa "TEK 0811-013" ---
+    # ============================================================
+    # KOD boýunça gözleg — SENE BARLAGYNDAN ÖŇ
+    # ------------------------------------------------------------
+    # Sebäp (Erkin, 15.08): TikTok-a goýlan kart bir günlük däl.
+    # Müşderi ertesi gün kody ýazsa "maglumat taýýar däl" görse —
+    # reklama puly ýanýar. Kod HEMIŞE jogap bermeli.
+    # ============================================================
     mcode = re.search(r'\b(\d{4})\s*[-–—/]\s*(\d{1,3})\b', tu)
     if mcode:
         want = f"{mcode.group(1)}-{int(mcode.group(2)):03d}"
         hit = [c for c in cars if str(c.get("code", "")).upper() == want]
         if hit:
-            await update.message.reply_text(
-                f"🆔 *{esc(want)}* — tapyldy:", parse_mode="Markdown")
+            if fresh:
+                await update.message.reply_text(
+                    f"🆔 *{esc(want)}* — tapyldy:", parse_mode="Markdown")
+            else:
+                d = str(hit[0].get("date", ""))
+                ds = f"{d[6:8]}.{d[4:6]}" if len(d) == 8 else d
+                await update.message.reply_text(
+                    f"🆔 *{esc(want)}* — tapyldy\n\n"
+                    f"⚠️ Bu maşyn *{ds}* auksionyndan. Şol auksion geçdi.\n"
+                    f"Goşmaça soragyňyz bolsa WhatsApp-a ýazyň 👇",
+                    parse_mode="Markdown")
             for car in hit:
                 await send_car_with_photo(update, car)
+            log_search(want, "found", None, len(hit))
             return
+        log_search(want, "none")
         await update.message.reply_text(
             f"📭 *{esc(want)}* kody bilen maşyn tapylmady.\n\n"
-            "Kod her gün täzelenýär — düýnki koda şu gün maşyn ýok bolmagy mümkin.",
+            "Kody ýene bir gezek barlaň — kartda ýazylan görnüşde ýazyň.",
             parse_mode="Markdown", reply_markup=contact_keyboard())
+        return
+
+    if not fresh:
+        await update.message.reply_text(NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard())
         return
 
     for key, aname in AUCTIONS.items():
