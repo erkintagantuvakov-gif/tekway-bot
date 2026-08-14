@@ -366,30 +366,58 @@ AUCTION_CODES = {
 }
 
 
+def _code_sort_key(c):
+    """!! kod_ber.py-daky sort_key bilen DEŇ bolmaly !!
+    Birini üýtgetseň — beýlekisini hem üýtget, ýogsa kodlar deň bolmaz."""
+    return (
+        c.get("price") or 10 ** 9,
+        (c.get("brand") or "").upper(),
+        (c.get("model") or "").upper(),
+        (c.get("auction") or "").upper(),
+        c.get("page") or 0,
+        (c.get("image_path") or ""),
+    )
+
+
+def ensure_codes(cars):
+    """Bazada "code" ýok bolsa — şu ýerde hasaplaýar.
+
+    14.08 mesele: kod_ber işlemän galdy -> kartda 0814-055,
+    botda HAJI-0814-056 -> müşderi tapmady.
+    Indi bot kod ýok bolsa-da EDIL ŞOL kadadan hasaplaýar,
+    şoň üçin kart bilen hemişe deň bolýar.
+    """
+    if not cars or all(c.get("code") for c in cars):
+        return cars
+    days = {}
+    for c in cars:
+        days.setdefault(str(c.get("date", "")), []).append(c)
+    for day, group in days.items():
+        if len(day) != 8:
+            continue
+        mmdd = day[4:6] + day[6:8]
+        for i, c in enumerate(sorted(group, key=_code_sort_key), 1):
+            if not c.get("code"):
+                c["code"] = f"{mmdd}-{i:03d}"
+    return cars
+
+
 def get_car_code(car):
-    """Günüň umumy kody: MMDD-NNN (mysal 0811-013).
+    """Günüň umumy kody: MMDD-NNN (mysal 0814-055).
 
-    Kody `kod_ber.py` bazasyna ýazýar ("code" meýdany) — şoň üçin
-    TikTok karty bilen Telegram bot DEŇ kody görkezýär.
-    Müşderi "0811-013 gerek" diýse — botda gözlenip tapylýar.
-
-    Bazada kod ýok bolsa (köne maglumat) — auksion prefiksli köne format.
+    Auksion prefiksi ÝOK (Filipiň haýşy 14.08) — kart bilen deň bolmaly.
     """
     code = car.get("code")
     if code:
         return str(code)
-
-    # --- köne format (zapas) ---
-    auction = car.get("auction", "")
+    # Bu ýere düşse — load_cars() ensure_codes çagyrmandyr.
     date_str = str(car.get("date", ""))
-    page = car.get("page", 0)
-    ac = AUCTION_CODES.get(auction, "AUCT")
-    ds = date_str[4:8] if len(date_str) == 8 else "????"
+    ds = date_str[4:8] if len(date_str) == 8 else "0000"
     try:
-        ps = f"{int(page):03d}"
+        ps = f"{int(car.get('page', 0)):03d}"
     except (ValueError, TypeError):
         ps = "000"
-    return f"{ac}-{ds}-{ps}"
+    return f"{ds}-{ps}"
 
 
 def aed_to_usd(aed):
@@ -443,7 +471,7 @@ def load_cars():
     if CARS_DB_FILE.exists():
         try:
             with open(CARS_DB_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                return ensure_codes(json.load(f))
         except Exception as e:
             logger.error(f"DB okalmady: {e}")
     return []
