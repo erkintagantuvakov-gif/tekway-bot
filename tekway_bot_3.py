@@ -876,11 +876,25 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     alert_users = sum(1 for v in y.values() if v)
     alert_total = sum(len(v) for v in y.values())
 
+    # --- TAZE gelen ulanyjylar (first_seen boyunca) ---
+    def _first_day(u):
+        fs = str(u.get("first_seen", ""))
+        return fs[:10].replace("-", "")     # "2026-08-14 09:12" -> "20260814"
+
+    new_today = sum(1 for u in users.values() if _first_day(u) == today)
+    new_week = sum(1 for u in users.values() if _first_day(u) in week_days)
+    new_month = sum(1 for u in users.values() if _first_day(u) in month_days)
+
     txt = "📊 *BOT STATISTIKASY*\n\n"
-    txt += f"👥 *Jemi ulanyjy:* {total}\n"
-    txt += f"🟢 Bugün aktiw: {today_active}\n"
-    txt += f"📅 Şu hepde: {week_active}\n"
-    txt += f"📆 Şu aý: {month_active}\n\n"
+    txt += f"👥 *Jemi ulanyjy:* {total}\n\n"
+    txt += "🆕 *Täze gelenler:*\n"
+    txt += f"   Bugün: *{new_today}*\n"
+    txt += f"   Şu hepde: *{new_week}*\n"
+    txt += f"   Şu aý: *{new_month}*\n\n"
+    txt += "🟢 *Aktiw (girip gören):*\n"
+    txt += f"   Bugün: {today_active}\n"
+    txt += f"   Şu hepde: {week_active}\n"
+    txt += f"   Şu aý: {month_active}\n\n"
     txt += f"🔍 Jemi gözleg: {total_searches}\n"
     txt += f"🔔 Ýatlatma goýan: {alert_users} ({alert_total} sany)\n"
 
