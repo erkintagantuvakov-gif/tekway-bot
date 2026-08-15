@@ -1020,6 +1020,37 @@ def _save_warn(d):
         logger.error(f"warn save: {e}")
 
 
+def load_report(day):
+    """Günlik hasabat: haýsy PDF işlendi, näçe maşyn çykdy."""
+    p = Path(f"gun_hasabat_{day}.json")
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+
+def report_lines(day, cars):
+    """Auksion boýunça setirler. Hasabat ýok bolsa bazadan hasaplaýar."""
+    rep = load_report(day)
+    out = []
+    if rep:
+        for r in sorted(rep, key=lambda x: -(x.get("kept") or 0)):
+            nm = str(r.get("auction", "?"))[:26]
+            kept = r.get("kept", 0)
+            pages = r.get("pages", 0)
+            mark = "⚠️" if kept == 0 else "🏢"
+            out.append(f"{mark} {esc(nm)} — *{kept}* maşyn  _({pages} sah.)_")
+    else:
+        cnt = {}
+        for c in cars:
+            if str(c.get("date")) == day:
+                a = c.get("auction", "?")
+                cnt[a] = cnt.get(a, 0) + 1
+        for a, n in sorted(cnt.items(), key=lambda x: -x[1]):
+            out.append(f"🏢 {esc(str(a)[:26])} — *{n}* maşyn")
+    return out
+
+
 ADMIN_ALERTS_FILE = Path("admin_alerts.json")      # repo-dan gelya
 SENT_ADMIN_FILE = _DATA_DIR / "sent_admin_alerts.json"
 
@@ -1096,10 +1127,12 @@ async def data_watch_loop(app):
                     await app.bot.send_message(
                         ADMIN_ID,
                         f"✅ *Maglumat taýýar*\n\n"
-                        f"📅 {today[6:8]}.{today[4:6]}\n"
-                        f"🚗 {len(cars)} maşyn\n"
-                        f"🕐 {now.strftime('%H:%M')} (Dubaý)\n\n"
-                        f"Bot işleýär.",
+                        f"📅 {today[6:8]}.{today[4:6]}  ·  "
+                        f"🕐 {now.strftime('%H:%M')} (Dubaý)\n"
+                        f"🚗 *{len(cars)} maşyn*  ·  "
+                        f"{len(report_lines(today, cars))} auksion\n\n"
+                        + "\n".join(report_lines(today, cars))
+                        + "\n\n_Jikme-jik: /hasabat_",
                         parse_mode="Markdown")
                 except Exception as e:
                     logger.error(f"data ok msg: {e}")
@@ -1139,6 +1172,53 @@ async def post_init(app):
     logger.info(f"Maglumat gozegciligi isledildi (duyduryş sagat {DATA_WARN_HOUR}:00)")
 
 
+
+
+async def hasabat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Şu günki PDF-ler doly işlendimi — jikme-jik (diňe admin)."""
+    if str(update.effective_user.id) != str(ADMIN_ID):
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+
+    cars = load_cars()
+    day = max((str(c.get("date", "")) for c in cars), default=get_today())
+    rep = load_report(day)
+
+    t = f"📋 *GÜNLIK HASABAT — {day[6:8]}.{day[4:6]}*\n\n"
+    if not rep:
+        t += ("_Hasabat faýly ýok._\n"
+              "Bu köne maglumat bolmagy mümkin — hasabat 15.08-den başlap ýazylýar.\n\n")
+        for ln in report_lines(day, cars):
+            t += ln + "\n"
+        await update.message.reply_text(t, parse_mode="Markdown")
+        return
+
+    tot_pages = sum(r.get("pages", 0) for r in rep)
+    tot_kept = sum(r.get("kept", 0) for r in rep)
+    tot_rej = sum(r.get("rejected", 0) for r in rep)
+
+    t += f"📄 *{len(rep)} PDF* işlendi  ·  {tot_pages} sahypa\n"
+    t += f"✅ Alnan: *{tot_kept}*  ·  🚫 Süzülen: {tot_rej}\n\n"
+
+    for r in sorted(rep, key=lambda x: -(x.get("kept") or 0)):
+        kept = r.get("kept", 0)
+        pages = r.get("pages", 0)
+        rej = r.get("rejected", 0)
+        mark = "⚠️" if kept == 0 else "✅"
+        t += f"{mark} *{esc(str(r.get('auction', '?')))}*\n"
+        t += f"    {kept} maşyn  ·  {pages} sahypa  ·  {rej} süzüldi\n"
+        t += f"    _{esc(str(r.get('pdf', ''))[:44])}_  {r.get('time', '')}\n\n"
+
+    bos = [r for r in rep if not r.get("kept")]
+    if bos:
+        t += "🔴 *Maşyn çykmadyk PDF bar — barla!*\n"
+    else:
+        t += "_Ähli PDF üstünlikli işlendi._\n"
+
+    t += f"\n🚗 Bazada jemi: *{len([c for c in cars if str(c.get('date')) == day])}* maşyn"
+
+    for i in range(0, len(t), 3800):
+        await update.message.reply_text(t[i:i + 3800], parse_mode="Markdown")
 
 
 async def gozleg_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1461,6 +1541,7 @@ def main():
     app.add_handler(CommandHandler("stats", stats_command))
     app.add_handler(CommandHandler("users", users_command))
     app.add_handler(CommandHandler("checkalerts", checkalerts_command))
+    app.add_handler(CommandHandler("hasabat", hasabat_command))
     app.add_handler(CommandHandler("gozleg", gozleg_command))
     app.add_handler(CommandHandler("sonky", sonky_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
