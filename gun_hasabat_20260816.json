@@ -40,14 +40,6 @@
     "time": "01:01"
   },
   {
-    "pdf": "SUNDAY AUCTION CARS LIST 16-8-2026.pdf",
-    "auction": "Al Bashayera Auction",
-    "pages": 168,
-    "kept": 0,
-    "rejected": 0,
-    "time": "01:17"
-  },
-  {
     "pdf": "SUNDAY SAJAA AUCTION 16-AUG-2026.pdf",
     "auction": "Al Qaryah Auctions",
     "pages": 308,
@@ -59,8 +51,16 @@
     "pdf": "Sunday - 16-082026 - GCA.pdf",
     "auction": "Gulf Cars Auction",
     "pages": 147,
-    "kept": 0,
-    "rejected": 134,
-    "time": "01:18"
+    "kept": 42,
+    "rejected": 92,
+    "time": "08:13"
+  },
+  {
+    "pdf": "SUNDAY AUCTION CARS LIST 16-8-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 168,
+    "kept": 96,
+    "rejected": 69,
+    "time": "08:43"
   }
 ]
