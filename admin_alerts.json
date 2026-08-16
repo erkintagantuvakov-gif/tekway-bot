@@ -26,5 +26,19 @@
       "yl=2015": 11
     },
     "msg": "147 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260817|Marhaba Auctions Monday 17th August 2026 Ind.Area 12 Auction LIst.pdf",
+    "date": "20260817",
+    "pdf": "Marhaba Auctions Monday 17th August 2026 Ind.Area 12 Auction LIst.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 98,
+    "kept": 0,
+    "rejected": 98,
+    "reasons": {
+      "yl=2011": 6,
+      "yl=2017": 92
+    },
+    "msg": "98 sahypa işlendi, ýöne 0 maşyn tapyldy"
   }
 ]
