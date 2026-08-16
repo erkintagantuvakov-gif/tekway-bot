@@ -1,26 +1,10 @@
 [
   {
-    "pdf": "16-AUGUST 2026 KHAT AL JAZEERA CARS AUCTION.pdf",
-    "auction": "KHAT AL JAZEERA CARS AUCTION",
-    "pages": 187,
-    "kept": 91,
-    "rejected": 90,
-    "time": "00:55"
-  },
-  {
     "pdf": "Fadak Cars Auction 16-8-2026 SAJAA BRANCH.pdf",
     "auction": "Fadak Cars Auction",
     "pages": 135,
     "kept": 75,
     "rejected": 55,
-    "time": "00:55"
-  },
-  {
-    "pdf": "HAJI MOHD CAR AUCTION Catalogue 16 August  2026.pdf",
-    "auction": "HAJI MOHD Cars Auctions",
-    "pages": 82,
-    "kept": 22,
-    "rejected": 43,
     "time": "00:55"
   },
   {
@@ -70,5 +54,21 @@
     "kept": 41,
     "rejected": 130,
     "time": "10:11"
+  },
+  {
+    "pdf": "16-AUGUST 2026 KHAT AL JAZEERA CARS AUCTION.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 187,
+    "kept": 88,
+    "rejected": 93,
+    "time": "00:25"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 16 August  2026.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 82,
+    "kept": 24,
+    "rejected": 44,
+    "time": "00:25"
   }
 ]
