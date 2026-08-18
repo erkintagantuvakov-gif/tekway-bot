@@ -1,13 +1,5 @@
 [
   {
-    "pdf": "18-08-2026 TUESDAY AUCTION.pdf",
-    "auction": "18-08-2026 TUESDAY AUCTION",
-    "pages": 79,
-    "kept": 0,
-    "rejected": 0,
-    "time": "00:49"
-  },
-  {
     "pdf": "18-AUG-2026.pdf",
     "auction": "West Cars Auctions",
     "pages": 149,
@@ -62,5 +54,21 @@
     "kept": 66,
     "rejected": 53,
     "time": "01:01"
+  },
+  {
+    "pdf": "18-08-2026 TUESDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 79,
+    "kept": 22,
+    "rejected": 43,
+    "time": "06:31"
+  },
+  {
+    "pdf": "TUESDAY AUCTION CARS LIST 18-8-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 163,
+    "kept": 92,
+    "rejected": 67,
+    "time": "06:45"
   }
 ]
