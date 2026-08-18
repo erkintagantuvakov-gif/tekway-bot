@@ -1070,7 +1070,45 @@ async def check_parser_alerts(bot):
         except Exception:
             sent = set()
 
-        yeni = [a for a in alerts if a.get("id") and a["id"] not in sent]
+        # 18.08 DUZEDIS — ÝALAN DUÝDURYŞ
+        # Mesele: auksion 0 maşyn berýär -> duýduryş ýazylýar. Soň Pawel
+        # düzedip gaýtadan işleýär, 92 maşyn goşulýar. Emma köne duýduryş
+        # faýlda galýar we bot restart bolanda ÝENE iberilýär.
+        # Erkin "auksion işlenmedi" diýen habary alýar, aslynda maşynlar bar.
+        # Indi: iberilmezden öň BAZA barlanýar — şol gün şol auksionda
+        # maşyn bar bolsa, duýduryş ugradylmaýar (çözülen hasaplanýar).
+        def _cozulenmi(a):
+            try:
+                pdf = str(a.get("pdf", ""))
+                dat = str(a.get("date", ""))
+                if not dat:
+                    return False
+                stem = re.sub(r'[^\w]', '_', pdf.rsplit(".", 1)[0])
+                for c in load_cars():
+                    if c.get("date") != dat:
+                        continue
+                    # a) şol PDF-den surat bar
+                    if stem and stem in str(c.get("image_path", "")):
+                        return True
+                    # b) ýa-da şol auksion ady indi bazada bar
+                    if c.get("auction") and c["auction"] == a.get("auction"):
+                        return True
+            except Exception:
+                pass
+            return False
+
+        yeni = []
+        for a in alerts:
+            if not a.get("id") or a["id"] in sent:
+                continue
+            if _cozulenmi(a):
+                sent.add(a["id"])          # dymyp ýap - eýýäm düzeldilipdir
+                logger.info(f"alert cozulen - ugradylmady: {a['id']}")
+                continue
+            yeni.append(a)
+        if not yeni and sent:
+            SENT_ADMIN_FILE.write_text(json.dumps(sorted(sent)), encoding="utf-8")
+
         for a in yeni:
             d = str(a.get("date", ""))
             ds = f"{d[6:8]}.{d[4:6]}" if len(d) == 8 else d
