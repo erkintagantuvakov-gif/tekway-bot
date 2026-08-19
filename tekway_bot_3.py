@@ -158,7 +158,21 @@ def build_vocab(cars):
 def fuzzy_find(query, cars):
     """(tapylan_soz, masynlar) gaytarya. Tapmasa (None, [])."""
     q = _norm(query)
-    if not q or len(q) < 3:
+    if not q:
+        return None, []
+
+    # 19.08 DUZEDIS — GYSGA MODEL ATLARY
+    # Onki kada: 3 harpdan gysga sorag ret edilyardi.
+    # Netije: "k5", "x5", "q5", "cx5", "gt" YALY HAKYKY MODELLER
+    # hic haçan tapylmaýardy. K5 bolsa in kop soralýan modelleriň biri.
+    # Indi: harp+san gornushi (k5, x5, q7, cx9, i8...) gonuden gozlenya.
+    if len(q) < 3:
+        if re.fullmatch(r'[a-z]{1,2}\d{1,2}', q):
+            found = [c for c in cars
+                     if re.search(rf'\b{re.escape(q)}\b',
+                                  _norm(f"{c.get('brand','')} {c.get('model','')}"))]
+            if found:
+                return q.upper(), found
         return None, []
 
     # 1. Göni sinonim
@@ -673,6 +687,13 @@ async def send_batch(msg, uid, cars_list, title=""):
 
     st["sent"] = start + len(chunk)
     _last_results[uid] = st
+
+    # 19.08: bu ýat (RAM) hiç haçan arassalanmaýardy. Her müşderiniň
+    # doly netije sanawy saklanýardy -> müşderi köpelse bot ýady dolýar.
+    # Indi diňe soňky 60 müşderi saklanýar (sahypalama üçin şol ýeterlik).
+    if len(_last_results) > 60:
+        for _k in list(_last_results.keys())[:-60]:
+            _last_results.pop(_k, None)
 
     galan = len(cars_list) - st["sent"]
     if galan > 0:
