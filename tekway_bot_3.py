@@ -233,6 +233,47 @@ def esc(s):
     return s
 
 
+def code_ok(s):
+    """`code` bellik ICINDE ulanmak ucin howpsuz tekst.
+
+    20.08: esc() "\\_" goşýardy, Telegram-yn köne Markdown-y bolsa
+    entity içinde gaçyrmagy kabul edenok -> habar iberilmeýär.
+    Kod belliginde diňe backtick howply — şony aýyrmak ýeterlik.
+    """
+    return str(s or "").replace("`", "'")
+
+
+async def _send_md_safe(msg, text, limit=3500):
+    """Uzyn teksti SETIR araçäginde bölüp iberýär.
+
+    20.08 sapagy — bot näme üçin dymýardy:
+      1) Tekst 3800 harpdan bölünende Markdown belgisi ORTASYNDAN kesilýärdi
+         (açylan `*` bir bölekde, ýapylany beýlekide) -> "Can't parse entities".
+      2) Ýalňyşlyk tutulmaýardy -> habar ASLA iberilmeýärdi, bot dymýardy.
+
+    Indi: setir araçäginde bölünýär, Markdown başartmasa şol bölek
+    bellik-siz gaýtadan iberilýär. Bot hiç haçan dymmaly däl.
+    """
+    parts, cur = [], ""
+    for line in str(text).split("\n"):
+        if len(cur) + len(line) + 1 > limit and cur:
+            parts.append(cur)
+            cur = ""
+        cur += line + "\n"
+    if cur.strip():
+        parts.append(cur)
+
+    for p in parts:
+        try:
+            await msg.reply_text(p, parse_mode="Markdown")
+        except Exception as e:
+            logger.error(f"Markdown basartmady, bellik-siz iberilya: {e}")
+            try:
+                await msg.reply_text(re.sub(r'[*_`\\]', '', p))
+            except Exception as e2:
+                logger.error(f"Habar asla iberilmedi: {e2}")
+
+
 def cb_data(prefix, text, limit=60):
     """callback_data üçin howpsuz kesme.
 
@@ -1266,7 +1307,14 @@ async def hasabat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         mark = "⚠️" if kept == 0 else "✅"
         t += f"{mark} *{esc(str(r.get('auction', '?')))}*\n"
         t += f"    {kept} maşyn  ·  {pages} sahypa  ·  {rej} süzüldi\n"
-        t += f"    _{esc(str(r.get('pdf', ''))[:44])}_  {r.get('time', '')}\n\n"
+        # 20.08 DUZEDIS — /hasabat JOGAP BERMEYARDI
+        # Onki setir: _{esc(pdf)}_  ->  _20-AUG-2026\_260819\_202619.pdf_
+        # Telegram-yn KONE Markdown-y entity ICINDE "\_" kabul edenok.
+        # Netije: "Can't parse entities" -> habar ASLA iberilmeya, bot dymya.
+        # (West Cars faylynyn adynda "_" kop - sonun ucin sho gun doly dymdy.)
+        # Indi: kursiw ayryldy, at `code` gornushinde berilýar - howpsuz.
+        _pdf = str(r.get('pdf', ''))[:44].replace('`', "'")
+        t += f"    `{_pdf}`  {r.get('time', '')}\n\n"
 
     bos = [r for r in rep if not r.get("kept")]
     if bos:
@@ -1276,8 +1324,7 @@ async def hasabat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     t += f"\n🚗 Bazada jemi: *{len([c for c in cars if str(c.get('date')) == day])}* maşyn"
 
-    for i in range(0, len(t), 3800):
-        await update.message.reply_text(t[i:i + 3800], parse_mode="Markdown")
+    await _send_md_safe(update.message, t)
 
 
 async def gozleg_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1309,25 +1356,24 @@ async def gozleg_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if none:
         t += "🔴 *TAPYLMADY* (iň möhüm — bazada ýok ýa bot düşünmedi)\n"
         for q, n in sorted(none.items(), key=lambda x: -x[1])[:15]:
-            t += f"   `{esc(q)}` — {n}×\n"
+            t += f"   `{code_ok(q)}` — {n}×\n"
         t += "\n"
 
     if fuzzy:
         t += "🔎 *ÝALŇYŞ ÝAZYLYP DÜZEDILEN*\n"
         for k, n in sorted(fuzzy.items(), key=lambda x: -x[1])[:15]:
             a, _, b = k.partition(">")
-            t += f"   `{esc(a)}` → *{esc(b)}* — {n}×\n"
+            t += f"   `{code_ok(a)}` → *{esc(b)}* — {n}×\n"
         t += "\n"
 
     if found:
         t += "✅ *IŇ KÖP GÖZLENEN*\n"
         for q, n in sorted(found.items(), key=lambda x: -x[1])[:15]:
-            t += f"   `{esc(q)}` — {n}×\n"
+            t += f"   `{code_ok(q)}` — {n}×\n"
 
     t += "\n_Tapylmadyk sözleri maňa aýt — sinonim sanawyna goşaryn._"
 
-    for i in range(0, len(t), 3800):
-        await update.message.reply_text(t[i:i + 3800], parse_mode="Markdown")
+    await _send_md_safe(update.message, t)
 
 
 async def sonky_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1343,9 +1389,8 @@ async def sonky_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     icon = {"found": "✅", "fuzzy": "🔎", "none": "📭"}
     t = "🕐 *SOŇKY 30 GÖZLEG*\n\n"
     for r in reversed(last):
-        t += f"{icon.get(r.get('k'), '•')} `{esc(r.get('q'))}` — {r.get('n', 0)} maşyn  _{r.get('t')}_\n"
-    for i in range(0, len(t), 3800):
-        await update.message.reply_text(t[i:i + 3800], parse_mode="Markdown")
+        t += f"{icon.get(r.get('k'), '•')} `{code_ok(r.get('q'))}` — {r.get('n', 0)} maşyn  `{code_ok(r.get('t'))}`\n"
+    await _send_md_safe(update.message, t)
 
 
 async def checkalerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
