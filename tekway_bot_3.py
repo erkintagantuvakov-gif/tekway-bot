@@ -56,6 +56,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# --- ZAKAZ moduly (Notion -> işgärler). Token ýok bolsa dymýar. ---
+try:
+    import zakaz as ZK
+except Exception as _e:          # modul ýok bolsa bot öňki ýaly işlesin
+    ZK = None
+    logger.warning("zakaz moduly ýüklenmedi: %s", _e)
+
 
 # ============================================================
 # FUZZY GÖZLEG — ýalňyş / türkmençe / rusça ýazga çydamly
@@ -821,6 +828,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📱 */contact* — habarlaş",
         parse_mode="Markdown",
     )
+    # işgärlere goşmaça — müşderi bu bölümi görmeýär
+    if _zk_rugsat(update.effective_user.id) and _zk_bar():
+        await update.message.reply_text(
+            "👔 *TEK topary üçin:*\n\n"
+            "📋 */zakazlar* — işlenmeli zakazlar\n"
+            "🔎 */zakaz ZAK-3* — bir zakazyň jikme-jigi\n"
+            "🔄 */zakazlar tazele* — Notion-dan täzeden oka",
+            parse_mode="Markdown")
 
 
 async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1271,6 +1286,11 @@ async def data_watch_loop(app):
 async def post_init(app):
     asyncio.create_task(alert_loop(app))
     asyncio.create_task(data_watch_loop(app))
+    if ZK is not None and ZK.isleyarmi():
+        asyncio.create_task(zakaz_gozegcilik(app))
+        logger.info("ZAKAZ moduly isjen (Notion baglandy)")
+    else:
+        logger.info("ZAKAZ moduly ochuk (NOTION_TOKEN yok)")
     logger.info("Alert loop isledildi (her 10 min)")
     logger.info(f"Maglumat gozegciligi isledildi (duyduryş sagat {DATA_WARN_HOUR}:00)")
 
@@ -1394,6 +1414,268 @@ async def sonky_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for r in reversed(last):
         t += f"{icon.get(r.get('k'), '•')} `{code_ok(r.get('q'))}` — {r.get('n', 0)} maşyn  `{code_ok(r.get('t'))}`\n"
     await _send_md_safe(update.message, t)
+
+
+# ============================================================
+# ZAKAZ — diňe işgärler üçin (Notion-dan okaýar)
+# ============================================================
+def _zk_bar():
+    return ZK is not None and ZK.isleyarmi()
+
+
+def _zk_rugsat(uid):
+    """Admin hemişe, galanlary STAFF_IDS sanawynda bolmaly."""
+    return str(uid) == str(ADMIN_ID) or (ZK and ZK.staffmy(uid))
+
+
+def _zk_tap(zakazlar, kod):
+    for z in zakazlar:
+        if z["kod"] == kod:
+            return z
+    return None
+
+
+def _zk_duwmeler(z, tapylan=0):
+    setirler = []
+    if tapylan:
+        setirler.append([InlineKeyboardButton(
+            f"🔍 {tapylan} maşyny görkez", callback_data=f"zkg:{z['kod']}")])
+    else:
+        setirler.append([InlineKeyboardButton(
+            "🔍 Auksionlardan gözle", callback_data=f"zkg:{z['kod']}")])
+    setirler.append([
+        InlineKeyboardButton("🔍 Gözlenýär", callback_data=f"zks:{z['kod']}:Gözlenýär"),
+        InlineKeyboardButton("📸 Tapyldy", callback_data=f"zks:{z['kod']}:Tapyldy"),
+    ])
+    setirler.append([
+        InlineKeyboardButton("🔨 Auksionda", callback_data=f"zks:{z['kod']}:Auksionda"),
+        InlineKeyboardButton("✅ Alyndy", callback_data=f"zks:{z['kod']}:Alyndy"),
+    ])
+    if z.get("url"):
+        setirler.append([InlineKeyboardButton("🔗 Notion-da aç", url=z["url"])])
+    return InlineKeyboardMarkup(setirler)
+
+
+async def zakazlar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Işlenmeli zakazlaryň sanawy (diňe işgärler)."""
+    uid = update.effective_user.id
+    if not _zk_rugsat(uid):
+        await update.message.reply_text("⛔ Bu komanda diňe TEK topary üçin.")
+        return
+    if not _zk_bar():
+        await update.message.reply_text(
+            "⚙️ Zakaz sistemasy entek birikdirilmedik.\n\n"
+            "_Railway → Variables → `NOTION_TOKEN` goşulmaly._",
+            parse_mode="Markdown")
+        return
+
+    await update.message.chat.send_action("typing")
+    mejbury = bool(context.args and context.args[0].lower() in ("tazele", "yenile"))
+    zakazlar = await ZK.zakazlary_al(mejbury=mejbury)
+    if not zakazlar:
+        await update.message.reply_text("📭 Notion-da zakaz tapylmady.")
+        return
+
+    await _send_md_safe(update.message, ZK.sanaw_teksti(zakazlar))
+
+    acyk = [z for z in zakazlar if z["status"] in ZK.ACIK_STATUS]
+    if acyk:
+        knopka, hatar = [], []
+        for z in acyk[:12]:
+            hatar.append(InlineKeyboardButton(z["kod"], callback_data=f"zk:{z['kod']}"))
+            if len(hatar) == 3:
+                knopka.append(hatar)
+                hatar = []
+        if hatar:
+            knopka.append(hatar)
+        await update.message.reply_text(
+            "👇 Jikme-jik görmek üçin zakaz koduna bas:",
+            reply_markup=InlineKeyboardMarkup(knopka))
+
+
+async def zakaz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/zakaz ZAK-3 — bir zakazyň jikme-jigi."""
+    uid = update.effective_user.id
+    if not _zk_rugsat(uid):
+        await update.message.reply_text("⛔ Bu komanda diňe TEK topary üçin.")
+        return
+    if not _zk_bar():
+        await update.message.reply_text("⚙️ Zakaz sistemasy birikdirilmedik.")
+        return
+    if not context.args:
+        await update.message.reply_text(
+            "Ulanyş: `/zakaz ZAK-3`\n\nÄhli zakazlar: /zakazlar",
+            parse_mode="Markdown")
+        return
+
+    kod = context.args[0].upper()
+    if not kod.startswith("ZAK"):
+        kod = "ZAK-" + kod.lstrip("-")
+    zakazlar = await ZK.zakazlary_al()
+    z = _zk_tap(zakazlar, kod)
+    if not z:
+        await update.message.reply_text(f"📭 `{code_ok(kod)}` tapylmady.",
+                                        parse_mode="Markdown")
+        return
+
+    cars = load_cars()
+    tapylan = ZK.gabatla(z, cars, _norm) if db_is_fresh(cars) else []
+    await update.message.reply_text(
+        ZK.jikme_jik_teksti(z, len(tapylan)),
+        parse_mode="Markdown", reply_markup=_zk_duwmeler(z, len(tapylan)))
+
+
+async def _zk_callback(q, context, d):
+    """Zakaz düwmeleri. d — callback_data."""
+    uid = q.from_user.id
+    if not _zk_rugsat(uid):
+        await q.message.reply_text("⛔ Bu diňe TEK topary üçin.")
+        return
+    if not _zk_bar():
+        await q.message.reply_text("⚙️ Zakaz sistemasy birikdirilmedik.")
+        return
+
+    zakazlar = await ZK.zakazlary_al()
+
+    # --- jikme-jik ---
+    if d.startswith("zk:"):
+        z = _zk_tap(zakazlar, d[3:])
+        if not z:
+            await q.message.reply_text("📭 Zakaz tapylmady.")
+            return
+        cars = load_cars()
+        tapylan = ZK.gabatla(z, cars, _norm, min_bal=3) if db_is_fresh(cars) else []
+        await q.message.reply_text(
+            ZK.jikme_jik_teksti(z, len(tapylan)),
+            parse_mode="Markdown", reply_markup=_zk_duwmeler(z, len(tapylan)))
+        return
+
+    # --- auksionlardan gözle ---
+    if d.startswith("zkg:"):
+        z = _zk_tap(zakazlar, d[4:])
+        if not z:
+            await q.message.reply_text("📭 Zakaz tapylmady.")
+            return
+        cars = load_cars()
+        if not cars or not db_is_fresh(cars):
+            await q.message.reply_text(NOT_READY_MSG, parse_mode="Markdown")
+            return
+        tapylan, takyk = ZK.gabatla_doly(z, cars, _norm)
+        if not tapylan:
+            await q.message.reply_text(
+                f"📭 `{code_ok(z['kod'])}` — *{esc(z['isleg'])}* üçin "
+                f"şu günki auksionlarda gabat gelýän maşyn ýok.",
+                parse_mode="Markdown")
+            return
+
+        bellik = "" if takyk else "\n⚠️ _Takyk model tapylmady — diňe marka boýunça._"
+        await q.message.reply_text(
+            f"🔍 `{code_ok(z['kod'])}` — *{len(tapylan)}* maşyn tapyldy "
+            f"(býujet: {ZK._byujet_yaz(z['byujet'])}){bellik}",
+            parse_mode="Markdown")
+        await send_batch(q.message, str(uid), tapylan,
+                         title=f"zakaz {z['kod']}")
+
+        # kody Notion-a ýazmak üçin düwmeler
+        hatar = []
+        for c in tapylan[:6]:
+            k = get_car_code(c)
+            if k:
+                hatar.append([InlineKeyboardButton(
+                    f"📌 {k} → Notion-a ýaz",
+                    callback_data=f"zkk:{z['kod']}:{k}")])
+        if hatar:
+            await q.message.reply_text(
+                "👇 Müşderä hödürlejek maşynyňy saýla — kody Notion-a ýazaryn:",
+                reply_markup=InlineKeyboardMarkup(hatar))
+        return
+
+    # --- maşyn kodyny Notion-a ýaz ---
+    if d.startswith("zkk:"):
+        bolek = d[4:].split(":", 1)
+        if len(bolek) != 2:
+            return
+        kod, masyn_kod = bolek
+        z = _zk_tap(zakazlar, kod)
+        if not z:
+            await q.message.reply_text("📭 Zakaz tapylmady.")
+            return
+        bar = [x.strip() for x in (z.get("masyn_kody") or "").split(",") if x.strip()]
+        if masyn_kod not in bar:
+            bar.append(masyn_kod)
+        ok = await ZK.notion_yaz(z["id"], "Maşyn kody", ", ".join(bar))
+        if ok:
+            await ZK.notion_yaz(z["id"], "Status", "Tapyldy")
+            await q.message.reply_text(
+                f"✅ `{code_ok(masyn_kod)}` Notion-a ýazyldy → `{code_ok(kod)}`\n"
+                f"Status: *Tapyldy*",
+                parse_mode="Markdown")
+        else:
+            await q.message.reply_text("❌ Notion-a ýazyp bolmady. Loga seret.")
+        return
+
+    # --- status üýtget ---
+    if d.startswith("zks:"):
+        bolek = d[4:].split(":", 1)
+        if len(bolek) != 2:
+            return
+        kod, taze = bolek
+        z = _zk_tap(zakazlar, kod)
+        if not z:
+            await q.message.reply_text("📭 Zakaz tapylmady.")
+            return
+        ok = await ZK.notion_yaz(z["id"], "Status", taze)
+        if ok:
+            await q.message.reply_text(
+                f"✅ `{code_ok(kod)}` → *{esc(taze)}*", parse_mode="Markdown")
+        else:
+            await q.message.reply_text("❌ Notion-a ýazyp bolmady.")
+        return
+
+
+async def zakaz_gozegcilik(app):
+    """AWTOMAT: her gün täze maşynlar gelende açyk zakazlara gabatlaýar
+    we topar grupbasyna habar berýär. Işgär hiç zat barlamaly däl."""
+    await asyncio.sleep(120)
+    while True:
+        try:
+            if _zk_bar() and ZK.TOPAR_CHAT_ID:
+                cars = load_cars()
+                if cars and db_is_fresh(cars):
+                    zakazlar = await ZK.zakazlary_al(mejbury=True)
+                    for z in zakazlar:
+                        if z["status"] not in ("Täze", "Gözlenýär"):
+                            continue
+                        # AWTOMAT habar diňe TAKYK gabatlamada — ýogsa
+                        # "Nissan" zakazy her gün 40 maşyn spam eder
+                        tapylan = ZK.gabatla(z, cars, _norm, min_bal=3)
+                        if not tapylan:
+                            continue
+                        gorlen = ZK._habar_berlen.setdefault(z["kod"], set())
+                        taze = [c for c in tapylan
+                                if get_car_code(c) and get_car_code(c) not in gorlen]
+                        if not taze:
+                            continue
+                        for c in taze:
+                            gorlen.add(get_car_code(c))
+
+                        kodlar = ", ".join(f"`{get_car_code(c)}`" for c in taze[:8])
+                        try:
+                            await app.bot.send_message(
+                                chat_id=ZK.TOPAR_CHAT_ID,
+                                text=(f"🔔 *ZAKAZ ÜÇIN MAŞYN TAPYLDY*\n\n"
+                                      f"`{z['kod']}` — {esc(z['at'])}\n"
+                                      f"🚗 {esc(z['isleg'])}\n"
+                                      f"💰 {ZK._byujet_yaz(z['byujet'])}\n\n"
+                                      f"*{len(taze)}* täze maşyn: {kodlar}\n\n"
+                                      f"_Botda_ `/zakaz {z['kod']}` _ýazyp gör._"),
+                                parse_mode="Markdown")
+                        except Exception as e:
+                            logger.error("zakaz habar: %s", e)
+                        await asyncio.sleep(2)
+        except Exception as e:
+            logger.error("zakaz_gozegcilik: %s", e)
+        await asyncio.sleep(1800)   # 30 minutda bir
 
 
 async def checkalerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1550,6 +1832,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await q.answer()
     d = q.data or ""
 
+    # zakaz düwmeleri (diňe işgärler)
+    if d.startswith(("zk:", "zkg:", "zkk:", "zks:")):
+        await _zk_callback(q, context, d)
+        return
+
     if d.startswith("alert:"):
         st = d[6:].strip()
         uid = str(q.from_user.id)
@@ -1651,6 +1938,8 @@ def main():
     app.add_handler(CommandHandler("hasabat", hasabat_command))
     app.add_handler(CommandHandler("gozleg", gozleg_command))
     app.add_handler(CommandHandler("sonky", sonky_command))
+    app.add_handler(CommandHandler("zakazlar", zakazlar_command))
+    app.add_handler(CommandHandler("zakaz", zakaz_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     print("✅ Dubai Auksion | TEK AUTO MARKET boty işläp başlady!")
