@@ -1064,7 +1064,10 @@ async def alert_loop(app):
 # Sagat 10:00 bolup şu günki maşyn gelmedik bolsa — admin-e habar.
 # (board 12.08, 3-nji priýoritet)
 # ============================================================
-DATA_WARN_HOUR = 10          # sagat näçede duýdursyn (Dubaý wagty)
+DATA_WARN_HOUR = 7           # sagat näçede duýdursyn (Dubaý wagty)
+# 22.08: on 10:00-dy. Maglumat adatça 01:00-da taýýar bolýar,
+# şonuň üçin 10:00 gaty giç — Erkin meseläni bizden öň tapýardy.
+# Indi 07:00-da duýdurýar.
 WARN_FILE = _DATA_DIR / "data_warn.json"
 
 
