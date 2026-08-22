@@ -30,5 +30,13 @@
     "kept": 26,
     "rejected": 110,
     "time": "00:44"
+  },
+  {
+    "pdf": "WEST CARS AUCTION 22-AUG-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 77,
+    "rejected": 69,
+    "time": "10:08"
   }
 ]
