@@ -1,0 +1,88 @@
+[
+  {
+    "id": "20260816|SUNDAY AUCTION CARS LIST 16-8-2026.pdf",
+    "date": "20260816",
+    "pdf": "SUNDAY AUCTION CARS LIST 16-8-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 168,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "168 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260816|Sunday - 16-082026 - GCA.pdf",
+    "date": "20260816",
+    "pdf": "Sunday - 16-082026 - GCA.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 147,
+    "kept": 0,
+    "rejected": 134,
+    "reasons": {
+      "kollaz surat": 42,
+      "gadagan brand: JEEP": 1,
+      "yl=2018": 7,
+      "yl=2020": 14,
+      "yl=2015": 11
+    },
+    "msg": "147 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260817|Marhaba Auctions Monday 17th August 2026 Ind.Area 12 Auction LIst.pdf",
+    "date": "20260817",
+    "pdf": "Marhaba Auctions Monday 17th August 2026 Ind.Area 12 Auction LIst.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 98,
+    "kept": 0,
+    "rejected": 98,
+    "reasons": {
+      "yl=2011": 6,
+      "yl=2017": 92
+    },
+    "msg": "98 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260818|18-08-2026 TUESDAY AUCTION.pdf",
+    "date": "20260818",
+    "pdf": "18-08-2026 TUESDAY AUCTION.pdf",
+    "auction": "18-08-2026 TUESDAY AUCTION",
+    "pages": 79,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "79 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260818|TUESDAY AUCTION CARS LIST 18-8-2026.pdf",
+    "date": "20260818",
+    "pdf": "TUESDAY AUCTION CARS LIST 18-8-2026.pdf",
+    "auction": "TUESDAY AUCTION CARS LIST 18-8-2026",
+    "pages": 163,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "163 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260823|23-08-2026 SUNDAY AUCTON.pdf",
+    "date": "20260823",
+    "pdf": "23-08-2026 SUNDAY AUCTON.pdf",
+    "auction": "23-08-2026 SUNDAY AUCTON",
+    "pages": 76,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "76 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260824|PUSH|Push barlagy: 13d240e4 != cea0b3ca",
+    "date": "20260824",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push barlagy: 13d240e4 != cea0b3ca"
+  }
+]
