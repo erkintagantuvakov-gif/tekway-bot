@@ -2341,7 +2341,10 @@ def gundelik_habar_tekst(cars, today):
     d = datetime.strptime(today, "%Y%m%d")
     sene = f"{d.day} {_AYLAR[d.month - 1]}, {_GUN_ATLARY[d.weekday()]}"
 
-    t = "🌅 *Şu günki auksionlar başlaýar*\n\n"
+    # ⚠️ 25.08 — Erkin sada gornushi saylady.
+    # "tayyar", "baslayar" yaly sozler her gun gaytalansa gury sese
+    # owrulya. Chenňek SAN — "584 masyn". Sozlem dine tanatma.
+    t = "🌅 *Şu günki auksionlar*\n\n"
     t += f"📅 {sene}\n"
     t += f"🚗 *{len(bu_gun)} maşyn*  ·  {len(auk)} auksion\n"
     if sagatlar:
