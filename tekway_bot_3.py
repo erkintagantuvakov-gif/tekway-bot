@@ -2309,8 +2309,11 @@ def _habar_yaz(d):
 
 _AYLAR = ["ýanwar", "fewral", "mart", "aprel", "maý", "iýun",
           "iýul", "awgust", "sentýabr", "oktýabr", "noýabr", "dekabr"]
-_GUNLER = ["duşenbe", "sişenbe", "çarşenbe", "penşenbe",
-           "anna", "şenbe", "ýekşenbe"]
+# ⚠️ 25.08 — Erkin: "sişenbe, duşenbe diyip yazmada, 3-nji gun diyip yazay".
+# Tertip AUKSION EKSELI bilen deň: 1 GUN = duşenbe ... 7 GUN = ýekşenbe.
+# (Python-yn weekday() hem şeýle: duşenbe=0, şonuň üçin +1 edilýär.)
+_GUN_ATLARY = ["1-nji gün", "2-nji gün", "3-nji gün", "4-nji gün",
+               "5-nji gün", "6-njy gün", "7-nji gün"]
 
 
 def gundelik_habar_tekst(cars, today):
@@ -2336,9 +2339,9 @@ def gundelik_habar_tekst(cars, today):
     top = [m for m, _ in sorted(markalar.items(), key=lambda x: -x[1])[:4]]
 
     d = datetime.strptime(today, "%Y%m%d")
-    sene = f"{d.day} {_AYLAR[d.month - 1]}, {_GUNLER[d.weekday()]}"
+    sene = f"{d.day} {_AYLAR[d.month - 1]}, {_GUN_ATLARY[d.weekday()]}"
 
-    t = "🌅 *Şu günki auksionlar taýýar!*\n\n"
+    t = "🌅 *Şu günki auksionlar başlaýar*\n\n"
     t += f"📅 {sene}\n"
     t += f"🚗 *{len(bu_gun)} maşyn*  ·  {len(auk)} auksion\n"
     if sagatlar:
