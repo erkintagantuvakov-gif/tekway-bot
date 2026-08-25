@@ -2169,6 +2169,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if d.startswith("hbr:"):
         nam = d[4:]
         uid = str(q.from_user.id)
+        _habar_basyldy(nam, uid)
         if nam == "today":
             await today_command(q, context)
         elif nam == "gozle":
@@ -2316,6 +2317,22 @@ _GUN_ATLARY = ["1-nji gün", "2-nji gün", "3-nji gün", "4-nji gün",
                "5-nji gün", "6-njy gün", "7-nji gün"]
 
 
+def _habar_basyldy(nam, uid):
+    """Duwma basylanda hasaba alya — habar ishleyarmi, sho bilinsin."""
+    try:
+        st = _habar_yagdayi()
+        if st.get("gun") != get_today():
+            return
+        b = st.setdefault("basyldy", {})
+        b[nam] = b.get(nam, 0) + 1
+        adamlar = st.setdefault("basan_adamlar", [])
+        if uid not in adamlar:
+            adamlar.append(uid)
+        _habar_yaz(st)
+    except Exception as e:
+        logger.warning("habar basyldy: %s", e)
+
+
 def gundelik_habar_tekst(cars, today):
     """Gysga, gyzyklandyryjy habar. Uzyn sanaw YOK — ol /today-da."""
     bu_gun = [c for c in cars if str(c.get("date")) == today]
@@ -2358,10 +2375,15 @@ def gundelik_habar_tekst(cars, today):
 
 
 def _habar_duwmeler():
+    # ⚠️ 25.08 — "Bu habary ochur" DUWMESI AYRYLDY (Erkin).
+    #   "her gun yekeje bildiris olaryn yuregine dushmez.
+    #    son statistika seredip karar bereris."
+    # Kod ozi YERINDE galya: /habar_ochur komandasy we habar_ochuk
+    # belligi ishleya. Yagny biri sikayat etse, ishgar shol adam uchin
+    # ochurip bilya — bot bloklanmaz. Duwmani yzyna getirmek bir setir.
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("📅 Auksionlary gör", callback_data="hbr:today")],
         [InlineKeyboardButton("🔎 Maşyn gözle", callback_data="hbr:gozle")],
-        [InlineKeyboardButton("🔕 Bu habary öçür", callback_data="hbr:off")],
     ])
 
 
@@ -2434,6 +2456,30 @@ async def gundelik_habar_loop(app):
         await asyncio.sleep(600)
 
 
+def _basyldy_setir(st):
+    b = st.get("basyldy", {})
+    if not b:
+        return "entek ýok"
+    at = {"today": "auksionlar", "gozle": "gözleg"}
+    return " · ".join(f"{at.get(k, k)} {v}" for k, v in b.items())
+
+
+async def habar_ochur_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/habar_ochur — gundelik habary ochurya.
+
+    ⚠️ Duwme hokmunde GORKEZILMEYA (Erkin, 25.08). Emma komanda
+    yerinde — biri "maňa habar gelmesin" diyse, bot ony blok
+    etmeginin deregine shu komandany ulanyp biler.
+    """
+    uid = str(update.effective_user.id)
+    users = load_users()
+    if uid in users:
+        users[uid]["habar_ochuk"] = True
+        save_users(users)
+    await update.message.reply_text(
+        "🔕 Gündelik habar öçürildi.\n\nYzyna açmak: /habar\_ac")
+
+
 async def habar_ac_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/habar_ac — ochurilen gundelik habary yzyna achya."""
     uid = str(update.effective_user.id)
@@ -2471,8 +2517,11 @@ async def habar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👆 _Şu görnüşde gider._\n\n"
         f"👥 Aljak: *{len(users) - ochuk - blok}* adam\n"
         f"🔕 Öçüren: {ochuk}  ·  🚫 Blok eden: {blok}\n"
-        f"🕘 Her gün sagat {HABAR_SAGAT}:00 (Dubaý)\n"
-        f"📆 Iň soňky: {st.get('gun', '—')} {st.get('wagt', '')}\n\n"
+        f"🕘 Her gün sagat {HABAR_SAGAT}:00 (Dubaý)\n\n"
+        f"📆 *Iň soňky ugradylan:* {st.get('gun', '—')} {st.get('wagt', '')}\n"
+        f"   ✅ {st.get('gitdi', 0)} gitdi  ·  ⚠️ {st.get('bolmady', 0)} bolmady\n"
+        f"   👆 {len(st.get('basan_adamlar', []))} adam düwmä basdy"
+        f"  ({_basyldy_setir(st)})\n\n"
         f"_Häzir ugratmak: /habar ugrat_",
         parse_mode="Markdown")
 
@@ -2499,6 +2548,7 @@ def main():
     app.add_handler(CommandHandler("hasabat", hasabat_command))
     app.add_handler(CommandHandler("habar", habar_command))
     app.add_handler(CommandHandler("habar_ac", habar_ac_command))
+    app.add_handler(CommandHandler("habar_ochur", habar_ochur_command))
     app.add_handler(CommandHandler("gozleg", gozleg_command))
     app.add_handler(CommandHandler("sonky", sonky_command))
     # Yalnyshlyk tutujy — bot indi dymmaya (24.08)
