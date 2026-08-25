@@ -2506,7 +2506,7 @@
   },
   {
     "brand": "Bmw",
-    "model": "X9 Xdrive 40",
+    "model": "X5 Xdrive 40",
     "year": 2023,
     "color": "",
     "price": 90000,
@@ -2536,7 +2536,7 @@
   },
   {
     "brand": "Bmw",
-    "model": "3301",
+    "model": "330i",
     "year": 2025,
     "color": "",
     "price": 70000,
@@ -4441,7 +4441,7 @@
   },
   {
     "brand": "Bmw",
-    "model": "",
+    "model": "X7 Xdrive 40i",
     "year": 2023,
     "color": "",
     "price": 70000,
@@ -4636,7 +4636,7 @@
   },
   {
     "brand": "Kia",
-    "model": "K5Lxssst",
+    "model": "K5",
     "year": 2025,
     "color": "",
     "price": 26000,
@@ -4786,7 +4786,7 @@
   },
   {
     "brand": "Kia",
-    "model": "K5Lxs St",
+    "model": "K5",
     "year": 2023,
     "color": "",
     "price": 14000,
@@ -5236,7 +5236,7 @@
   },
   {
     "brand": "Mazda",
-    "model": "",
+    "model": "Mazda3",
     "year": 2024,
     "color": "",
     "price": 16000,
@@ -5701,7 +5701,7 @@
   },
   {
     "brand": "Toyota",
-    "model": "Bg Prime",
+    "model": "Rav4 Prime",
     "year": 2022,
     "color": "",
     "price": 29000,
@@ -5926,7 +5926,7 @@
   },
   {
     "brand": "Mercedes-Benz",
-    "model": "000 4Matic",
+    "model": "S500 4Matic",
     "year": 2022,
     "color": "",
     "price": 85000,
@@ -5956,7 +5956,7 @@
   },
   {
     "brand": "Kia",
-    "model": "Gee X-Line",
+    "model": "Sorento X-Line Ex",
     "year": 2025,
     "color": "",
     "price": 39000,
@@ -6196,7 +6196,7 @@
   },
   {
     "brand": "Chevrolet",
-    "model": "Aiae- Equinox Ls Eee",
+    "model": "Equinox Ls",
     "year": 2024,
     "color": "",
     "price": 28500,
@@ -8086,7 +8086,7 @@
   },
   {
     "brand": "Mazda",
-    "model": "",
+    "model": "Mazda6 Sport 2.5 Fwd",
     "year": 2021,
     "color": "",
     "price": 4500,
