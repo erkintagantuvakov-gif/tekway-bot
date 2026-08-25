@@ -16,6 +16,7 @@ from datetime import datetime, timezone, timedelta
 
 from telegram import (Update, InlineKeyboardButton, InlineKeyboardMarkup,
                       ReplyKeyboardMarkup, KeyboardButton)
+from telegram.error import Forbidden
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -1368,6 +1369,7 @@ async def data_watch_loop(app):
 async def post_init(app):
     asyncio.create_task(alert_loop(app))
     asyncio.create_task(data_watch_loop(app))
+    asyncio.create_task(gundelik_habar_loop(app))
     if ZK is not None and ZK.isleyarmi():
         asyncio.create_task(zakaz_gozegcilik(app))
         logger.info("ZAKAZ moduly isjen (Notion baglandy)")
@@ -1375,6 +1377,7 @@ async def post_init(app):
         logger.info("ZAKAZ moduly ochuk (NOTION_TOKEN yok)")
     logger.info("Alert loop isledildi (her 10 min)")
     logger.info(f"Maglumat gozegciligi isledildi (duyduryş sagat {DATA_WARN_HOUR}:00)")
+    logger.info(f"Gundelik habar isledildi (her gun sagat {HABAR_SAGAT}:00)")
 
     # ⚠️ 24.08 — TELEGRAMYN "MENU" DUWMESI.
     # Erkin: "panel gitdi, her sapar /start yazmalymy?"
@@ -2162,6 +2165,31 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await _zk_callback(q, context, d)
         return
 
+    # Gundelik habaryn duwmeleri (25.08)
+    if d.startswith("hbr:"):
+        nam = d[4:]
+        uid = str(q.from_user.id)
+        if nam == "today":
+            await today_command(q, context)
+        elif nam == "gozle":
+            await q.message.reply_text(
+                "🔎 *Maşyn gözlemek*\n\n"
+                "Marka ýa model ýazyň — mysal üçin:\n"
+                "`camry` · `rav4` · `sonata` · `k5`\n\n"
+                "Ýyl hem goşup bilersiňiz: `camry 2023`",
+                parse_mode="Markdown")
+        elif nam == "off":
+            users = load_users()
+            if uid in users:
+                users[uid]["habar_ochuk"] = True
+                save_users(users)
+            await q.message.reply_text(
+                "🔕 Gündelik habar öçürildi.\n\n"
+                "Bot öňküsi ýaly işleýär — islän wagtyňyz marka ýazyp "
+                "maşyn gözläp bilersiňiz.\n\n"
+                "Yzyna açmak: /habar\_ac")
+        return
+
     if d.startswith("alert:"):
         st = d[6:].strip()
         uid = str(q.from_user.id)
@@ -2242,6 +2270,207 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await q.message.reply_text(t, parse_mode="Markdown")
 
 
+
+# ============================================================
+# GUNDELIK HABAR — mushderileri bota yzyna getirmek  (25.08)
+#
+# Erkin: "Maksat mushderilerimize telegram bota girer yaly etmek,
+#         ya-da botun barlygyny yatlatmak."
+#
+# ⚠️ SHONUN UCHIN BU HABAR STATISTIKA HASABATY DAL.
+#    Adam sany okap dal, DUWMÄ BASSYN diyip yazylan:
+#      - gysga (bir ekran)
+#      - bir sany uly san (gyzyklandyryjy)
+#      - ashagynda 2 duwme: "Shu gunki auksionlar" / "Masyn gozle"
+#
+# ⚠️ ÖCHÜRMEK DUWMESI HÖKMAN.
+#    Hemme ulanyja gidyar. Halamadyk adam bota BLOK etse — ony
+#    hemishelik yitirdik. "Habary ochur" duwmesi bolsa, ol dine
+#    habary ochurya, bot ozi yerinde galya.
+# ============================================================
+HABAR_FILE = _DATA_DIR / "gundelik_habar.json"
+HABAR_SAGAT = 9              # Dubay wagty. Ahli PDF 02:30-a chenli tayyar.
+
+
+def _habar_yagdayi():
+    try:
+        return json.loads(HABAR_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _habar_yaz(d):
+    try:
+        HABAR_FILE.write_text(json.dumps(d, ensure_ascii=False, indent=2),
+                              encoding="utf-8")
+    except Exception as e:
+        logger.error("habar yagdayi yazylmady: %s", e)
+
+
+_AYLAR = ["ýanwar", "fewral", "mart", "aprel", "maý", "iýun",
+          "iýul", "awgust", "sentýabr", "oktýabr", "noýabr", "dekabr"]
+_GUNLER = ["duşenbe", "sişenbe", "çarşenbe", "penşenbe",
+           "anna", "şenbe", "ýekşenbe"]
+
+
+def gundelik_habar_tekst(cars, today):
+    """Gysga, gyzyklandyryjy habar. Uzyn sanaw YOK — ol /today-da."""
+    bu_gun = [c for c in cars if str(c.get("date")) == today]
+    if not bu_gun:
+        return None
+
+    # auksion = at + shahamcha + sagat (Marhaba 4 yerde ishleya)
+    auk = {}
+    for c in bu_gun:
+        acar = (c.get("auction", "?"), (c.get("auction_branch") or "").strip(),
+                (c.get("auction_time") or "").strip())
+        auk[acar] = auk.get(acar, 0) + 1
+
+    sagatlar = sorted(w for (_a, _s, w) in auk if w)
+    yerler = sorted({s for (_a, s, _w) in auk if s})
+    markalar = {}
+    for c in bu_gun:
+        b = str(c.get("brand") or "").strip()
+        if b:
+            markalar[b] = markalar.get(b, 0) + 1
+    top = [m for m, _ in sorted(markalar.items(), key=lambda x: -x[1])[:4]]
+
+    d = datetime.strptime(today, "%Y%m%d")
+    sene = f"{d.day} {_AYLAR[d.month - 1]}, {_GUNLER[d.weekday()]}"
+
+    t = "🌅 *Şu günki auksionlar taýýar!*\n\n"
+    t += f"📅 {sene}\n"
+    t += f"🚗 *{len(bu_gun)} maşyn*  ·  {len(auk)} auksion\n"
+    if sagatlar:
+        t += f"🕐 {esc(sagatlar[0])} — {esc(sagatlar[-1])}\n"
+    if yerler:
+        t += f"📍 {esc(' · '.join(yerler))}\n"
+    if top:
+        t += f"\n🔥 Iň köp: {esc(' · '.join(top))}\n"
+    t += "\n_Marka ýa model ýaz — men tapyp bereýin._"
+    return t
+
+
+def _habar_duwmeler():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("📅 Auksionlary gör", callback_data="hbr:today")],
+        [InlineKeyboardButton("🔎 Maşyn gözle", callback_data="hbr:gozle")],
+        [InlineKeyboardButton("🔕 Bu habary öçür", callback_data="hbr:off")],
+    ])
+
+
+async def gundelik_habar_ugrat(app, diňe_uid=None):
+    """Habary ugradýar. diňe_uid berilse — synag, dine sho adama."""
+    cars = load_cars()
+    today = get_today()
+    t = gundelik_habar_tekst(cars, today)
+    if not t:
+        return 0, 0, "maglumat yok"
+
+    kb = _habar_duwmeler()
+    if diňe_uid:
+        await app.bot.send_message(int(diňe_uid), t, parse_mode="Markdown",
+                                   reply_markup=kb)
+        return 1, 0, "synag"
+
+    users = load_users()
+    gitdi = bolmady = 0
+    for uid, u in list(users.items()):
+        if u.get("habar_ochuk") or u.get("bloklady"):
+            continue
+        try:
+            await app.bot.send_message(int(uid), t, parse_mode="Markdown",
+                                       reply_markup=kb)
+            gitdi += 1
+        except Forbidden:
+            # Adam boty blok edipdir — indi synanyshmaly dal
+            u["bloklady"] = True
+            bolmady += 1
+        except Exception as e:
+            logger.warning("gundelik habar (%s): %s", uid, e)
+            bolmady += 1
+        # ⚠️ Telegram sekuntda ~30 habar gechirya. 25-e chenli sakla.
+        await asyncio.sleep(0.05)
+    save_users(users)
+    return gitdi, bolmady, "ok"
+
+
+async def gundelik_habar_loop(app):
+    """Her 10 minutda barlaýar. Bir günde BIR gezek ugradýar."""
+    await asyncio.sleep(120)
+    while True:
+        try:
+            now = datetime.now(DUBAI_TZ)
+            today = get_today()
+            st = _habar_yagdayi()
+            if (st.get("gun") != today
+                    and now.hour >= HABAR_SAGAT
+                    and db_is_fresh(load_cars())):
+                # ⚠️ ILKI BELLIK, SONRA UGRAT. Ugratmak birnache minut
+                # dowam edip biler; shol wagt loop yene gelse IKI GEZEK
+                # gitmezi yaly gun derrew belgilenya.
+                _habar_yaz({"gun": today, "wagt": now.strftime("%H:%M")})
+                g, b, _ = await gundelik_habar_ugrat(app)
+                _habar_yaz({"gun": today, "wagt": now.strftime("%H:%M"),
+                            "gitdi": g, "bolmady": b})
+                logger.info("Gundelik habar: %d gitdi, %d bolmady", g, b)
+                try:
+                    await app.bot.send_message(
+                        ADMIN_ID,
+                        f"📣 *Gündelik habar ugradyldy*\n\n"
+                        f"✅ {g} adama gitdi\n"
+                        f"⚠️ {b} bolmady (blok eden ýa öçüren)",
+                        parse_mode="Markdown")
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.error("gundelik_habar_loop: %s", e)
+        await asyncio.sleep(600)
+
+
+async def habar_ac_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/habar_ac — ochurilen gundelik habary yzyna achya."""
+    uid = str(update.effective_user.id)
+    users = load_users()
+    if uid in users:
+        users[uid]["habar_ochuk"] = False
+        save_users(users)
+    await update.message.reply_text(
+        "🔔 Gündelik habar yzyna açyldy.\n\n"
+        "Her gün ir bilen şol günki auksionlar barada gysgaça habar bererin.")
+
+
+async def habar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/habar — diňe admin. Habary görkezýär (hiç kime gitmeýär)."""
+    if update.effective_user.id != ADMIN_ID:
+        return
+    arg = (context.args[0].lower() if context.args else "")
+    if arg == "ugrat":
+        g, b, ýagdaý = await gundelik_habar_ugrat(context.application)
+        await update.message.reply_text(
+            f"📣 Ugradyldy: {g} adam · {b} bolmady ({ýagdaý})")
+        return
+    cars = load_cars()
+    t = gundelik_habar_tekst(cars, get_today())
+    if not t:
+        await update.message.reply_text("⚠️ Şu günki maglumat entek ýok.")
+        return
+    st = _habar_yagdayi()
+    users = load_users()
+    ochuk = sum(1 for u in users.values() if u.get("habar_ochuk"))
+    blok = sum(1 for u in users.values() if u.get("bloklady"))
+    await update.message.reply_text(t, parse_mode="Markdown",
+                                    reply_markup=_habar_duwmeler())
+    await update.message.reply_text(
+        f"👆 _Şu görnüşde gider._\n\n"
+        f"👥 Aljak: *{len(users) - ochuk - blok}* adam\n"
+        f"🔕 Öçüren: {ochuk}  ·  🚫 Blok eden: {blok}\n"
+        f"🕘 Her gün sagat {HABAR_SAGAT}:00 (Dubaý)\n"
+        f"📆 Iň soňky: {st.get('gun', '—')} {st.get('wagt', '')}\n\n"
+        f"_Häzir ugratmak: /habar ugrat_",
+        parse_mode="Markdown")
+
+
 # ============================================================
 # IŞLET
 # ============================================================
@@ -2262,6 +2491,8 @@ def main():
     app.add_handler(CommandHandler("users", users_command))
     app.add_handler(CommandHandler("checkalerts", checkalerts_command))
     app.add_handler(CommandHandler("hasabat", hasabat_command))
+    app.add_handler(CommandHandler("habar", habar_command))
+    app.add_handler(CommandHandler("habar_ac", habar_ac_command))
     app.add_handler(CommandHandler("gozleg", gozleg_command))
     app.add_handler(CommandHandler("sonky", sonky_command))
     # Yalnyshlyk tutujy — bot indi dymmaya (24.08)
