@@ -1657,7 +1657,13 @@ async def zakaz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     cars = load_cars()
-    tapylan = ZK.gabatla(z, cars, _norm) if db_is_fresh(cars) else []
+    # ⚠️ 26.08 — min_bal=3 (TAKYK gabatlama).
+    # On bu yerde adaty gabatla() chagyrylyardy: model tapylmasa
+    # MARKA boyuncha gin sanaw beryardi we sany "gabat gelyan masyn"
+    # diyip gorkezyardi. Netije: "Lexus ES 350" sargydynda
+    # "1 gabat gelyan masyn bar" yazyldy — ol Lexus UX-di.
+    # Indi bu san dine hakyky model gabatlamasyny sanaya.
+    tapylan = ZK.gabatla(z, cars, _norm, min_bal=3) if db_is_fresh(cars) else []
     await update.message.reply_text(
         ZK.jikme_jik_teksti(z, len(tapylan)),
         parse_mode="Markdown", reply_markup=_zk_duwmeler(z, len(tapylan)))

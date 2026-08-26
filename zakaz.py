@@ -345,7 +345,9 @@ def _sozluk(cars, norm_fn):
     for c in cars:
         for s in (c.get("brand", ""), c.get("model", "")):
             for t in norm_fn(s).split():
-                if len(t) > 2:
+                # ⚠️ 26.08 — on "len>2" bolany uchin ES, RX, NX, UX, K5,
+                # X5 yaly HAKYKY model atlary sozluge dushmeyardi.
+                if len(t) >= 2:
                     v.add(t)
     return v
 
@@ -361,6 +363,13 @@ def _fonetik(s):
         corolla / korola       ->  korola
         hyundai / hunday       ->  hiundai / hundai  (0.93 meňzeş)
         patrol vs quattro      ->  patrol vs kuatro  (daş — ret edilýär)
+
+    ⚠️ 26.08 — SANLARA DEGILMEYA.
+    Onki nusga "500" -> "50" edyardi (gosa 0 yygnalyardy). Sonra
+    "350" bilen "50" menzeshligi 0.80 bolup, bosagadan (0.78) gechdi:
+        zakaz "Lexus ES 350"  ->  Mercedes EQE 500 gorkezildi.
+    Masyn modelindaki SAN ANYK maglumat — 350 bilen 500 baska masyn.
+    Shonun uchin gosa yygnamak dine HARPLARA degishli.
     """
     s = (s or "").lower()
     s = s.replace("ck", "k").replace("ph", "f").replace("x", "ks")
@@ -368,8 +377,9 @@ def _fonetik(s):
     s = s.replace("y", "i")
     out = []
     for ch in s:
-        if not out or out[-1] != ch:      # goşa harplary ýygna: ll -> l
-            out.append(ch)
+        if out and out[-1] == ch and not ch.isdigit():
+            continue                      # goşa HARP ýygnalýar: ll -> l
+        out.append(ch)
     return "".join(out)
 
 
@@ -388,6 +398,14 @@ def _duzet(toks, sozluk):
     out = set()
     for t in toks:
         if t in sozluk:
+            out.add(t)
+            continue
+        # ⚠️ 26.08 — IKI HALATDA DUZEDILMEYA:
+        #   1) icinde SAN bar bolsa — "350", "250h", "k5". San anyk
+        #      maglumat, chak bilen uytgetmek masyny cholshurya.
+        #   2) 4 harpdan gysga bolsa — "es", "rx", "gt". Gysga sozde
+        #      bir harp tapawut hem menzeshligi yokary gorkezya.
+        if any(ch.isdigit() for ch in t) or len(t) < 4:
             out.add(t)
             continue
         ft = _fonetik(t)
@@ -436,8 +454,22 @@ def gabatla(zakaz, cars, norm_fn, min_bal=None, yyl_barla=True):
             marka = norm_fn(c.get("brand", ""))
             model = norm_fn(c.get("model", ""))
 
+            # ⚠️ 26.08 — BAL BERIS UYTGEDILDI.
+            # Onki: model sozunin ISLENDIK bolegi gabat gelse 3 bal.
+            #   -> "Eqe 500"-in "500"-i zakazyn "350"-sine (yalnysh)
+            #      baglandy we masyn TAKYK gabat hokmunde gitdi.
+            # Indi UCH DEREJE:
+            #   uzyn soz  ("camry", "sonata")  — ozi yeterlik
+            #   gysga at  ("es", "rx", "k5")   — MARKA hem gabat gelmeli
+            #   san       ("350", "500")       — MARKA hem gabat gelmeli
+            # Sebabi: "350" ozi bir zat aňlatmayar, "Lexus 350" aňladya.
             marka_hit = bool(marka) and marka.split()[0] in toks
-            model_hit = any(t in toks for t in model.split() if len(t) > 2)
+            mt = [t for t in model.split() if len(t) >= 2]
+            uzyn = any(t in toks and len(t) >= 3 and not any(ch.isdigit() for ch in t)
+                       for t in mt)
+            gysga = any(t in toks and (len(t) == 2 or any(ch.isdigit() for ch in t))
+                        for t in mt)
+            model_hit = uzyn or (gysga and marka_hit)
             bal = (3 if model_hit else 0) + (2 if marka_hit else 0)
             if bal < bosag:
                 continue
