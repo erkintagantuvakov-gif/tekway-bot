@@ -551,9 +551,9 @@ def auction_keyboard_for_car(car):
     text += f"🆔 Kod: {code}\n"
     text += f"🚗 {year} {brand} {model}\n"
     text += f"🏢 {auksion_ady_yer(car)}\n"
-    _w = auksion_sagady(car)
-    if _w:
-        text += f"🕐 Auksion: {_w} (Dubaý wagty)\n"
+    _ws = _auksion_wagt_setiri(car)
+    if _ws:
+        text += _ws + "\n"
     if price:
         usd = aed_to_usd(price)
         text += f"💰 Başlanýan bahasy: {usd:,} USD ({price} AED)\n"
@@ -701,13 +701,40 @@ def auksion_sagady(car):
     return w
 
 
+def auksion_senesi(car):
+    """Auksionyn senesi: '26.08.2026'. Bolmasa bosh setir.
+
+    ⚠️ 26.08 — Erkin: "Dubay wagty bar, emma SENE yok".
+    Mushderä WhatsApp-a gidyan tekstde dine sagat bardy. Adam ony
+    gije okasa "ertirmi, sho gunmi" bilenokdy — hakykatda ol masyn
+    ESHOL GUN oynalyp gutarypdy. Sene indi hokman gorkezilya.
+    """
+    d = str(car.get("date") or "").strip()
+    if len(d) == 8 and d.isdigit():
+        return f"{d[6:8]}.{d[4:6]}.{d[0:4]}"
+    return ""
+
+
+def _auksion_wagt_setiri(car, esc_fn=None):
+    """'26.08.2026, 17:45 (Dubaý wagty)' — sene we sagat birlikde."""
+    e = esc_fn or (lambda x: x)
+    sn, wg = auksion_senesi(car), auksion_sagady(car)
+    if sn and wg:
+        return f"🕐 Auksion: {e(sn)}, {e(wg)} (Dubaý wagty)"
+    if sn:
+        return f"📅 Auksion: {e(sn)}"
+    if wg:
+        return f"🕐 Auksion: {e(wg)} (Dubaý wagty)"
+    return ""
+
+
 def build_caption(car):
     name = esc(f"{car.get('year')} {car.get('brand')} {car.get('model')}")
     cap = f"🚗 *{name}*\n"
     cap += f"🏢 {esc(auksion_ady_yer(car))}\n"
-    _w = auksion_sagady(car)
-    if _w:
-        cap += f"🕐 Auksion: {esc(_w)} (Dubaý wagty)\n"
+    _ws = _auksion_wagt_setiri(car, esc)
+    if _ws:
+        cap += _ws + "\n"
     if car.get("price"):
         usd = aed_to_usd(car.get("price"))
         cap += f"💰 Başlanýan bahasy: *{usd:,} USD* ({car.get('price')} AED)\n"
