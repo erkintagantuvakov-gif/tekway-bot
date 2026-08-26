@@ -33,7 +33,8 @@ import json
 import logging
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 # httpx — python-telegram-bot bilen bile gelýär, goşmaça gurnama gerek däl.
 # Bolmasa-da modul ýykylmaýar, diňe Notion öçük galýar.
@@ -48,6 +49,7 @@ except Exception:                                    # pragma: no cover
     BYUJET = None
 
 logger = logging.getLogger(__name__)
+_DUBAI = timezone(timedelta(hours=4))
 
 # ============================================================
 # SAZLAMALAR
@@ -74,6 +76,36 @@ CACHE_MIN = 5
 
 # Haýsy zakaza haýsy maşyn eýýäm habar berildi (gaýtalanmaz ýaly)
 _habar_berlen = {}   # {zakaz_id: set(car_code)}
+
+# ⚠️ 26.08 — HABAR BERLEN KODLAR DISKDE SAKLANYA.
+# On dine yatda durdy. Railway her deploy-da boty tazeden ishledya —
+# shonda sanaw bosayardy we ERTESI GUN AYNI MASYNLAR gaytadan
+# habar berilyardi. Ishgar uchin bu "spam" — habarlara ynam gachya.
+# Indi /data-da yatyar (Railway tazelense-de galya).
+_HB_FAYL = (Path("/data") if Path("/data").exists() else Path(".")) / "sargyt_habar_berlen.json"
+
+
+def _hb_oka():
+    """Bot ishlan wagty diskden okaya. Gun cheshse — bosadya."""
+    global _habar_berlen
+    try:
+        d = json.loads(_HB_FAYL.read_text(encoding="utf-8"))
+        if d.get("gun") == datetime.now(_DUBAI).strftime("%Y%m%d"):
+            _habar_berlen = {k: set(v) for k, v in (d.get("kodlar") or {}).items()}
+            return
+    except Exception:
+        pass
+    _habar_berlen = {}
+
+
+def _hb_yaz():
+    try:
+        _HB_FAYL.write_text(json.dumps(
+            {"gun": datetime.now(_DUBAI).strftime("%Y%m%d"),
+             "kodlar": {k: sorted(v) for k, v in _habar_berlen.items()}},
+            ensure_ascii=False), encoding="utf-8")
+    except Exception as e:
+        logger.warning("habar_berlen yazylmady: %s", e)
 
 
 def isleyarmi():

@@ -1371,8 +1371,11 @@ async def post_init(app):
     asyncio.create_task(data_watch_loop(app))
     asyncio.create_task(gundelik_habar_loop(app))
     if ZK is not None and ZK.isleyarmi():
+        ZK._hb_oka()          # 26.08: onki habarlar diskden okalya
         asyncio.create_task(zakaz_gozegcilik(app))
+        _alyj = (ZK.TOPAR_CHAT_ID or ", ".join(sorted(ZK.STAFF_IDS)) or "—")
         logger.info("ZAKAZ moduly isjen (Notion baglandy)")
+        logger.info("SARGYT awtomat habary -> %s (her 30 min)", _alyj)
     else:
         logger.info("ZAKAZ moduly ochuk (NOTION_TOKEN yok)")
     logger.info("Alert loop isledildi (her 10 min)")
@@ -1906,7 +1909,19 @@ async def zakaz_gozegcilik(app):
     await asyncio.sleep(120)
     while True:
         try:
-            if _zk_bar() and ZK.TOPAR_CHAT_ID:
+            # ⚠️ 26.08 — ONKI NUSGA DYMYARDY.
+            # Shert "TOPAR_CHAT_ID bar bolsa" diyipdi. Ol uytgeyji
+            # Railway-da HIC HACAN GOYULMANDY, sonun uchin bu dowre
+            # her 30 minutda ishlap, HIC ZAT etmani gidyardi.
+            # Erkin: "duyn zakaz yazdym, bu gun habar gelmedi" —
+            # shol gun 4 sargyda gabat gelyan masyn BARDY (Camry 8,
+            # Corolla 7, Outlander 1, Hilux 1), yone hic kime aydylmady.
+            #
+            # Indi: topar grupbasy bolmasa ISHGARLERIN OZUNE gidya.
+            # Sistema sazlama garashyp durmaly dal.
+            alyjylar = ([ZK.TOPAR_CHAT_ID] if ZK.TOPAR_CHAT_ID
+                        else sorted(set(ZK.STAFF_IDS) | {str(ADMIN_ID)}))
+            if _zk_bar() and alyjylar:
                 cars = load_cars()
                 if cars and db_is_fresh(cars):
                     zakazlar = await ZK.zakazlary_al(mejbury=True)
@@ -1927,18 +1942,20 @@ async def zakaz_gozegcilik(app):
                             gorlen.add(get_car_code(c))
 
                         kodlar = ", ".join(f"`{get_car_code(c)}`" for c in taze[:8])
-                        try:
-                            await app.bot.send_message(
-                                chat_id=ZK.TOPAR_CHAT_ID,
-                                text=(f"🔔 *ZAKAZ ÜÇIN MAŞYN TAPYLDY*\n\n"
-                                      f"`{z['kod']}` — {esc(z['at'])}\n"
-                                      f"🚗 {esc(z['isleg'])}\n"
-                                      f"💰 {ZK._byujet_yaz(z)}\n\n"
-                                      f"*{len(taze)}* täze maşyn: {kodlar}\n\n"
-                                      f"_Botda_ `/zakaz {z['kod']}` _ýazyp gör._"),
-                                parse_mode="Markdown")
-                        except Exception as e:
-                            logger.error("zakaz habar: %s", e)
+                        _tekst = (f"🔔 *SARGYT ÜÇIN MAŞYN TAPYLDY*\n\n"
+                                  f"`{z['kod']}` — {esc(z['at'])}\n"
+                                  f"🚗 {esc(z['isleg'])}\n"
+                                  f"💰 {ZK._byujet_yaz(z)}\n\n"
+                                  f"*{len(taze)}* täze maşyn: {kodlar}\n\n"
+                                  f"_Görmek üçin_ `/sargyt {z['kod']}`")
+                        for _al in alyjylar:
+                            try:
+                                await app.bot.send_message(
+                                    chat_id=int(_al), text=_tekst,
+                                    parse_mode="Markdown")
+                            except Exception as e:
+                                logger.error("sargyt habar (%s): %s", _al, e)
+                        ZK._hb_yaz()
                         await asyncio.sleep(2)
         except Exception as e:
             logger.error("zakaz_gozegcilik: %s", e)
