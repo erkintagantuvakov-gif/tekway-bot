@@ -1903,63 +1903,112 @@ async def _zk_callback(q, context, d):
         return
 
 
+async def _sargyt_habar_isle(app, hasabat=None):
+    """Bir gezek barlap, tapylan masynlar hakda habar iberya.
+
+    ⚠️ 26.08 — AYRY FUNKSIYA EDILDI.
+    On bu logika dine 30 minutlyk dowrun ichindedi. Ishlemese
+    NAM UCHIN ishlemeyanini gormek MUMKIN DALDI — log Railway-da,
+    Erkin bolsa dine "habar gelmedi" goryardi.
+    Indi /sargytbarla komandasy shu ayny funksiyany chagyryp,
+    her adimin netijesini yazyp beryar.
+
+    hasabat — sanaw berilse, her adim shoňa yazylya.
+    """
+    def _y(t):
+        if hasabat is not None:
+            hasabat.append(t)
+
+    if not _zk_bar():
+        _y("❌ Sargyt moduly ÖÇÜK (NOTION_TOKEN ýok)")
+        return 0
+    _y("✅ Sargyt moduly açyk")
+
+    alyjylar = ([ZK.TOPAR_CHAT_ID] if ZK.TOPAR_CHAT_ID
+                else sorted(set(ZK.STAFF_IDS) | {str(ADMIN_ID)}))
+    _y(f"📬 Alyjylar: {', '.join(alyjylar) if alyjylar else '—'}"
+       + ("  _(topar grupbasy)_" if ZK.TOPAR_CHAT_ID else "  _(işgärler)_"))
+    if not alyjylar:
+        return 0
+
+    cars = load_cars()
+    _y(f"📦 Baza: {len(cars)} maşyn  ·  täze: {'hawa' if db_is_fresh(cars) else 'ÝOK'}")
+    if not cars or not db_is_fresh(cars):
+        _y("❌ Baza şu günki däl — habar iberilmeýär")
+        return 0
+
+    try:
+        zakazlar = await ZK.zakazlary_al(mejbury=True)
+    except Exception as e:
+        _y(f"❌ Notion okalmady: {esc(str(e)[:80])}")
+        return 0
+    _y(f"📋 Notion-da {len(zakazlar)} sargyt")
+
+    ugradyldy = 0
+    for z in zakazlar:
+        if z["status"] not in ("Täze", "Gözlenýär"):
+            _y(f"   ⏭ `{z['kod']}` {esc(z['isleg'][:22])} — status «{esc(z['status'])}»")
+            continue
+        # AWTOMAT habar diňe TAKYK gabatlamada — ýogsa
+        # "Nissan" zakazy her gün 40 maşyn spam eder
+        tapylan = ZK.gabatla(z, cars, _norm, min_bal=3)
+        gorlen = ZK._habar_berlen.setdefault(z["kod"], set())
+        taze = [c for c in tapylan
+                if get_car_code(c) and get_car_code(c) not in gorlen]
+        _y(f"   • `{z['kod']}` {esc(z['isleg'][:22])} — "
+           f"tapylan {len(tapylan)}, täze {len(taze)}")
+        if not taze:
+            continue
+        for c in taze:
+            gorlen.add(get_car_code(c))
+
+        kodlar = ", ".join(f"`{get_car_code(c)}`" for c in taze[:8])
+        _tekst = (f"🔔 *SARGYT ÜÇIN MAŞYN TAPYLDY*\n\n"
+                  f"`{z['kod']}` — {esc(z['at'])}\n"
+                  f"🚗 {esc(z['isleg'])}\n"
+                  f"💰 {ZK._byujet_yaz(z)}\n\n"
+                  f"*{len(taze)}* täze maşyn: {kodlar}\n\n"
+                  f"_Görmek üçin_ `/sargyt {z['kod']}`")
+        for _al in alyjylar:
+            try:
+                await app.bot.send_message(chat_id=int(_al), text=_tekst,
+                                           parse_mode="Markdown")
+                ugradyldy += 1
+            except Exception as e:
+                logger.error("sargyt habar (%s): %s", _al, e)
+                _y(f"      ❌ {_al}: {esc(str(e)[:60])}")
+        ZK._hb_yaz()
+        await asyncio.sleep(1)
+    _y(f"📨 Jemi {ugradyldy} habar iberildi")
+    return ugradyldy
+
+
 async def zakaz_gozegcilik(app):
-    """AWTOMAT: her gün täze maşynlar gelende açyk zakazlara gabatlaýar
-    we topar grupbasyna habar berýär. Işgär hiç zat barlamaly däl."""
+    """AWTOMAT: her 30 minutda açyk sargytlara gabat gelýän täze
+    maşyn bar bolsa habar berýär. Işgär hiç zat barlamaly däl."""
     await asyncio.sleep(120)
     while True:
         try:
-            # ⚠️ 26.08 — ONKI NUSGA DYMYARDY.
-            # Shert "TOPAR_CHAT_ID bar bolsa" diyipdi. Ol uytgeyji
-            # Railway-da HIC HACAN GOYULMANDY, sonun uchin bu dowre
-            # her 30 minutda ishlap, HIC ZAT etmani gidyardi.
-            # Erkin: "duyn zakaz yazdym, bu gun habar gelmedi" —
-            # shol gun 4 sargyda gabat gelyan masyn BARDY (Camry 8,
-            # Corolla 7, Outlander 1, Hilux 1), yone hic kime aydylmady.
-            #
-            # Indi: topar grupbasy bolmasa ISHGARLERIN OZUNE gidya.
-            # Sistema sazlama garashyp durmaly dal.
-            alyjylar = ([ZK.TOPAR_CHAT_ID] if ZK.TOPAR_CHAT_ID
-                        else sorted(set(ZK.STAFF_IDS) | {str(ADMIN_ID)}))
-            if _zk_bar() and alyjylar:
-                cars = load_cars()
-                if cars and db_is_fresh(cars):
-                    zakazlar = await ZK.zakazlary_al(mejbury=True)
-                    for z in zakazlar:
-                        if z["status"] not in ("Täze", "Gözlenýär"):
-                            continue
-                        # AWTOMAT habar diňe TAKYK gabatlamada — ýogsa
-                        # "Nissan" zakazy her gün 40 maşyn spam eder
-                        tapylan = ZK.gabatla(z, cars, _norm, min_bal=3)
-                        if not tapylan:
-                            continue
-                        gorlen = ZK._habar_berlen.setdefault(z["kod"], set())
-                        taze = [c for c in tapylan
-                                if get_car_code(c) and get_car_code(c) not in gorlen]
-                        if not taze:
-                            continue
-                        for c in taze:
-                            gorlen.add(get_car_code(c))
-
-                        kodlar = ", ".join(f"`{get_car_code(c)}`" for c in taze[:8])
-                        _tekst = (f"🔔 *SARGYT ÜÇIN MAŞYN TAPYLDY*\n\n"
-                                  f"`{z['kod']}` — {esc(z['at'])}\n"
-                                  f"🚗 {esc(z['isleg'])}\n"
-                                  f"💰 {ZK._byujet_yaz(z)}\n\n"
-                                  f"*{len(taze)}* täze maşyn: {kodlar}\n\n"
-                                  f"_Görmek üçin_ `/sargyt {z['kod']}`")
-                        for _al in alyjylar:
-                            try:
-                                await app.bot.send_message(
-                                    chat_id=int(_al), text=_tekst,
-                                    parse_mode="Markdown")
-                            except Exception as e:
-                                logger.error("sargyt habar (%s): %s", _al, e)
-                        ZK._hb_yaz()
-                        await asyncio.sleep(2)
+            await _sargyt_habar_isle(app)
         except Exception as e:
             logger.error("zakaz_gozegcilik: %s", e)
         await asyncio.sleep(1800)   # 30 minutda bir
+
+
+async def sargytbarla_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/sargytbarla — awtomat habar ulgamyny HÄZIR işledýär we
+    her ädimiň netijesini görkezýär. Diňe admin."""
+    if update.effective_user.id != ADMIN_ID:
+        return
+    hasabat = []
+    try:
+        await _sargyt_habar_isle(context.application, hasabat)
+    except Exception as e:
+        hasabat.append(f"❌ ÝALŇYŞLYK: {esc(str(e)[:120])}")
+        logger.exception("sargytbarla")
+    await update.message.reply_text(
+        "🔍 *SARGYT HABAR BARLAGY*\n\n" + "\n".join(hasabat),
+        parse_mode="Markdown")
 
 
 async def checkalerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -2572,6 +2621,7 @@ def main():
     app.add_handler(CommandHandler("habar", habar_command))
     app.add_handler(CommandHandler("habar_ac", habar_ac_command))
     app.add_handler(CommandHandler("habar_ochur", habar_ochur_command))
+    app.add_handler(CommandHandler("sargytbarla", sargytbarla_command))
     app.add_handler(CommandHandler("gozleg", gozleg_command))
     app.add_handler(CommandHandler("sonky", sonky_command))
     # Yalnyshlyk tutujy — bot indi dymmaya (24.08)
