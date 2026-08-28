@@ -54,5 +54,21 @@
     "kept": 25,
     "rejected": 54,
     "time": "01:00"
+  },
+  {
+    "pdf": "Friday 28th AUG 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 209,
+    "kept": 62,
+    "rejected": 125,
+    "time": "06:38"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 28-08-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 173,
+    "kept": 100,
+    "rejected": 70,
+    "time": "07:09"
   }
 ]
