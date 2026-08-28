@@ -1,0 +1,26 @@
+[
+  {
+    "pdf": "29-AUG-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 78,
+    "rejected": 68,
+    "time": "00:02"
+  },
+  {
+    "pdf": "Fadak Cars Auction 29-8-2026 INDUSTRIAL AREA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 84,
+    "kept": 38,
+    "rejected": 40,
+    "time": "00:02"
+  },
+  {
+    "pdf": "Marhaba Auctions Saturday 29th August 2026 Ind.Area 12 Auction LIst.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 146,
+    "kept": 29,
+    "rejected": 105,
+    "time": "00:02"
+  }
+]
