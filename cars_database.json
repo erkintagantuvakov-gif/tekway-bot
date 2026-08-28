@@ -120,36 +120,6 @@
     "code": "0828-030"
   },
   {
-    "brand": "Ram",
-    "model": "1500 La Ie",
-    "year": 2022,
-    "color": "",
-    "price": 49000,
-    "auction": "Al Nukhbah Cars Auction",
-    "auction_branch": "Sajaa",
-    "auction_time": "19:00",
-    "date": "20260828",
-    "page": 21,
-    "image_path": "car_images/20260828/FRIDAY_28_AUG_2026_p021.jpg",
-    "telegram_file_id": "",
-    "code": "0828-033"
-  },
-  {
-    "brand": "Ram",
-    "model": "1500 La Ie",
-    "year": 2022,
-    "color": "",
-    "price": 49000,
-    "auction": "Al Nukhbah Cars Auction",
-    "auction_branch": "Sajaa",
-    "auction_time": "19:00",
-    "date": "20260828",
-    "page": 22,
-    "image_path": "car_images/20260828/FRIDAY_28_AUG_2026_p022.jpg",
-    "telegram_file_id": "",
-    "code": "0828-034"
-  },
-  {
     "brand": "Mazda",
     "model": "Cx90 Turbo Premium",
     "year": 2026,
@@ -1183,21 +1153,6 @@
     "image_path": "car_images/20260828/28_AUGUST_2026_KHAT_AL_JAZEERA_CARS_AUCTION_p012.jpg",
     "telegram_file_id": "",
     "code": "0828-180"
-  },
-  {
-    "brand": "Ram",
-    "model": "1500 Bighorn",
-    "year": 2025,
-    "color": "",
-    "price": 60000,
-    "auction": "KHAT AL JAZEERA CARS AUCTION",
-    "auction_branch": "Sajaa",
-    "auction_time": "18:30",
-    "date": "20260828",
-    "page": 13,
-    "image_path": "car_images/20260828/28_AUGUST_2026_KHAT_AL_JAZEERA_CARS_AUCTION_p013.jpg",
-    "telegram_file_id": "",
-    "code": "0828-171"
   },
   {
     "brand": "Bmw",
@@ -3943,36 +3898,6 @@
     "image_path": "car_images/20260828/Friday_Auction_28_08_2026_GCA_p023.jpg",
     "telegram_file_id": "",
     "code": "0828-310"
-  },
-  {
-    "brand": "Ram",
-    "model": "2500 Big Horn",
-    "year": 2024,
-    "color": "",
-    "price": 71500,
-    "auction": "Gulf Cars Auction",
-    "auction_branch": "Sajaa",
-    "auction_time": "17:30",
-    "date": "20260828",
-    "page": 25,
-    "image_path": "car_images/20260828/Friday_Auction_28_08_2026_GCA_p025.jpg",
-    "telegram_file_id": "",
-    "code": "0828-315"
-  },
-  {
-    "brand": "Ram",
-    "model": "1500 Slt",
-    "year": 2022,
-    "color": "",
-    "price": 28500,
-    "auction": "Gulf Cars Auction",
-    "auction_branch": "Sajaa",
-    "auction_time": "17:30",
-    "date": "20260828",
-    "page": 35,
-    "image_path": "car_images/20260828/Friday_Auction_28_08_2026_GCA_p035.jpg",
-    "telegram_file_id": "",
-    "code": "0828-300"
   },
   {
     "brand": "Mercedes-Benz",
