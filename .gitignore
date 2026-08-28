@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+
+# 28.08 - zapas nusgalar repoda gerek dal (git taryhy bar)
+cars_database.json.backup_*
+__pycache__/
