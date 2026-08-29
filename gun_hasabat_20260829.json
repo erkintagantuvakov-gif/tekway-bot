@@ -5,7 +5,7 @@
     "pages": 149,
     "kept": 78,
     "rejected": 68,
-    "time": "00:02"
+    "time": "21:56"
   },
   {
     "pdf": "Fadak Cars Auction 29-8-2026 INDUSTRIAL AREA BRANCH.pdf",
@@ -13,7 +13,7 @@
     "pages": 84,
     "kept": 38,
     "rejected": 40,
-    "time": "00:02"
+    "time": "21:57"
   },
   {
     "pdf": "Marhaba Auctions Saturday 29th August 2026 Ind.Area 12 Auction LIst.pdf",
@@ -21,15 +21,7 @@
     "pages": 146,
     "kept": 29,
     "rejected": 105,
-    "time": "00:02"
-  },
-  {
-    "pdf": "SATURDAY AUCTION - IND. AREA 2 - 29-AUG-2026.pdf",
-    "auction": "Al Qaryah Auctions",
-    "pages": 225,
-    "kept": 60,
-    "rejected": 133,
-    "time": "06:11"
+    "time": "21:57"
   },
   {
     "pdf": "SATURDAY AUCTION - IND. AREA 2 - 29-AUG-2026 (1).pdf",
@@ -37,6 +29,14 @@
     "pages": 225,
     "kept": 60,
     "rejected": 133,
-    "time": "08:17"
+    "time": "21:57"
+  },
+  {
+    "pdf": "SATURDAY AUCTION - IND. AREA 2 - 29-AUG-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 225,
+    "kept": 60,
+    "rejected": 133,
+    "time": "21:57"
   }
 ]
