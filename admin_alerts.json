@@ -84,5 +84,16 @@
     "rejected": 0,
     "reasons": {},
     "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push barlagy: 13d240e4 != cea0b3ca"
+  },
+  {
+    "id": "20260902|PUSH|Push bolmady: fatal: unable to access 'h",
+    "date": "20260902",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: fatal: unable to access 'https://github.com/erkintagantuvakov-gif/tekway-bot.git/': Could not resolve host: github.com\n"
   }
 ]
