@@ -1,0 +1,26 @@
+[
+  {
+    "pdf": "Fadak Cars Auction 2-9-2026 INDUSTRIAL AREA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 84,
+    "kept": 39,
+    "rejected": 39,
+    "time": "07:27"
+  },
+  {
+    "pdf": "WEDNESDAY 2 SEP 2026.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 224,
+    "kept": 43,
+    "rejected": 175,
+    "time": "07:27"
+  },
+  {
+    "pdf": "WEDNESDAY AUCTION - 02-SEP-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 226,
+    "kept": 67,
+    "rejected": 141,
+    "time": "07:27"
+  }
+]
