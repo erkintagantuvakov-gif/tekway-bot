@@ -2215,13 +2215,6 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     """
     import traceback
     e = context.error
-
-    # 03.09.2026: "Query is too old" — musderi kone duwma basdy, zyyansyz.
-    # Admin topara traceback iberilmez, ulanyja-da yalnyshlyk yazylmaz.
-    if "query is too old" in str(e).lower():
-        logger.info("Kone callback (zyyansyz): %s", e)
-        return
-
     logger.error("Tutulmadyk yalnyshlyk: %s", e, exc_info=e)
 
     # 1) Ulanyja — gysga we dushnukli
@@ -2263,15 +2256,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 # ============================================================
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
-    # 03.09.2026 duzedis: musderi KONE habaryn duwmesine bassa (mes. duyunki
-    # sanawyn "more" duwmesi), Telegram "Query is too old" diyyar — bu hakyky
-    # yalnyshlyk dal. On bu yalnyshlyk error_handler-e dushup, admin topara
-    # doly traceback iberyardi. Indi: yuwash gecirilyar, dowme isi dowam edyar.
-    try:
-        await q.answer()
-    except Exception as _e:
-        if "query is too old" not in str(_e).lower():
-            logger.warning("q.answer(): %s", _e)
+    await q.answer()
     d = q.data or ""
 
     # zakaz düwmeleri (diňe işgärler)
