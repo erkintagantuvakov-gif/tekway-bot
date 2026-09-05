@@ -1,0 +1,74 @@
+[
+  {
+    "pdf": "06-09-2026 SUNDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 75,
+    "kept": 25,
+    "rejected": 44,
+    "time": "00:43"
+  },
+  {
+    "pdf": "06-SEPT 2026 KHAT AL JAZEERA CARS AUCTION.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 177,
+    "kept": 68,
+    "rejected": 99,
+    "time": "00:48"
+  },
+  {
+    "pdf": "Fadak Cars Auction 6-9-2026 SAJAA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 128,
+    "kept": 74,
+    "rejected": 50,
+    "time": "00:49"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 6 SEPTEMBER  2026.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 92,
+    "kept": 22,
+    "rejected": 47,
+    "time": "00:49"
+  },
+  {
+    "pdf": "Marhaba Auction  Sunday 6th September 2026 - Main Branch Industrial Area 2 - Auction List_compressed.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 254,
+    "kept": 53,
+    "rejected": 189,
+    "time": "00:49"
+  },
+  {
+    "pdf": "NCA 6TH SEPTEMBER LIST.pdf",
+    "auction": "Nojoom Cars Auction",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 1,
+    "time": "00:49"
+  },
+  {
+    "pdf": "SUNDAY 6 SEP 2026.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 203,
+    "kept": 36,
+    "rejected": 161,
+    "time": "00:49"
+  },
+  {
+    "pdf": "SUNDAY AUCTION CARS LIST 06-09-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 167,
+    "kept": 100,
+    "rejected": 64,
+    "time": "01:17"
+  },
+  {
+    "pdf": "Sunday-Auction-6th-Sep-2026-GCA.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 152,
+    "kept": 40,
+    "rejected": 103,
+    "time": "01:18"
+  }
+]
