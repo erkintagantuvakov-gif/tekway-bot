@@ -70,5 +70,29 @@
     "kept": 40,
     "rejected": 103,
     "time": "01:18"
+  },
+  {
+    "pdf": "NCA 6TH SEPTEMBER VEHICELS .pdf",
+    "auction": "Nojoom Cars Auction",
+    "pages": 115,
+    "kept": 65,
+    "rejected": 45,
+    "time": "06:16"
+  },
+  {
+    "pdf": "Sunday 6th SEP 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 202,
+    "kept": 52,
+    "rejected": 129,
+    "time": "06:38"
+  },
+  {
+    "pdf": "SUNDAY SAJAA AUCTION 06-SEP-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 309,
+    "kept": 119,
+    "rejected": 150,
+    "time": "06:38"
   }
 ]
