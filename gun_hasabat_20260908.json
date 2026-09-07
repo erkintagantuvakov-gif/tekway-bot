@@ -38,5 +38,45 @@
     "kept": 102,
     "rejected": 160,
     "time": "00:46"
+  },
+  {
+    "pdf": "08-09-2026 TUESDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 71,
+    "kept": 17,
+    "rejected": 45,
+    "time": "00:55"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 8 SEPTEMBER  2026.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 94,
+    "kept": 22,
+    "rejected": 48,
+    "time": "00:55"
+  },
+  {
+    "pdf": "Marhaba Auction  Tuesday 8th September 2026 - Main Branch Industrial Area 2 - Auction List_compressed.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 211,
+    "kept": 36,
+    "rejected": 160,
+    "time": "00:55"
+  },
+  {
+    "pdf": "TUESDAY AUCTION CARS LIST 08-09-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 168,
+    "kept": 105,
+    "rejected": 60,
+    "time": "01:20"
+  },
+  {
+    "pdf": "Tuesday-Auction-8th-Sep-2026-GCA.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 130,
+    "kept": 41,
+    "rejected": 81,
+    "time": "01:21"
   }
 ]
