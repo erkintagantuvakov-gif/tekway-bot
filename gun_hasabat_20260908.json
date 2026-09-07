@@ -14,5 +14,29 @@
     "kept": 70,
     "rejected": 45,
     "time": "00:37"
+  },
+  {
+    "pdf": "08-SEPT 2026 KHAT AL JAZEERA CARS AUCTION.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 147,
+    "kept": 65,
+    "rejected": 77,
+    "time": "00:46"
+  },
+  {
+    "pdf": "08-SEPT-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 77,
+    "rejected": 69,
+    "time": "00:46"
+  },
+  {
+    "pdf": "TUESDAY SAJAA AUCTION 08-SEP-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 283,
+    "kept": 102,
+    "rejected": 160,
+    "time": "00:46"
   }
 ]
