@@ -78,5 +78,13 @@
     "kept": 41,
     "rejected": 81,
     "time": "01:21"
+  },
+  {
+    "pdf": "PUSH TRIGGER B 08-09-2026.pdf",
+    "auction": "PUSH TRIGGER B 08-09-2026",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 0,
+    "time": "06:02"
   }
 ]
