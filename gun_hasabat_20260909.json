@@ -1,0 +1,34 @@
+[
+  {
+    "pdf": "Fadak Cars Auction 9-9-2026 INDUSTRIAL AREA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 85,
+    "kept": 43,
+    "rejected": 37,
+    "time": "00:35"
+  },
+  {
+    "pdf": "WEDNESDAY 9 SEP 2026.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 227,
+    "kept": 39,
+    "rejected": 182,
+    "time": "00:35"
+  },
+  {
+    "pdf": "WEDNESDAY AUCTION - 09-SEP-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 226,
+    "kept": 73,
+    "rejected": 132,
+    "time": "00:36"
+  },
+  {
+    "pdf": "Wednesday Auction 9-September 2026 Marhaba Cars Auction Presentation Souq Branch.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 147,
+    "kept": 23,
+    "rejected": 91,
+    "time": "00:36"
+  }
+]
