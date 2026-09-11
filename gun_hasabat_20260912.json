@@ -9,7 +9,7 @@
   },
   {
     "pdf": "SATURDAY AUCTION - IND. AREA 2 - 12-SEP-2026 -B.pdf",
-    "auction": "SATURDAY AUCTION - IND. AREA 2 - 12-SEP-2026 -B",
+    "auction": "Al Qaryah Auctions",
     "pages": 75,
     "kept": 24,
     "rejected": 49,
@@ -17,7 +17,7 @@
   },
   {
     "pdf": "SATURDAY AUCTION - IND. AREA 2 - 12-SEP-2026 -C.pdf",
-    "auction": "SATURDAY AUCTION - IND. AREA 2 - 12-SEP-2026 -C",
+    "auction": "Al Qaryah Auctions",
     "pages": 75,
     "kept": 17,
     "rejected": 55,
@@ -54,5 +54,13 @@
     "kept": 9,
     "rejected": 25,
     "time": "00:40"
+  },
+  {
+    "pdf": "PUSH TRIGGER H 12-09-2026.pdf",
+    "auction": "PUSH TRIGGER H 12-09-2026",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 0,
+    "time": "01:39"
   }
 ]
