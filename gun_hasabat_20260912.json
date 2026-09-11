@@ -1,0 +1,58 @@
+[
+  {
+    "pdf": "SATURDAY AUCTION - IND. AREA 2 - 12-SEP-2026 -A.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 75,
+    "kept": 21,
+    "rejected": 26,
+    "time": "00:39"
+  },
+  {
+    "pdf": "SATURDAY AUCTION - IND. AREA 2 - 12-SEP-2026 -B.pdf",
+    "auction": "SATURDAY AUCTION - IND. AREA 2 - 12-SEP-2026 -B",
+    "pages": 75,
+    "kept": 24,
+    "rejected": 49,
+    "time": "00:39"
+  },
+  {
+    "pdf": "SATURDAY AUCTION - IND. AREA 2 - 12-SEP-2026 -C.pdf",
+    "auction": "SATURDAY AUCTION - IND. AREA 2 - 12-SEP-2026 -C",
+    "pages": 75,
+    "kept": 17,
+    "rejected": 55,
+    "time": "00:39"
+  },
+  {
+    "pdf": "12-SEPT-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 74,
+    "rejected": 72,
+    "time": "00:40"
+  },
+  {
+    "pdf": "Fadak Cars Auction 12-9-2026 INDUSTRIAL AREA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 83,
+    "kept": 44,
+    "rejected": 34,
+    "time": "00:40"
+  },
+  {
+    "pdf": "Saturday Auction 12-09-2026 Marhaba Cars Auction Souq Branch -A.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 47,
+    "kept": 10,
+    "rejected": 28,
+    "time": "00:40"
+  },
+  {
+    "pdf": "Saturday Auction 12-09-2026 Marhaba Cars Auction Souq Branch -B.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 46,
+    "kept": 9,
+    "rejected": 25,
+    "time": "00:40"
+  }
+]
