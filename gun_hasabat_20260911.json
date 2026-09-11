@@ -22,5 +22,229 @@
     "kept": 72,
     "rejected": 61,
     "time": "07:03"
+  },
+  {
+    "pdf": "FRIDAY 11 SEP 2026 -A.pdf",
+    "auction": "FRIDAY 11 SEP 2026 -A",
+    "pages": 70,
+    "kept": 2,
+    "rejected": 26,
+    "time": "08:06"
+  },
+  {
+    "pdf": "FRIDAY 11 SEP 2026 -B.pdf",
+    "auction": "FRIDAY 11 SEP 2026 -B",
+    "pages": 70,
+    "kept": 5,
+    "rejected": 29,
+    "time": "08:06"
+  },
+  {
+    "pdf": "FRIDAY GRAND AUCTION 11-SEP-2026 -A.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 89,
+    "kept": 22,
+    "rejected": 24,
+    "time": "08:06"
+  },
+  {
+    "pdf": "FRIDAY GRAND AUCTION 11-SEP-2026 -B.pdf",
+    "auction": "FRIDAY GRAND AUCTION 11-SEP-2026 -B",
+    "pages": 89,
+    "kept": 25,
+    "rejected": 53,
+    "time": "08:06"
+  },
+  {
+    "pdf": "FRIDAY GRAND AUCTION 11-SEP-2026 -C.pdf",
+    "auction": "FRIDAY GRAND AUCTION 11-SEP-2026 -C",
+    "pages": 89,
+    "kept": 40,
+    "rejected": 46,
+    "time": "08:06"
+  },
+  {
+    "pdf": "FRIDAY GRAND AUCTION 11-SEP-2026 -D.pdf",
+    "auction": "FRIDAY GRAND AUCTION 11-SEP-2026 -D",
+    "pages": 87,
+    "kept": 31,
+    "rejected": 52,
+    "time": "08:06"
+  },
+  {
+    "pdf": "FRIDAY 11 SEP 2026 -C.pdf",
+    "auction": "FRIDAY 11 SEP 2026 -C",
+    "pages": 70,
+    "kept": 2,
+    "rejected": 27,
+    "time": "08:07"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 11-09-2026 -A.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 35,
+    "kept": 26,
+    "rejected": 6,
+    "time": "08:11"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 11-09-2026 -B.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 35,
+    "kept": 22,
+    "rejected": 13,
+    "time": "08:15"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 11-09-2026 -C.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 35,
+    "kept": 22,
+    "rejected": 13,
+    "time": "08:19"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 11-09-2026 -D.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 35,
+    "kept": 19,
+    "rejected": 16,
+    "time": "08:23"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 11-09-2026 -E.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 33,
+    "kept": 16,
+    "rejected": 17,
+    "time": "08:27"
+  },
+  {
+    "pdf": "Friday 11th SEP 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE -A.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 54,
+    "kept": 12,
+    "rejected": 32,
+    "time": "08:33"
+  },
+  {
+    "pdf": "Friday 11th SEP 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE -B.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 54,
+    "kept": 19,
+    "rejected": 29,
+    "time": "08:38"
+  },
+  {
+    "pdf": "Friday 11th SEP 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE -C.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 54,
+    "kept": 16,
+    "rejected": 33,
+    "time": "08:44"
+  },
+  {
+    "pdf": "Friday 11th SEP 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE -D.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 51,
+    "kept": 7,
+    "rejected": 39,
+    "time": "08:49"
+  },
+  {
+    "pdf": "Friday Auction 11-09-2026 GCA -A.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 45,
+    "kept": 8,
+    "rejected": 33,
+    "time": "08:49"
+  },
+  {
+    "pdf": "Friday Auction 11-09-2026 GCA -B.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 45,
+    "kept": 16,
+    "rejected": 28,
+    "time": "08:49"
+  },
+  {
+    "pdf": "Friday Auction 11-09-2026 GCA -C.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 45,
+    "kept": 19,
+    "rejected": 24,
+    "time": "08:49"
+  },
+  {
+    "pdf": "Friday Auction 11-09-2026 GCA -D.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 44,
+    "kept": 17,
+    "rejected": 22,
+    "time": "08:49"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 11 SEPTEMBER  2026 -A.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 12,
+    "kept": 2,
+    "rejected": 7,
+    "time": "08:49"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 11 SEPTEMBER  2026 -B.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 12,
+    "kept": 2,
+    "rejected": 5,
+    "time": "08:49"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 11 SEPTEMBER  2026 -C.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 12,
+    "kept": 2,
+    "rejected": 7,
+    "time": "08:49"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 11 SEPTEMBER  2026 -D.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 12,
+    "kept": 3,
+    "rejected": 7,
+    "time": "08:49"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 11 SEPTEMBER  2026 -E.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 12,
+    "kept": 3,
+    "rejected": 5,
+    "time": "08:49"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 11 SEPTEMBER  2026 -F.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 12,
+    "kept": 4,
+    "rejected": 4,
+    "time": "08:49"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 11 SEPTEMBER  2026 -G.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 12,
+    "kept": 6,
+    "rejected": 4,
+    "time": "08:49"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 11 SEPTEMBER  2026 -H.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 10,
+    "kept": 0,
+    "rejected": 9,
+    "time": "08:49"
   }
 ]

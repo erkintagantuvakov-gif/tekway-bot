@@ -95,5 +95,39 @@
     "rejected": 0,
     "reasons": {},
     "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: fatal: unable to access 'https://github.com/erkintagantuvakov-gif/tekway-bot.git/': Could not resolve host: github.com\n"
+  },
+  {
+    "id": "20260911|FRIDAY 11 SEP 2026 -A.pdf",
+    "date": "20260911",
+    "pdf": "FRIDAY 11 SEP 2026 -A.pdf",
+    "auction": "FRIDAY 11 SEP 2026 -A",
+    "pages": 70,
+    "kept": 2,
+    "rejected": 26,
+    "reasons": {
+      "uly motor modeli: F-150": 2,
+      "uly motor modeli: GENESIS": 2,
+      "yl=2017": 2,
+      "yl=2020": 5,
+      "yl=2015": 3
+    },
+    "msg": "70 sahypa işlendi, diňe 2 maşyn tapyldy"
+  },
+  {
+    "id": "20260911|FRIDAY 11 SEP 2026 -C.pdf",
+    "date": "20260911",
+    "pdf": "FRIDAY 11 SEP 2026 -C.pdf",
+    "auction": "FRIDAY 11 SEP 2026 -C",
+    "pages": 70,
+    "kept": 2,
+    "rejected": 27,
+    "reasons": {
+      "yl=2013": 4,
+      "yl=2015": 6,
+      "yl=2020": 2,
+      "yl=2018": 5,
+      "yl=2017": 4
+    },
+    "msg": "70 sahypa işlendi, diňe 2 maşyn tapyldy"
   }
 ]
