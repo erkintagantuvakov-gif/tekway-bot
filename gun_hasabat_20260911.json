@@ -1,0 +1,26 @@
+[
+  {
+    "pdf": "11-09-2026 FRIDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 79,
+    "kept": 20,
+    "rejected": 51,
+    "time": "06:55"
+  },
+  {
+    "pdf": "11-SEPT 2026 KHAT AL JAZEERA CARS AUCTION.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 235,
+    "kept": 116,
+    "rejected": 108,
+    "time": "07:03"
+  },
+  {
+    "pdf": "Fadak Cars Auction 11-9-2026 SAJJA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 137,
+    "kept": 72,
+    "rejected": 61,
+    "time": "07:03"
+  }
+]
