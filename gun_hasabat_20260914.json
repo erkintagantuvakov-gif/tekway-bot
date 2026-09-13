@@ -6,5 +6,37 @@
     "kept": 0,
     "rejected": 0,
     "time": "00:31"
+  },
+  {
+    "pdf": "MONDAY AUCTION - IND. AREA 2 - 14-SEP-2026 -A.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 75,
+    "kept": 17,
+    "rejected": 42,
+    "time": "00:37"
+  },
+  {
+    "pdf": "MONDAY AUCTION - IND. AREA 2 - 14-SEP-2026 -B.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 75,
+    "kept": 19,
+    "rejected": 53,
+    "time": "00:39"
+  },
+  {
+    "pdf": "MONDAY AUCTION - IND. AREA 2 - 14-SEP-2026 -C.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 75,
+    "kept": 18,
+    "rejected": 55,
+    "time": "00:39"
+  },
+  {
+    "pdf": "Monday Auction 14-09-2026 Marhaba Cars Auction Souq Branch.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 152,
+    "kept": 25,
+    "rejected": 104,
+    "time": "00:39"
   }
 ]
