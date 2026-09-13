@@ -121,7 +121,7 @@
   },
   {
     "pdf": "SUNDAY 13 SEP 2026 -A.pdf",
-    "auction": "SUNDAY 13 SEP 2026 -A",
+    "auction": "Al Nukhbah Cars Auction",
     "pages": 53,
     "kept": 2,
     "rejected": 14,
@@ -129,7 +129,7 @@
   },
   {
     "pdf": "SUNDAY 13 SEP 2026 -B.pdf",
-    "auction": "SUNDAY 13 SEP 2026 -B",
+    "auction": "Al Nukhbah Cars Auction",
     "pages": 53,
     "kept": 4,
     "rejected": 25,
@@ -137,7 +137,7 @@
   },
   {
     "pdf": "SUNDAY 13 SEP 2026 -C.pdf",
-    "auction": "SUNDAY 13 SEP 2026 -C",
+    "auction": "Al Nukhbah Cars Auction",
     "pages": 53,
     "kept": 2,
     "rejected": 28,
@@ -145,7 +145,7 @@
   },
   {
     "pdf": "SUNDAY 13 SEP 2026 -D.pdf",
-    "auction": "SUNDAY 13 SEP 2026 -D",
+    "auction": "Al Nukhbah Cars Auction",
     "pages": 50,
     "kept": 1,
     "rejected": 13,
@@ -254,5 +254,13 @@
     "kept": 15,
     "rejected": 40,
     "time": "07:24"
+  },
+  {
+    "pdf": "PUSH TRIGGER K 13-09-2026.pdf",
+    "auction": "PUSH TRIGGER K 13-09-2026",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 0,
+    "time": "08:00"
   }
 ]
