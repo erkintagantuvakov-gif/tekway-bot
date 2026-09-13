@@ -262,5 +262,13 @@
     "kept": 0,
     "rejected": 0,
     "time": "08:00"
+  },
+  {
+    "pdf": "PUSH TRIGGER L 13-09-2026.pdf",
+    "auction": "PUSH TRIGGER L 13-09-2026",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 0,
+    "time": "12:54"
   }
 ]

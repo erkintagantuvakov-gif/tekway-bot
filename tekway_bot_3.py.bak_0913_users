@@ -1109,24 +1109,21 @@ async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Sonky gelen boyunca sortla
     items = sorted(users.items(), key=lambda x: x[1].get("last_seen", ""), reverse=True)
 
-    # 13.09 DUZEDIS - /users ISLEMEYARDI
-    # Ulanyjynyn adynda "_" ya "*" bolsa (mysal: "Mr_Tiktok"), Telegram
-    # "Can't parse entities" berya we HABAR ASLA IBERILMEYA.
-    # Onki setir: txt += f"{i}. {name} {un}..."  -> ad gacyrylman goyulyardy.
-    # Indi: esc() bilen gacyrylya + _send_md_safe ulanylya (ol basartmasa
-    # bellik-siz gaytadan iberya, bot hic haçan dymmaly dal).
     txt = f"👥 *Ulanyjylar ({len(items)}):*\n\n"
     for i, (uid_s, u) in enumerate(items[:40], 1):
-        name = esc(u.get("name", "?"))
-        un = f"@{esc(u['username'])}" if u.get("username") else ""
+        name = u.get("name", "?")
+        un = f"@{u['username']}" if u.get("username") else ""
         s = u.get("searches", 0)
-        last = esc(u.get("last_seen", "")[:10])
+        last = u.get("last_seen", "")[:10]
         txt += f"{i}. {name} {un}\n   🔍{s} · {last}\n"
 
     if len(items) > 40:
         txt += f"\n... ýene {len(items)-40} sany"
 
-    await _send_md_safe(update.message, txt)
+    # Telegram habar cakleri - 4096 simwol
+    if len(txt) > 3900:
+        txt = txt[:3900] + "\n..."
+    await update.message.reply_text(txt, parse_mode="Markdown")
 
 
 # ============================================================
