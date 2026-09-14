@@ -129,5 +129,22 @@
       "yl=2017": 4
     },
     "msg": "70 sahypa işlendi, diňe 2 maşyn tapyldy"
+  },
+  {
+    "id": "20260915|Marhaba Tuesday 15-09-2026 Main Branch Industrial Area 2 -C.pdf",
+    "date": "20260915",
+    "pdf": "Marhaba Tuesday 15-09-2026 Main Branch Industrial Area 2 -C.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 73,
+    "kept": 0,
+    "rejected": 65,
+    "reasons": {
+      "yl=2011": 11,
+      "yl=2018": 2,
+      "yl=2019": 5,
+      "yl=2020": 1,
+      "yl=2017": 11
+    },
+    "msg": "73 sahypa işlendi, ýöne 0 maşyn tapyldy"
   }
 ]

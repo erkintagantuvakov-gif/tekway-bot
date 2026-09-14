@@ -6,5 +6,181 @@
     "kept": 0,
     "rejected": 0,
     "time": "00:31"
+  },
+  {
+    "pdf": "TUESDAY SAJAA AUCTION 15-SEP-2026 -A.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 91,
+    "kept": 34,
+    "rejected": 50,
+    "time": "00:43"
+  },
+  {
+    "pdf": "15-SEPT-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 73,
+    "rejected": 73,
+    "time": "00:45"
+  },
+  {
+    "pdf": "Marhaba Tuesday 15-09-2026 Main Branch Industrial Area 2 -A.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 75,
+    "kept": 7,
+    "rejected": 61,
+    "time": "00:45"
+  },
+  {
+    "pdf": "Marhaba Tuesday 15-09-2026 Main Branch Industrial Area 2 -B.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 75,
+    "kept": 14,
+    "rejected": 57,
+    "time": "00:45"
+  },
+  {
+    "pdf": "Marhaba Tuesday 15-09-2026 Main Branch Industrial Area 2 -C.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 73,
+    "kept": 0,
+    "rejected": 18,
+    "time": "00:49"
+  },
+  {
+    "pdf": "TUESDAY SAJAA AUCTION 15-SEP-2026 -B.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 91,
+    "kept": 34,
+    "rejected": 54,
+    "time": "00:49"
+  },
+  {
+    "pdf": "TUESDAY SAJAA AUCTION 15-SEP-2026 -C.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 90,
+    "kept": 28,
+    "rejected": 60,
+    "time": "00:49"
+  },
+  {
+    "pdf": "15-SEPT 2026 KHAT AL JAZEERA CARS AUCTION -A.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 40,
+    "kept": 19,
+    "rejected": 20,
+    "time": "00:51"
+  },
+  {
+    "pdf": "15-SEPT 2026 KHAT AL JAZEERA CARS AUCTION -B.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 40,
+    "kept": 18,
+    "rejected": 19,
+    "time": "00:52"
+  },
+  {
+    "pdf": "15-SEPT 2026 KHAT AL JAZEERA CARS AUCTION -C.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 40,
+    "kept": 17,
+    "rejected": 21,
+    "time": "00:54"
+  },
+  {
+    "pdf": "15-SEPT 2026 KHAT AL JAZEERA CARS AUCTION -D.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 39,
+    "kept": 19,
+    "rejected": 18,
+    "time": "00:55"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 15 SEPTEMBER 2026 -A.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 15,
+    "kept": 2,
+    "rejected": 9,
+    "time": "00:55"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 15 SEPTEMBER 2026 -B.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 15,
+    "kept": 2,
+    "rejected": 9,
+    "time": "00:55"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 15 SEPTEMBER 2026 -C.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 15,
+    "kept": 1,
+    "rejected": 10,
+    "time": "00:55"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 15 SEPTEMBER 2026 -D.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 15,
+    "kept": 4,
+    "rejected": 9,
+    "time": "00:55"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 15 SEPTEMBER 2026 -E.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 15,
+    "kept": 2,
+    "rejected": 8,
+    "time": "00:55"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 15 SEPTEMBER 2026 -F.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 15,
+    "kept": 7,
+    "rejected": 6,
+    "time": "00:55"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 15 SEPTEMBER 2026 -G.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 15,
+    "kept": 4,
+    "rejected": 9,
+    "time": "00:55"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 15 SEPTEMBER 2026 -H.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 10,
+    "kept": 0,
+    "rejected": 10,
+    "time": "00:55"
+  },
+  {
+    "pdf": "Tuesday - 15-09-2026 - GCA -A.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 47,
+    "kept": 14,
+    "rejected": 28,
+    "time": "00:55"
+  },
+  {
+    "pdf": "Tuesday - 15-09-2026 - GCA -B.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 47,
+    "kept": 20,
+    "rejected": 24,
+    "time": "00:55"
+  },
+  {
+    "pdf": "Tuesday - 15-09-2026 - GCA -C.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 45,
+    "kept": 10,
+    "rejected": 31,
+    "time": "00:55"
   }
 ]
