@@ -182,5 +182,13 @@
     "kept": 10,
     "rejected": 31,
     "time": "00:55"
+  },
+  {
+    "pdf": "15-09-2026 TUESDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 72,
+    "kept": 31,
+    "rejected": 35,
+    "time": "07:30"
   }
 ]
