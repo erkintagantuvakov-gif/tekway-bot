@@ -94,5 +94,45 @@
     "kept": 1,
     "rejected": 44,
     "time": "10:51"
+  },
+  {
+    "pdf": "WEDNESDAY 16 SEP 2026 INDUSTRIAL AREA 2 -B.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 51,
+    "kept": 17,
+    "rejected": 31,
+    "time": "10:55"
+  },
+  {
+    "pdf": "WEDNESDAY 16 SEP 2026 INDUSTRIAL AREA 2 -C.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 51,
+    "kept": 9,
+    "rejected": 39,
+    "time": "10:55"
+  },
+  {
+    "pdf": "WEDNESDAY 16 SEP 2026 INDUSTRIAL AREA 2 -D.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 51,
+    "kept": 4,
+    "rejected": 44,
+    "time": "10:55"
+  },
+  {
+    "pdf": "WEDNESDAY 16 SEP 2026 INDUSTRIAL AREA 2 -E.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 44,
+    "kept": 5,
+    "rejected": 36,
+    "time": "10:56"
+  },
+  {
+    "pdf": "PUSH TRIGGER R 16-09-2026.pdf",
+    "auction": "PUSH TRIGGER R 16-09-2026",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 0,
+    "time": "10:58"
   }
 ]
