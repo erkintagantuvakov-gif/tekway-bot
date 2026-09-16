@@ -2038,5 +2038,20 @@
   "image_path": "car_images/20260916/WEDNESDAY_16_SEP_2026__D_p046.jpg",
   "telegram_file_id": "",
   "code": "0916-135"
+ },
+ {
+  "brand": "Hyundai",
+  "model": "Elantra N Line",
+  "year": 2021,
+  "color": "",
+  "price": 26000,
+  "auction": "Al Nukhbah Cars Auction",
+  "auction_branch": "IND 2",
+  "auction_time": "19:00",
+  "date": "20260916",
+  "page": 23,
+  "image_path": "car_images/20260916/WEDNESDAY_16_SEP_2026_INDUSTRIAL_AREA_2__A_p023.jpg",
+  "telegram_file_id": "",
+  "code": "0916-137"
  }
 ]
