@@ -46,5 +46,45 @@
     "kept": 21,
     "rejected": 73,
     "time": "10:35"
+  },
+  {
+    "pdf": "WEDNESDAY 16 SEP 2026 -A.pdf",
+    "auction": "WEDNESDAY 16 SEP 2026 -A",
+    "pages": 51,
+    "kept": 0,
+    "rejected": 30,
+    "time": "10:42"
+  },
+  {
+    "pdf": "WEDNESDAY 16 SEP 2026 -B.pdf",
+    "auction": "WEDNESDAY 16 SEP 2026 -B",
+    "pages": 51,
+    "kept": 7,
+    "rejected": 7,
+    "time": "10:42"
+  },
+  {
+    "pdf": "WEDNESDAY 16 SEP 2026 -C.pdf",
+    "auction": "WEDNESDAY 16 SEP 2026 -C",
+    "pages": 51,
+    "kept": 2,
+    "rejected": 17,
+    "time": "10:43"
+  },
+  {
+    "pdf": "WEDNESDAY 16 SEP 2026 -D.pdf",
+    "auction": "WEDNESDAY 16 SEP 2026 -D",
+    "pages": 51,
+    "kept": 2,
+    "rejected": 26,
+    "time": "10:43"
+  },
+  {
+    "pdf": "WEDNESDAY 16 SEP 2026 -E.pdf",
+    "auction": "WEDNESDAY 16 SEP 2026 -E",
+    "pages": 44,
+    "kept": 0,
+    "rejected": 13,
+    "time": "10:43"
   }
 ]

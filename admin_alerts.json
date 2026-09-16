@@ -146,5 +146,39 @@
       "yl=2017": 11
     },
     "msg": "73 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260916|WEDNESDAY 16 SEP 2026 -A.pdf",
+    "date": "20260916",
+    "pdf": "WEDNESDAY 16 SEP 2026 -A.pdf",
+    "auction": "WEDNESDAY 16 SEP 2026 -A",
+    "pages": 51,
+    "kept": 0,
+    "rejected": 30,
+    "reasons": {
+      "gadagan brand: RANGE": 2,
+      "uly motor modeli: GENESIS": 2,
+      "yl=2018": 6,
+      "gadagan model: BRONCO": 2,
+      "yl=2016": 1
+    },
+    "msg": "51 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260916|WEDNESDAY 16 SEP 2026 -E.pdf",
+    "date": "20260916",
+    "pdf": "WEDNESDAY 16 SEP 2026 -E.pdf",
+    "auction": "WEDNESDAY 16 SEP 2026 -E",
+    "pages": 44,
+    "kept": 0,
+    "rejected": 13,
+    "reasons": {
+      "yl=2013": 1,
+      "yl=2016": 1,
+      "yl=2017": 1,
+      "yl=2020": 1,
+      "yl=2019": 1
+    },
+    "msg": "44 sahypa işlendi, ýöne 0 maşyn tapyldy"
   }
 ]
