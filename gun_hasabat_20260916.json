@@ -14,5 +14,37 @@
     "kept": 47,
     "rejected": 32,
     "time": "10:26"
+  },
+  {
+    "pdf": "WEDNESDAY AUCTION 16-SEP-2026 -A.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 117,
+    "kept": 34,
+    "rejected": 67,
+    "time": "10:34"
+  },
+  {
+    "pdf": "Wednesday Auction 16-09-2026 Marhaba Cars Auction Presentation Souq Branch -A.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 97,
+    "kept": 20,
+    "rejected": 54,
+    "time": "10:34"
+  },
+  {
+    "pdf": "Wednesday Auction 16-09-2026 Marhaba Cars Auction Presentation Souq Branch -B.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 57,
+    "kept": 3,
+    "rejected": 43,
+    "time": "10:34"
+  },
+  {
+    "pdf": "WEDNESDAY AUCTION 16-SEP-2026 -B.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 97,
+    "kept": 21,
+    "rejected": 73,
+    "time": "10:35"
   }
 ]
