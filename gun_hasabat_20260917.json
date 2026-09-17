@@ -30,5 +30,21 @@
     "kept": 0,
     "rejected": 0,
     "time": "05:19"
+  },
+  {
+    "pdf": "NCA 17TH SEPTEMBER VEHICELS .pdf",
+    "auction": "Nojoom Cars Auction",
+    "pages": 121,
+    "kept": 66,
+    "rejected": 47,
+    "time": "05:30"
+  },
+  {
+    "pdf": "17-SEPT-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 71,
+    "rejected": 75,
+    "time": "05:32"
   }
 ]
