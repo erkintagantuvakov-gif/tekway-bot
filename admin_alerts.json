@@ -180,5 +180,16 @@
       "yl=2019": 1
     },
     "msg": "44 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260917|PUSH|Push bolmady: fatal: unable to access 'h",
+    "date": "20260917",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: fatal: unable to access 'https://github.com/erkintagantuvakov-gif/tekway-bot.git/': Could not resolve host: github.com\n"
   }
 ]
