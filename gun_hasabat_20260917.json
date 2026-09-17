@@ -6,5 +6,29 @@
     "kept": 0,
     "rejected": 0,
     "time": "05:08"
+  },
+  {
+    "pdf": "Marhaba Thursday 17-09-2026 Main Branch Industrial Area 2 -A.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 107,
+    "kept": 23,
+    "rejected": 75,
+    "time": "05:18"
+  },
+  {
+    "pdf": "Marhaba Thursday 17-09-2026 Main Branch Industrial Area 2 -B.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 107,
+    "kept": 5,
+    "rejected": 88,
+    "time": "05:19"
+  },
+  {
+    "pdf": "Marhaba Thursday 17-09-2026 Main Branch Industrial Area 2 -C.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 4,
+    "kept": 0,
+    "rejected": 0,
+    "time": "05:19"
   }
 ]
