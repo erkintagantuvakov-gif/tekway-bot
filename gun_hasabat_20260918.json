@@ -46,5 +46,173 @@
     "kept": 15,
     "rejected": 32,
     "time": "00:09"
+  },
+  {
+    "pdf": "18-SEPT 2026 KHAT AL JAZEERA CARS AUCTION -A.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 79,
+    "kept": 39,
+    "rejected": 34,
+    "time": "00:15"
+  },
+  {
+    "pdf": "18-SEPT 2026 KHAT AL JAZEERA CARS AUCTION -B.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 79,
+    "kept": 43,
+    "rejected": 35,
+    "time": "00:18"
+  },
+  {
+    "pdf": "18-SEPT 2026 KHAT AL JAZEERA CARS AUCTION -C.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 73,
+    "kept": 14,
+    "rejected": 55,
+    "time": "00:20"
+  },
+  {
+    "pdf": "Fadak Cars Auction 18-9-2026 SAJAA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 139,
+    "kept": 74,
+    "rejected": 60,
+    "time": "00:21"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 18-09-2026 -A.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 42,
+    "kept": 26,
+    "rejected": 12,
+    "time": "00:26"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 18-09-2026 -B.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 42,
+    "kept": 25,
+    "rejected": 14,
+    "time": "00:31"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 18-09-2026 -C.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 42,
+    "kept": 21,
+    "rejected": 18,
+    "time": "00:36"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 18-09-2026 -D.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 37,
+    "kept": 19,
+    "rejected": 15,
+    "time": "00:40"
+  },
+  {
+    "pdf": "FRIDAY 18 SEP 2026 INDUSTRIAL AREA 2 -A.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 49,
+    "kept": 11,
+    "rejected": 32,
+    "time": "00:41"
+  },
+  {
+    "pdf": "FRIDAY 18 SEP 2026 INDUSTRIAL AREA 2 -B.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 49,
+    "kept": 9,
+    "rejected": 37,
+    "time": "00:41"
+  },
+  {
+    "pdf": "FRIDAY 18 SEP 2026 INDUSTRIAL AREA 2 -C.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 49,
+    "kept": 9,
+    "rejected": 37,
+    "time": "00:41"
+  },
+  {
+    "pdf": "FRIDAY 18 SEP 2026 INDUSTRIAL AREA 2 -D.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 49,
+    "kept": 2,
+    "rejected": 44,
+    "time": "00:41"
+  },
+  {
+    "pdf": "FRIDAY 18 SEP 2026 INDUSTRIAL AREA 2 -E.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 43,
+    "kept": 5,
+    "rejected": 35,
+    "time": "00:41"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 18 SEPTEMBER  2026 -A.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 14,
+    "kept": 2,
+    "rejected": 9,
+    "time": "00:41"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 18 SEPTEMBER  2026 -B.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 14,
+    "kept": 3,
+    "rejected": 7,
+    "time": "00:41"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 18 SEPTEMBER  2026 -C.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 14,
+    "kept": 2,
+    "rejected": 9,
+    "time": "00:41"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 18 SEPTEMBER  2026 -D.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 14,
+    "kept": 2,
+    "rejected": 9,
+    "time": "00:41"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 18 SEPTEMBER  2026 -E.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 14,
+    "kept": 4,
+    "rejected": 6,
+    "time": "00:41"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 18 SEPTEMBER  2026 -F.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 14,
+    "kept": 4,
+    "rejected": 7,
+    "time": "00:41"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 18 SEPTEMBER  2026 -G.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 14,
+    "kept": 4,
+    "rejected": 8,
+    "time": "00:42"
+  },
+  {
+    "pdf": "HAJI MOHD CAR AUCTION Catalogue 18 SEPTEMBER  2026 -H.pdf",
+    "auction": "HAJI MOHD Cars Auctions",
+    "pages": 12,
+    "kept": 3,
+    "rejected": 7,
+    "time": "00:42"
   }
 ]
