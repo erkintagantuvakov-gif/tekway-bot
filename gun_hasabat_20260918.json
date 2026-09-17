@@ -1,0 +1,50 @@
+[
+  {
+    "pdf": "FRIDAY AUCTION 18-09-2026 GCA -A.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 50,
+    "kept": 9,
+    "rejected": 36,
+    "time": "00:05"
+  },
+  {
+    "pdf": "FRIDAY AUCTION 18-09-2026 GCA -B.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 50,
+    "kept": 14,
+    "rejected": 30,
+    "time": "00:05"
+  },
+  {
+    "pdf": "FRIDAY AUCTION 18-09-2026 GCA -C.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 50,
+    "kept": 17,
+    "rejected": 28,
+    "time": "00:05"
+  },
+  {
+    "pdf": "18-09-2026 FRIDAY AUCTION -A.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 56,
+    "kept": 13,
+    "rejected": 36,
+    "time": "00:08"
+  },
+  {
+    "pdf": "18-09-2026 FRIDAY AUCTION -B.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 26,
+    "kept": 6,
+    "rejected": 16,
+    "time": "00:09"
+  },
+  {
+    "pdf": "FRIDAY AUCTION 18-09-2026 GCA -D.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 50,
+    "kept": 15,
+    "rejected": 32,
+    "time": "00:09"
+  }
+]
