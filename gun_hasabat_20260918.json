@@ -214,5 +214,37 @@
     "kept": 3,
     "rejected": 7,
     "time": "00:42"
+  },
+  {
+    "pdf": "FRIDAY GRAND AUCTION 18-SEP-2026 -A.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 107,
+    "kept": 26,
+    "rejected": 39,
+    "time": "06:06"
+  },
+  {
+    "pdf": "FRIDAY GRAND AUCTION 18-SEP-2026 -B.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 107,
+    "kept": 38,
+    "rejected": 58,
+    "time": "06:07"
+  },
+  {
+    "pdf": "FRIDAY GRAND AUCTION 18-SEP-2026 -C.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 107,
+    "kept": 32,
+    "rejected": 69,
+    "time": "06:07"
+  },
+  {
+    "pdf": "FRIDAY GRAND AUCTION 18-SEP-2026 -D.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 67,
+    "kept": 30,
+    "rejected": 33,
+    "time": "06:07"
   }
 ]
