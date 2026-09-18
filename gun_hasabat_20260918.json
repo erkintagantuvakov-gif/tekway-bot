@@ -246,5 +246,29 @@
     "kept": 30,
     "rejected": 33,
     "time": "06:07"
+  },
+  {
+    "pdf": "AL QARYAH FRIDAY GRAND AUCTION 18-SEP-2026 -B.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 107,
+    "kept": 38,
+    "rejected": 56,
+    "time": "08:08"
+  },
+  {
+    "pdf": "AL QARYAH FRIDAY GRAND AUCTION 18-SEP-2026 -C.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 107,
+    "kept": 32,
+    "rejected": 68,
+    "time": "08:08"
+  },
+  {
+    "pdf": "AL QARYAH FRIDAY GRAND AUCTION 18-SEP-2026 -D.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 67,
+    "kept": 30,
+    "rejected": 32,
+    "time": "08:09"
   }
 ]
