@@ -191,5 +191,22 @@
     "rejected": 0,
     "reasons": {},
     "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: fatal: unable to access 'https://github.com/erkintagantuvakov-gif/tekway-bot.git/': Could not resolve host: github.com\n"
+  },
+  {
+    "id": "20260920|MARHABA MAIN BRANCH INDUSTRIAL AREA 2 SUNDAY 20-09-2026 -C.pdf",
+    "date": "20260920",
+    "pdf": "MARHABA MAIN BRANCH INDUSTRIAL AREA 2 SUNDAY 20-09-2026 -C.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 81,
+    "kept": 0,
+    "rejected": 72,
+    "reasons": {
+      "yl=2011": 12,
+      "yl=2016": 9,
+      "yl=2017": 15,
+      "yl=2012": 8,
+      "yl=2015": 6
+    },
+    "msg": "81 sahypa işlendi, ýöne 0 maşyn tapyldy"
   }
 ]
