@@ -6,5 +6,45 @@
     "kept": 12,
     "rejected": 42,
     "time": "06:53"
+  },
+  {
+    "pdf": "AL QARYAH SATURDAY AUCTION IND AREA 2 19-SEP-2026 -A.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 103,
+    "kept": 22,
+    "rejected": 60,
+    "time": "06:57"
+  },
+  {
+    "pdf": "AL QARYAH SATURDAY AUCTION IND AREA 2 19-SEP-2026 -B.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 103,
+    "kept": 29,
+    "rejected": 69,
+    "time": "06:57"
+  },
+  {
+    "pdf": "AL QARYAH SATURDAY AUCTION IND AREA 2 19-SEP-2026 -C.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 23,
+    "kept": 6,
+    "rejected": 13,
+    "time": "06:57"
+  },
+  {
+    "pdf": "Fadak Cars Auction 19-9-2026 INDUSTRIAL AREA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 81,
+    "kept": 48,
+    "rejected": 29,
+    "time": "06:58"
+  },
+  {
+    "pdf": "WEST CARS AUCTIONS 19-SEPT-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 68,
+    "rejected": 78,
+    "time": "07:01"
   }
 ]
