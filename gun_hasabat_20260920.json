@@ -246,5 +246,13 @@
     "kept": 0,
     "rejected": 72,
     "time": "01:15"
+  },
+  {
+    "pdf": "PUSH_TRIGGER_0920a.pdf",
+    "auction": "PUSH_TRIGGER_0920a",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 0,
+    "time": "02:34"
   }
 ]
