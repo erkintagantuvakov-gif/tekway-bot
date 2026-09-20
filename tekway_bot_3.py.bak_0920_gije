@@ -53,20 +53,6 @@ SHOW_HOME_PRICE = False   # True -> kartada gorkezer
 
 DUBAI_TZ = timezone(timedelta(hours=4))
 
-# 20.09.2026 ERKIN: "gije bir topar bildiriş gelýär, biz ýatýarys.
-# Sargytlar we beýleki habarlar 09:30-da gelsin."
-# PDF-ler 00:30-02:30 aralygynda işlenýär. Şol wagt çykan ähli awtomat
-# habarlar (sargyt, müşderi ýatlatmasy, "maglumat taýýar", parser
-# duýduryşy) SAKLANYP DURÝAR we 09:30-dan soň iberilýär.
-# Bu Pawel-a hem ertir ir bazany barlap-düzetmäge wagt berýär.
-HABAR_BASLANYAR = (9, 30)    # Dubaý wagty (sagat, minut)
-
-
-def habar_wagtymy():
-    """09:30-dan soň bolsa True. Gijesine awtomat habar ugradylmaýar."""
-    now = datetime.now(DUBAI_TZ)
-    return (now.hour, now.minute) >= HABAR_BASLANYAR
-
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
@@ -1155,9 +1141,6 @@ async def check_alerts(bot):
         if not db_is_fresh(cars):
             logger.info(f"check_alerts: DB kone (today={get_today()})")
             return
-        if not habar_wagtymy():
-            logger.info("check_alerts: gije - 09:30-a cenli saklanyar")
-            return
         y = load_yatlatmas()
         if not y:
             logger.info(f"check_alerts: yatlatma yok ({ALERTS_FILE})")
@@ -1241,26 +1224,23 @@ def load_report(day):
 
 def report_lines(day, cars):
     """Auksion boýunça setirler. Hasabat ýok bolsa bazadan hasaplaýar."""
-    # 20.09: öň her PDF bölegi aýry setir bolýardy ("31 auksion").
-    # Indi auksion boýunça jemlenýär, maşyn sany BAZADAN alynýar
-    # (Pawel-yň düzedişlerinden soňky hakyky san).
     rep = load_report(day)
-    cnt, pages = {}, {}
-    for c in cars:
-        if str(c.get("date")) == day:
-            a = c.get("auction", "?")
-            cnt[a] = cnt.get(a, 0) + 1
-    for r in rep:
-        a = str(r.get("auction", "?"))
-        if a.upper().startswith("PUSH"):
-            continue
-        pages[a] = pages.get(a, 0) + (r.get("pages") or 0)
-        cnt.setdefault(a, 0)
     out = []
-    for a, n in sorted(cnt.items(), key=lambda x: -x[1]):
-        mark = "⚠️" if n == 0 else "🏢"
-        sah = f"  _({pages[a]} sah.)_" if pages.get(a) else ""
-        out.append(f"{mark} {esc(str(a)[:26])} — *{n}* maşyn{sah}")
+    if rep:
+        for r in sorted(rep, key=lambda x: -(x.get("kept") or 0)):
+            nm = str(r.get("auction", "?"))[:26]
+            kept = r.get("kept", 0)
+            pages = r.get("pages", 0)
+            mark = "⚠️" if kept == 0 else "🏢"
+            out.append(f"{mark} {esc(nm)} — *{kept}* maşyn  _({pages} sah.)_")
+    else:
+        cnt = {}
+        for c in cars:
+            if str(c.get("date")) == day:
+                a = c.get("auction", "?")
+                cnt[a] = cnt.get(a, 0) + 1
+        for a, n in sorted(cnt.items(), key=lambda x: -x[1]):
+            out.append(f"🏢 {esc(str(a)[:26])} — *{n}* maşyn")
     return out
 
 
@@ -1368,13 +1348,10 @@ async def data_watch_loop(app):
             fresh = db_is_fresh(cars)
 
             # Parser duyduryşlary (0 masyn cykan auksionlar)
-            # 20.09: gije ugradylmaýar - 09:30-dan soň.
-            if habar_wagtymy():
-                await check_parser_alerts(app.bot)
+            await check_parser_alerts(app.bot)
 
             # 1) Maglumat geldi -> bir gezek "taýýar" habary
-            #    20.09: diňe 09:30-dan soň (gije ýatýarlar).
-            if fresh and not st.get("ok") and habar_wagtymy():
+            if fresh and not st.get("ok"):
                 st["ok"] = True
                 _save_warn(st)
                 try:
@@ -2042,10 +2019,7 @@ async def zakaz_gozegcilik(app):
     await asyncio.sleep(120)
     while True:
         try:
-            # 20.09: gije sargyt habary ugradylmaýar - 09:30-dan soň.
-            # (/sargytbarla el bilen islendik wagt işleýär.)
-            if habar_wagtymy():
-                await _sargyt_habar_isle(app)
+            await _sargyt_habar_isle(app)
         except Exception as e:
             logger.error("zakaz_gozegcilik: %s", e)
         await asyncio.sleep(1800)   # 30 minutda bir
@@ -2249,14 +2223,6 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     # Admin topara traceback iberilmez, ulanyja-da yalnyshlyk yazylmaz.
     if "query is too old" in str(e).lower():
         logger.info("Kone callback (zyyansyz): %s", e)
-        return
-
-    # 20.09.2026: "NetworkError: Bad Gateway" gije 05:12-de Erkine geldi.
-    # Bu Telegram serweriniň wagtlaýyn näsazlygy - bot özi gaýtadan
-    # birikýär, hiç zat etmeli däl. Admine traceback ugradylmaýar.
-    from telegram.error import NetworkError, TimedOut
-    if isinstance(e, (NetworkError, TimedOut)) and not isinstance(update, Update):
-        logger.warning("Wagtlayyn tor yalnyshlygy (zyyansyz): %s", e)
         return
 
     logger.error("Tutulmadyk yalnyshlyk: %s", e, exc_info=e)
