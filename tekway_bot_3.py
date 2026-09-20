@@ -54,16 +54,16 @@ SHOW_HOME_PRICE = False   # True -> kartada gorkezer
 DUBAI_TZ = timezone(timedelta(hours=4))
 
 # 20.09.2026 ERKIN: "gije bir topar bildiriş gelýär, biz ýatýarys.
-# Sargytlar we beýleki habarlar 09:30-da gelsin."
+# Sargytlar we beýleki habarlar 08:45-de gelsin."
 # PDF-ler 00:30-02:30 aralygynda işlenýär. Şol wagt çykan ähli awtomat
 # habarlar (sargyt, müşderi ýatlatmasy, "maglumat taýýar", parser
-# duýduryşy) SAKLANYP DURÝAR we 09:30-dan soň iberilýär.
+# duýduryşy) SAKLANYP DURÝAR we 08:45-den soň iberilýär.
 # Bu Pawel-a hem ertir ir bazany barlap-düzetmäge wagt berýär.
-HABAR_BASLANYAR = (9, 30)    # Dubaý wagty (sagat, minut)
+HABAR_BASLANYAR = (8, 45)    # Dubaý wagty (sagat, minut) — 20.09 Erkin: 09:30 giç, 08:45 et
 
 
 def habar_wagtymy():
-    """09:30-dan soň bolsa True. Gijesine awtomat habar ugradylmaýar."""
+    """08:45-den soň bolsa True. Gijesine awtomat habar ugradylmaýar."""
     now = datetime.now(DUBAI_TZ)
     return (now.hour, now.minute) >= HABAR_BASLANYAR
 
@@ -1156,7 +1156,7 @@ async def check_alerts(bot):
             logger.info(f"check_alerts: DB kone (today={get_today()})")
             return
         if not habar_wagtymy():
-            logger.info("check_alerts: gije - 09:30-a cenli saklanyar")
+            logger.info("check_alerts: gije - 08:45-e cenli saklanyar")
             return
         y = load_yatlatmas()
         if not y:
@@ -1368,12 +1368,12 @@ async def data_watch_loop(app):
             fresh = db_is_fresh(cars)
 
             # Parser duyduryşlary (0 masyn cykan auksionlar)
-            # 20.09: gije ugradylmaýar - 09:30-dan soň.
+            # 20.09: gije ugradylmaýar - 08:45-den soň.
             if habar_wagtymy():
                 await check_parser_alerts(app.bot)
 
             # 1) Maglumat geldi -> bir gezek "taýýar" habary
-            #    20.09: diňe 09:30-dan soň (gije ýatýarlar).
+            #    20.09: diňe 08:45-den soň (gije ýatýarlar).
             if fresh and not st.get("ok") and habar_wagtymy():
                 st["ok"] = True
                 _save_warn(st)
@@ -2042,7 +2042,7 @@ async def zakaz_gozegcilik(app):
     await asyncio.sleep(120)
     while True:
         try:
-            # 20.09: gije sargyt habary ugradylmaýar - 09:30-dan soň.
+            # 20.09: gije sargyt habary ugradylmaýar - 08:45-den soň.
             # (/sargytbarla el bilen islendik wagt işleýär.)
             if habar_wagtymy():
                 await _sargyt_habar_isle(app)
