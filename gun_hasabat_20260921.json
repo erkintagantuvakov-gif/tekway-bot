@@ -14,5 +14,21 @@
     "kept": 0,
     "rejected": 0,
     "time": "00:42"
+  },
+  {
+    "pdf": "AL QARYAH IND AREA 2 MONDAY 21-09-2026 -A.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 106,
+    "kept": 22,
+    "rejected": 69,
+    "time": "07:06"
+  },
+  {
+    "pdf": "AL QARYAH IND AREA 2 MONDAY 21-09-2026 -B.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 105,
+    "kept": 37,
+    "rejected": 63,
+    "time": "07:06"
   }
 ]
