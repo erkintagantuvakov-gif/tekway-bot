@@ -208,5 +208,22 @@
       "yl=2015": 6
     },
     "msg": "81 sahypa işlendi, ýöne 0 maşyn tapyldy"
+  },
+  {
+    "id": "20260922|MARHABA MAIN BRANCH INDUSTRIAL AREA 2 TUESDAY 22-09-2026 -C.pdf",
+    "date": "20260922",
+    "pdf": "MARHABA MAIN BRANCH INDUSTRIAL AREA 2 TUESDAY 22-09-2026 -C.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 35,
+    "kept": 0,
+    "rejected": 31,
+    "reasons": {
+      "yl=2011": 11,
+      "yl=2015": 7,
+      "yl=2010": 1,
+      "yl=2013": 3,
+      "yl=2017": 1
+    },
+    "msg": "35 sahypa işlendi, ýöne 0 maşyn tapyldy"
   }
 ]
