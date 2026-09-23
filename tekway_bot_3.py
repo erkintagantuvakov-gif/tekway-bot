@@ -839,6 +839,10 @@ TEXTS = {
         "tm": "🔔 *Ýatlatma!*\n\nSiziň gözlän maşynyňyz *{q}* şu gün auksionda bar!\nJemi: *{n}* sany",
         "ru": "🔔 *Напоминание!*\n\nМашина, которую вы искали — *{q}* — сегодня на аукционе!\nВсего: *{n}* шт.",
     },
+    "staff_panel": {
+        "tm": "👔 *TEK topary* — düwmeler aşakda taýýar.",
+        "ru": "👔 *Команда TEK* — кнопки внизу экрана.",
+    },
     # --- gündelik habar ---
     "daily_title": {
         "tm": "🌅 *Şu günki auksionlar*",
@@ -1254,9 +1258,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Ishgar bolsa — hemishelik duwme panelini gorkez (24.08)
     try:
         if _zk_rugsat(update.effective_user.id):
+            _l = lang_of(update.effective_user.id)
             await update.message.reply_text(
-                "👔 *TEK topary* — düwmeler aşakda taýýar.",
-                parse_mode="Markdown", reply_markup=ishgar_klawiatura())
+                T(_l, "staff_panel"), parse_mode="Markdown",
+                reply_markup=ishgar_klawiatura(_l))
     except Exception:
         pass
     uid = update.effective_user.id
@@ -2147,19 +2152,32 @@ async def zakaz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # "/" basyp soz yazmak howlukmac ishde bogyar.
 # Chozgut: ekranyn ashagynda HEMISHE duran duwmeler. Bir basyş.
 # Diňe ISHGARLERE gorkezilya, mushderiler gormeya.
+# 23.09: panel hem ulanyjynyň dilinde. Erkin rusça saýlanda ekranda
+# türkmençe düwmeler galýardy — garyşyk görünýärdi.
+# Iki diliň hem ýazgylary sanawda dur, şonuň üçin dil çalşanda
+# öňki düwmä basylsa-da bot düşünýär.
 ISHGAR_DUWME = {
     "📋 Sargytlar": "sanaw",
     "🔄 Täzele": "tazele",
     "📅 Şu gün": "bugun",
+    "📋 Заказы": "sanaw",
+    "🔄 Обновить": "tazele",
+    "📅 Сегодня": "bugun",
 }
 
-def ishgar_klawiatura():
+_ISHGAR_PANEL = {
+    "tm": ("📋 Sargytlar", "🔄 Täzele", "📅 Şu gün", "Maşyn gözlemek üçin ýaz…"),
+    "ru": ("📋 Заказы", "🔄 Обновить", "📅 Сегодня", "Напишите марку машины…"),
+}
+
+
+def ishgar_klawiatura(lang=DEFAULT_LANG):
+    a, b, c, ph = _ISHGAR_PANEL.get(lang) or _ISHGAR_PANEL["tm"]
     return ReplyKeyboardMarkup(
-        [[KeyboardButton("📋 Sargytlar")],
-         [KeyboardButton("🔄 Täzele"), KeyboardButton("📅 Şu gün")]],
+        [[KeyboardButton(a)], [KeyboardButton(b), KeyboardButton(c)]],
         resize_keyboard=True,
         is_persistent=True,
-        input_field_placeholder="Maşyn gözlemek üçin ýaz…",
+        input_field_placeholder=ph,
     )
 
 
@@ -2774,6 +2792,13 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             lang = DEFAULT_LANG
         set_user_pref(q.from_user.id, lang=lang)
         await q.message.reply_text(T(lang, "lang_saved"), parse_mode="Markdown")
+        # işgär bolsa aşakdaky panel hem täze dilde bolsun
+        try:
+            if _zk_rugsat(q.from_user.id):
+                await q.message.reply_text(T(lang, "staff_panel"), parse_mode="Markdown",
+                                           reply_markup=ishgar_klawiatura(lang))
+        except Exception:
+            pass
 
         # 23.09 ERKIN: "türkmenler giren wagty awtomat 2021-den ýokary bolar ýaly edäý"
         # 🇹🇲 baýdagy = türkmen müşderi = hemme maşyn (baza eýýäm 2021+).
