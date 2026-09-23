@@ -2774,7 +2774,17 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             lang = DEFAULT_LANG
         set_user_pref(q.from_user.id, lang=lang)
         await q.message.reply_text(T(lang, "lang_saved"), parse_mode="Markdown")
-        if user_min_year(q.from_user.id) or "min_year" in (load_users().get(str(q.from_user.id)) or {}):
+
+        # 23.09 ERKIN: "türkmenler giren wagty awtomat 2021-den ýokary bolar ýaly edäý"
+        # 🇹🇲 baýdagy = türkmen müşderi = hemme maşyn (baza eýýäm 2021+).
+        # Ýyl soragy SORALMAÝAR — bir düwme az, adam derrew gözläp başlaýar.
+        # Isleseler menýudaky "📅 Ýyl" düwmesinden üýtgedip bilýärler.
+        # Rus dilini saýlanlardan ýyl soralýar — olar dürli ýurtdan, isleg başga.
+        _bar = "min_year" in (load_users().get(str(q.from_user.id)) or {})
+        if lang == "tm" and not _bar:
+            set_user_pref(q.from_user.id, min_year=0)
+            await esasy_ekran(q.message, q.from_user.id)
+        elif _bar:
             await esasy_ekran(q.message, q.from_user.id)
         else:
             await q.message.reply_text(T(lang, "choose_year"), parse_mode="Markdown",
