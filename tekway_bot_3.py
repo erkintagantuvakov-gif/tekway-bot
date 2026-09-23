@@ -478,7 +478,7 @@ NOT_READY_MSG = (
 # gelse, ýyl süzgüji sebäpli "tapylmady" diýmeli däl.
 # ============================================================
 DEFAULT_LANG = "tm"
-YYL_WARIANTLAR = [0, 2023, 2024, 2025]
+YYL_WARIANTLAR = [0, 2022, 2023, 2024, 2025, 2026]
 
 
 def user_lang(uid):
@@ -597,7 +597,7 @@ TEXTS = {
         "tm": "🌐 *Dil saýlaň / Выберите язык*",
         "ru": "🌐 *Dil saýlaň / Выберите язык*",
     },
-    "yyl_hemmesi": {"tm": "Hemmesi", "ru": "Все годы"},
+    "yyl_hemmesi": {"tm": "Hemmesi (2021-den ýokary)", "ru": "Все годы (от 2021)"},
     "yyl_dan": {"tm": "{y}-den ýokary", "ru": "От {y} года"},
     "choose_year": {
         "tm": "📅 *Haýsy ýyldan başlap görkezeýin?*\n\n"
