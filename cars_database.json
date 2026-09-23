@@ -2203,5 +2203,35 @@
   "image_path": "car_images/20260923/AL_NUKHBAH_WEDNESDAY_23_SEP_2026__E_p033.jpg",
   "telegram_file_id": "",
   "code": "0923-146"
+ },
+ {
+  "brand": "Genesis",
+  "model": "Gv80 Base",
+  "year": 2021,
+  "color": "",
+  "price": 59000,
+  "auction": "Al Nukhbah Cars Auction",
+  "auction_branch": "Sajaa",
+  "auction_time": "19:00",
+  "date": "20260923",
+  "page": 4,
+  "image_path": "car_images/20260923/AL_NUKHBAH_WEDNESDAY_23_SEP_2026__GENESIS_p004.jpg",
+  "telegram_file_id": "",
+  "code": "0923-149"
+ },
+ {
+  "brand": "Genesis",
+  "model": "Gv70 Base",
+  "year": 2022,
+  "color": "",
+  "price": 56000,
+  "auction": "Al Nukhbah Cars Auction",
+  "auction_branch": "Sajaa",
+  "auction_time": "19:00",
+  "date": "20260923",
+  "page": 5,
+  "image_path": "car_images/20260923/AL_NUKHBAH_WEDNESDAY_23_SEP_2026__GENESIS_p005.jpg",
+  "telegram_file_id": "",
+  "code": "0923-148"
  }
 ]
