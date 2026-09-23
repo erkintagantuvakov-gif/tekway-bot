@@ -461,404 +461,6 @@ NOT_READY_MSG = (
 
 
 # ============================================================
-# DIL (tm / ru) + ÝYL SÜZGÜJI          23.09.2026 — Erkin
-# ------------------------------------------------------------
-# Erkin: "boty diňe TM müşderiler üçin däl-de beýleki ýurtlar
-#         üçinem edesim gelýär. rus dilinde. bota giren wagty
-#         ýyl saýlap bilsinler."
-#
-# Nähili işleýär:
-#   1) Ilkinji /start  -> dil soralýar (tm / ru)
-#   2) Soň            -> "haýsy ýyldan başlap görkezeýin?"
-#   3) Saýlaw users.json-da saklanýar (lang, min_year) — hemişelik.
-#   4) Menýuda "🌐 Dil" we "📅 Ýyl" düwmeleri — islendik wagt üýtget.
-#
-# Süzgüç DIŇE görkezilende işleýär — baza doly durýar.
-# KOD boýunça gözleg süzgüje BAGLY DÄL: müşderi TikTok-dan kod bilen
-# gelse, ýyl süzgüji sebäpli "tapylmady" diýmeli däl.
-# ============================================================
-DEFAULT_LANG = "tm"
-YYL_WARIANTLAR = [0, 2023, 2024, 2025]
-
-
-def user_lang(uid):
-    """Ulanyjynyň dili. Saýlamadyk bolsa None."""
-    try:
-        u = load_users().get(str(uid)) or {}
-        l = u.get("lang")
-        return l if l in ("tm", "ru") else None
-    except Exception:
-        return None
-
-
-def lang_of(uid):
-    """Dil, saýlanmadyk bolsa türkmençe."""
-    return user_lang(uid) or DEFAULT_LANG
-
-
-def user_min_year(uid):
-    try:
-        u = load_users().get(str(uid)) or {}
-        return int(u.get("min_year") or 0)
-    except Exception:
-        return 0
-
-
-def set_user_pref(uid, **kw):
-    try:
-        users = load_users()
-        uid = str(uid)
-        users.setdefault(uid, {})
-        users[uid].update(kw)
-        save_users(users)
-    except Exception as e:
-        logger.error("set_user_pref: %s", e)
-
-
-def suzgucle(cars, uid):
-    """Ulanyjynyň saýlan ýylyndan pes maşynlary aýyrýar."""
-    y = user_min_year(uid)
-    if not y:
-        return cars
-    out = []
-    for c in cars:
-        try:
-            if int(c.get("year") or 0) >= y:
-                out.append(c)
-        except Exception:
-            out.append(c)
-    return out
-
-
-_RU_MASYN = ("машина", "машины", "машин")
-_RU_AUKSION = ("аукцион", "аукциона", "аукционов")
-_RU_AYLAR = ["января", "февраля", "марта", "апреля", "мая", "июня",
-             "июля", "августа", "сентября", "октября", "ноября", "декабря"]
-_RU_GUNLER = ["понедельник", "вторник", "среда", "четверг",
-              "пятница", "суббота", "воскресенье"]
-
-
-def _ru_plural(n, forms):
-    """1 машина · 2 машины · 5 машин"""
-    n = abs(int(n))
-    if n % 10 == 1 and n % 100 != 11:
-        return forms[0]
-    if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
-        return forms[1]
-    return forms[2]
-
-
-def w_car(lang, n):
-    return _ru_plural(n, _RU_MASYN) if lang == "ru" else "maşyn"
-
-
-def w_auc(lang, n):
-    return _ru_plural(n, _RU_AUKSION) if lang == "ru" else "auksion"
-
-
-def T(lang, key, **kw):
-    d = TEXTS.get(key) or {}
-    s = d.get(lang) or d.get("tm") or key
-    try:
-        return s.format(**kw) if kw else s
-    except Exception:
-        return s
-
-
-def dil_duwmeler():
-    return InlineKeyboardMarkup([[
-        InlineKeyboardButton("🇹🇲 Türkmençe", callback_data="lang:tm"),
-        InlineKeyboardButton("🇷🇺 Русский", callback_data="lang:ru"),
-    ]])
-
-
-def yyl_duwmeler(lang):
-    rows = []
-    for y in YYL_WARIANTLAR:
-        label = T(lang, "yyl_hemmesi") if not y else T(lang, "yyl_dan", y=y)
-        rows.append([InlineKeyboardButton(label, callback_data=f"yyl:{y}")])
-    return InlineKeyboardMarkup(rows)
-
-
-def esasy_menyu(lang):
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton(T(lang, "menu_search"), callback_data="search")],
-        [InlineKeyboardButton(T(lang, "menu_auction"), callback_data="auction")],
-        [InlineKeyboardButton(T(lang, "menu_alerts"), callback_data="myalerts")],
-        [InlineKeyboardButton(T(lang, "menu_year"), callback_data="setyear"),
-         InlineKeyboardButton(T(lang, "menu_lang"), callback_data="setlang")],
-        [InlineKeyboardButton(T(lang, "menu_contact"), callback_data="contact")],
-    ])
-
-
-TEXTS = {
-    # --- dil / ýyl ---
-    "choose_lang": {
-        "tm": "🌐 *Dil saýlaň / Выберите язык*",
-        "ru": "🌐 *Dil saýlaň / Выберите язык*",
-    },
-    "yyl_hemmesi": {"tm": "Hemmesi", "ru": "Все годы"},
-    "yyl_dan": {"tm": "{y}-den ýokary", "ru": "От {y} года"},
-    "choose_year": {
-        "tm": "📅 *Haýsy ýyldan başlap görkezeýin?*\n\n"
-              "_Soň islendik wagt menýudan üýtgedip bilersiňiz._",
-        "ru": "📅 *С какого года показывать машины?*\n\n"
-              "_Позже можно изменить в меню в любой момент._",
-    },
-    "year_saved_all": {
-        "tm": "✅ Ähli ýyllar görkeziler.",
-        "ru": "✅ Показываю машины всех годов.",
-    },
-    "year_saved": {
-        "tm": "✅ Indi diňe *{y}* we ondan täze maşynlar görkeziler.",
-        "ru": "✅ Теперь показываю только машины *{y}* года и новее.",
-    },
-    "lang_saved": {
-        "tm": "✅ Dil: *Türkmençe*",
-        "ru": "✅ Язык: *Русский*",
-    },
-    # --- menýu ---
-    "menu_search": {"tm": "🚗 Maşyn gözle", "ru": "🚗 Поиск машины"},
-    "menu_auction": {"tm": "🏢 Auksion gözle", "ru": "🏢 Поиск по аукциону"},
-    "menu_alerts": {"tm": "🔔 Ýatlatmalarym", "ru": "🔔 Мои напоминания"},
-    "menu_contact": {"tm": "📱 Habarlaşmak", "ru": "📱 Связаться"},
-    "menu_lang": {"tm": "🌐 Dil", "ru": "🌐 Язык"},
-    "menu_year": {"tm": "📅 Ýyl", "ru": "📅 Год"},
-    # --- start / help ---
-    "start": {
-        "tm": "🚗 *Dubai Auksion | TEK AUTO MARKET*\n\n"
-              "Salam! Men şu günki Dubaý auksionlarynyň maşynlaryny gözlemäge kömek edýärin.\n\n"
-              "📌 Nähili ulanmaly:\n"
-              "• Maşyn adyny ýaz — meselem: {ex}\n"
-              "• Auksion adyny ýaz — meselem: *Marhaba*, *Nojoom*\n"
-              "• Ýalňyş ýazsaň-da düşünýärin (`kamry`, `hunday`)\n"
-              "• Maşyn tapylmasa — düwme bilen ýatlatma goý\n"
-              "• /help — ähli komandalar",
-        "ru": "🚗 *Dubai Auksion | TEK AUTO MARKET*\n\n"
-              "Здравствуйте! Я помогаю искать машины на сегодняшних аукционах Дубая и Шарджи.\n\n"
-              "📌 Как пользоваться:\n"
-              "• Напишите марку или модель — например: {ex}\n"
-              "• Или название аукциона — например: *Marhaba*, *Nojoom*\n"
-              "• Понимаю и с ошибками, и по-русски (`камри`, `хендай`)\n"
-              "• Если машины нет — поставьте напоминание кнопкой\n"
-              "• /help — все команды",
-    },
-    "help": {
-        "tm": "📋 *Komandalar:*\n\n"
-              "🚗 *Maşyn gözlemek:* {ex}\n"
-              "🏢 *Auksion gözlemek:* {exa}\n"
-              "🔎 Ýalňyş ýazsaň-da düşünýärin: `kamry`, `hunday`\n"
-              "🆔 *Kod boýunça:* `0813-013`\n\n"
-              "🔔 *Ýatlatma:* maşyn tapylmasa — düwmä bas\n"
-              "📋 */myalerts* — ýatlatmalarym\n"
-              "❌ */delalert Camry* — ýatlatmany poz\n"
-              "❌ */delalert all* — hemmesini poz\n\n"
-              "📊 */today* — şu günki ýagdaý\n"
-              "🌐 */dil* — dili üýtget\n"
-              "📅 */yyl* — ýyl süzgüji\n"
-              "📱 */contact* — habarlaş",
-        "ru": "📋 *Команды:*\n\n"
-              "🚗 *Поиск машины:* {ex}\n"
-              "🏢 *Поиск аукциона:* {exa}\n"
-              "🔎 Понимаю с ошибками и по-русски: `камри`, `хендай`\n"
-              "🆔 *По коду:* `0813-013`\n\n"
-              "🔔 *Напоминание:* если машины нет — нажмите кнопку\n"
-              "📋 */myalerts* — мои напоминания\n"
-              "❌ */delalert Camry* — удалить напоминание\n"
-              "❌ */delalert all* — удалить все\n\n"
-              "📊 */today* — что сегодня на аукционах\n"
-              "🌐 */dil* — сменить язык\n"
-              "📅 */yyl* — фильтр по году\n"
-              "📱 */contact* — связаться",
-    },
-    "not_ready": {
-        "tm": "⏳ *Bugünki auksion maglumaty entek taýýar däl*\n\n"
-              "Adatça her gün irden **07:00-10:00** aralygynda täzelenýär.\n"
-              "Biraz soňra ýene synanyşyň.\n\n"
-              "📱 Gyssagly sorag bolsa habarlaşyň:",
-        "ru": "⏳ *Данные сегодняшних аукционов ещё не готовы*\n\n"
-              "Обычно они обновляются каждое утро с **07:00 до 10:00** (время Дубая).\n"
-              "Попробуйте чуть позже.\n\n"
-              "📱 Если вопрос срочный — напишите нам:",
-    },
-    # --- today ---
-    "today_title": {
-        "tm": "📅 *Şu günki auksionlar:*\n\n",
-        "ru": "📅 *Сегодняшние аукционы:*\n\n",
-    },
-    "today_cars": {"tm": "{n} maşyn", "ru": "{n} {w}"},
-    "today_total": {
-        "tm": "✅ Jemi: *{n} maşyn*  ·  {a} auksion",
-        "ru": "✅ Всего: *{n} {w}*  ·  {a} {wa}",
-    },
-    "today_empty_year": {
-        "tm": "📭 Siziň ýyl süzgüjiňize ({y}+) görä şu gün maşyn ýok.\n\n"
-              "Süzgüji üýtgetmek: /yyl",
-        "ru": "📭 По вашему фильтру ({y}+) сегодня машин нет.\n\n"
-              "Изменить фильтр: /yyl",
-    },
-    # --- kart ---
-    "cap_time_both": {
-        "tm": "🕐 Auksion: {d}, {t} (Dubaý wagty)",
-        "ru": "🕐 Аукцион: {d}, {t} (время Дубая)",
-    },
-    "cap_time_date": {"tm": "📅 Auksion: {d}", "ru": "📅 Аукцион: {d}"},
-    "cap_time_time": {
-        "tm": "🕐 Auksion: {t} (Dubaý wagty)",
-        "ru": "🕐 Аукцион: {t} (время Дубая)",
-    },
-    "cap_price": {
-        "tm": "💰 Başlanýan bahasy: *{usd:,} USD* ({aed} AED)",
-        "ru": "💰 Стартовая цена: *{usd:,} USD* ({aed} AED)",
-    },
-    "cap_home": {
-        "tm": "🏠 Öýe çenli: ~*{usd:,} USD*-dan",
-        "ru": "🏠 С доставкой: ~*{usd:,} USD*",
-    },
-    "cap_code": {"tm": "🆔 Kod: `{code}`", "ru": "🆔 Код: `{code}`"},
-    "wa_btn": {
-        "tm": "🚗 Şu maşyny gyzyklanýan",
-        "ru": "🚗 Интересует эта машина",
-    },
-    "wa_hello": {
-        "tm": "Salam! Şu maşyny gyzyklanýan:",
-        "ru": "Здравствуйте! Меня интересует эта машина:",
-    },
-    "wa_code": {"tm": "🆔 Kod: {code}", "ru": "🆔 Код: {code}"},
-    "wa_price": {
-        "tm": "💰 Başlanýan bahasy: {usd:,} USD ({aed} AED)",
-        "ru": "💰 Стартовая цена: {usd:,} USD ({aed} AED)",
-    },
-    # --- sanaw ---
-    "batch_shown": {
-        "tm": "📋 *{sent}/{total}* görkezildi.  Ýene *{left}* maşyn bar.\n\n"
-              "_Has takyk ýazsaň az çykar — meselem `Camry 2023`._",
-        "ru": "📋 Показано *{sent}/{total}*.  Ещё *{left}* машин.\n\n"
-              "_Напишите точнее — например `Camry 2023`._",
-    },
-    "batch_more": {"tm": "⬇️ Ýene {n} görkez", "ru": "⬇️ Показать ещё {n}"},
-    "batch_wa": {"tm": "📱 WhatsApp-a ýaz", "ru": "📱 Написать в WhatsApp"},
-    "batch_all": {
-        "tm": "✅ Hemmesi görkezildi — *{n}* maşyn.",
-        "ru": "✅ Показаны все — *{n}* {w}.",
-    },
-    # --- gözleg ---
-    "found": {
-        "tm": "🚗 *'{q}'* — {n} maşyn tapyldy:",
-        "ru": "🚗 *'{q}'* — найдено {n} {w}:",
-    },
-    "found_fuzzy": {
-        "tm": "🔎 *{s}* diýip düşündim — {n} maşyn tapyldy:",
-        "ru": "🔎 Понял как *{s}* — найдено {n} {w}:",
-    },
-    "not_found": {
-        "tm": "📭 *'{q}'* şu gün ýok.\n\nÇykanda habar bermegimi isleýäňizmi?",
-        "ru": "📭 *'{q}'* сегодня нет.\n\nСообщить, когда появится?",
-    },
-    "not_found_year": {
-        "tm": "📭 *'{q}'* şu gün ýok — ýa-da siziň ýyl süzgüjiňizden ({y}+) pes.\n\n"
-              "Süzgüji üýtgetmek: /yyl",
-        "ru": "📭 *'{q}'* сегодня нет — или машина старше вашего фильтра ({y}+).\n\n"
-              "Изменить фильтр: /yyl",
-    },
-    "alert_btn": {
-        "tm": "🔔 '{q}' çykanda habar ber",
-        "ru": "🔔 Сообщить, когда появится '{q}'",
-    },
-    "code_found": {"tm": "🆔 *{code}* — tapyldy:", "ru": "🆔 *{code}* — найдено:"},
-    "code_old": {
-        "tm": "🆔 *{code}* — tapyldy\n\n"
-              "⚠️ Bu maşyn *{d}* auksionyndan. Şol auksion geçdi.\n"
-              "Goşmaça soragyňyz bolsa WhatsApp-a ýazyň 👇",
-        "ru": "🆔 *{code}* — найдено\n\n"
-              "⚠️ Эта машина с аукциона *{d}*. Тот аукцион уже прошёл.\n"
-              "Если есть вопросы — напишите в WhatsApp 👇",
-    },
-    "code_none": {
-        "tm": "📭 *{code}* kody bilen maşyn tapylmady.\n\n"
-              "Kody ýene bir gezek barlaň — kartda ýazylan görnüşde ýazyň.",
-        "ru": "📭 Машина с кодом *{code}* не найдена.\n\n"
-              "Проверьте код — напишите его так, как указано на карточке.",
-    },
-    "auction_none": {
-        "tm": "📭 {a}-da şu gün maşyn ýok.",
-        "ru": "📭 На {a} сегодня машин нет.",
-    },
-    "auction_found": {
-        "tm": "🏢 *{a}* — {n} maşyn tapyldy:",
-        "ru": "🏢 *{a}* — найдено {n} {w}:",
-    },
-    "search_prompt": {
-        "tm": "🚗 *Haýsy maşyny gözleýäň?*\n\n"
-              "Adyny ýaz ýa aşakdakylardan bir düwmä bas.\n"
-              "_Şu gün iň köp bar bolanlar:_",
-        "ru": "🚗 *Какую машину ищете?*\n\n"
-              "Напишите название или нажмите кнопку ниже.\n"
-              "_Сегодня больше всего:_",
-    },
-    "auction_prompt": {
-        "tm": "🏢 *Haýsy auksiony gözleýäň?*\n\nŞu gün bar bolanlar:\n",
-        "ru": "🏢 *Какой аукцион ищете?*\n\nСегодня работают:\n",
-    },
-    "auction_prompt_end": {
-        "tm": "\nAdyny ýaz — meselem: `Marhaba`",
-        "ru": "\nНапишите название — например: `Marhaba`",
-    },
-    "more_lost": {
-        "tm": "🔄 Gözleg ýatdan çykdy. Maşyn adyny täzeden ýazaý.",
-        "ru": "🔄 Поиск устарел. Напишите название машины ещё раз.",
-    },
-    "contact_title": {
-        "tm": "📱 *TEK AUTO MARKET* bilen habarlaş:",
-        "ru": "📱 Связаться с *TEK AUTO MARKET*:",
-    },
-    # --- ýatlatma ---
-    "alert_set": {
-        "tm": "✅ Ýatlatma goýuldy: *{q}*\n\n"
-              "Şol maşyn çykanda size habar bererin.\nÝatlatmalar: /myalerts",
-        "ru": "✅ Напоминание сохранено: *{q}*\n\n"
-              "Сообщу, когда эта машина появится.\nМои напоминания: /myalerts",
-    },
-    "alert_exists": {
-        "tm": "ℹ️ *{q}* üçin ýatlatma eýýäm bar.",
-        "ru": "ℹ️ Напоминание для *{q}* уже есть.",
-    },
-    "alerts_empty": {
-        "tm": "🔔 Sizde ýatlatma ýok.\n\nMaşyn gözläniňizde tapylmasa — düwme bilen goýup bilersiňiz.",
-        "ru": "🔔 У вас нет напоминаний.\n\nЕсли машина не найдена — поставьте напоминание кнопкой.",
-    },
-    "alerts_title": {
-        "tm": "🔔 *Siziň ýatlatmalaryňyz:*\n\n",
-        "ru": "🔔 *Ваши напоминания:*\n\n",
-    },
-    "alerts_del": {
-        "tm": "\n❌ Pozmak: `/delalert <ady>`",
-        "ru": "\n❌ Удалить: `/delalert <название>`",
-    },
-    "alert_hit": {
-        "tm": "🔔 *Ýatlatma!*\n\nSiziň gözlän maşynyňyz *{q}* şu gün auksionda bar!\nJemi: *{n}* sany",
-        "ru": "🔔 *Напоминание!*\n\nМашина, которую вы искали — *{q}* — сегодня на аукционе!\nВсего: *{n}* шт.",
-    },
-    # --- gündelik habar ---
-    "daily_title": {
-        "tm": "🌅 *Şu günki auksionlar*",
-        "ru": "🌅 *Сегодняшние аукционы*",
-    },
-    "daily_cars": {
-        "tm": "🚗 *{n} maşyn*  ·  {a} auksion",
-        "ru": "🚗 *{n} {w}*  ·  {a} {wa}",
-    },
-    "daily_top": {"tm": "🔥 Iň köp: {s}", "ru": "🔥 Больше всего: {s}"},
-    "daily_tail": {
-        "tm": "_Marka ýa model ýaz — men tapyp bereýin._",
-        "ru": "_Напишите марку или модель — я найду._",
-    },
-    "daily_btn_today": {"tm": "📅 Auksionlary gör", "ru": "📅 Показать аукционы"},
-    "daily_btn_search": {"tm": "🔎 Maşyn gözle", "ru": "🔎 Найти машину"},
-}
-
-
-# ============================================================
 # AUCTION KODLARY + USD
 # ============================================================
 AUCTION_CODES = {
@@ -951,7 +553,7 @@ def contact_keyboard():
     ]])
 
 
-def auction_keyboard_for_car(car, lang=DEFAULT_LANG):
+def auction_keyboard_for_car(car):
     year = car.get("year", "")
     brand = car.get("brand", "")
     model = car.get("model", "")
@@ -959,23 +561,25 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG):
     price = car.get("price", 0)
     code = get_car_code(car)
 
-    text = T(lang, "wa_hello") + "\n"
-    text += T(lang, "wa_code", code=code) + "\n"
+    text = "Salam! Şu maşyny gyzyklanýan:\n"
+    text += f"🆔 Kod: {code}\n"
     text += f"🚗 {year} {brand} {model}\n"
     text += f"🏢 {auksion_ady_yer(car)}\n"
-    _ws = _auksion_wagt_setiri(car, lang=lang)
+    _ws = _auksion_wagt_setiri(car)
     if _ws:
         text += _ws + "\n"
     if price:
         usd = aed_to_usd(price)
-        text += T(lang, "wa_price", usd=usd, aed=price) + "\n"
+        text += f"💰 Başlanýan bahasy: {usd:,} USD ({price} AED)\n"
+        if SHOW_HOME_PRICE:
+            text += f"\U0001F3E0 Öýe çenli: ~{usd + HOME_PRICE_EXTRA_USD:,} USD-dan\n"
     img = car.get("image_path", "")
     if img:
         text += f"📸 https://raw.githubusercontent.com/erkintagantuvakov-gif/tekway-bot/main/{img}"
 
     wa_url = f"https://wa.me/971522371195?text={quote(text)}"
     return InlineKeyboardMarkup([[
-        InlineKeyboardButton(T(lang, "wa_btn"), url=wa_url),
+        InlineKeyboardButton("🚗 Şu maşyny gyzyklanýan", url=wa_url),
     ]])
 
 
@@ -1125,39 +729,39 @@ def auksion_senesi(car):
     return ""
 
 
-def _auksion_wagt_setiri(car, esc_fn=None, lang=DEFAULT_LANG):
+def _auksion_wagt_setiri(car, esc_fn=None):
     """'26.08.2026, 17:45 (Dubaý wagty)' — sene we sagat birlikde."""
     e = esc_fn or (lambda x: x)
     sn, wg = auksion_senesi(car), auksion_sagady(car)
     if sn and wg:
-        return T(lang, "cap_time_both", d=e(sn), t=e(wg))
+        return f"🕐 Auksion: {e(sn)}, {e(wg)} (Dubaý wagty)"
     if sn:
-        return T(lang, "cap_time_date", d=e(sn))
+        return f"📅 Auksion: {e(sn)}"
     if wg:
-        return T(lang, "cap_time_time", t=e(wg))
+        return f"🕐 Auksion: {e(wg)} (Dubaý wagty)"
     return ""
 
 
-def build_caption(car, lang=DEFAULT_LANG):
+def build_caption(car):
     name = esc(f"{car.get('year')} {car.get('brand')} {car.get('model')}")
     cap = f"🚗 *{name}*\n"
     cap += f"🏢 {esc(auksion_ady_yer(car))}\n"
-    _ws = _auksion_wagt_setiri(car, esc, lang=lang)
+    _ws = _auksion_wagt_setiri(car, esc)
     if _ws:
         cap += _ws + "\n"
     if car.get("price"):
         usd = aed_to_usd(car.get("price"))
-        cap += T(lang, "cap_price", usd=usd, aed=car.get("price")) + "\n"
+        cap += f"💰 Başlanýan bahasy: *{usd:,} USD* ({car.get('price')} AED)\n"
         if SHOW_HOME_PRICE:
-            cap += T(lang, "cap_home", usd=usd + HOME_PRICE_EXTRA_USD) + "\n"
-    cap += T(lang, "cap_code", code=get_car_code(car))
+            cap += f"\U0001F3E0 Öýe çenli: ~*{usd + HOME_PRICE_EXTRA_USD:,} USD*-dan\n"
+    cap += f"🆔 Kod: `{get_car_code(car)}`"
     return cap
 
 
-async def send_car_with_photo(update_or_message, car, keyboard=None, lang=DEFAULT_LANG):
+async def send_car_with_photo(update_or_message, car, keyboard=None):
     msg = update_or_message if hasattr(update_or_message, "reply_text") else update_or_message.message
-    caption = build_caption(car, lang)
-    kb = keyboard or auction_keyboard_for_car(car, lang)
+    caption = build_caption(car)
+    kb = keyboard or auction_keyboard_for_car(car)
 
     file_id = car.get("telegram_file_id", "")
     if file_id:
@@ -1179,15 +783,13 @@ async def send_car_with_photo(update_or_message, car, keyboard=None, lang=DEFAUL
     await msg.reply_text(caption, parse_mode="Markdown", reply_markup=kb)
 
 
-async def send_batch(msg, uid, cars_list, title="", lang=None):
+async def send_batch(msg, uid, cars_list, title=""):
     """Suratlary 10-lyk toparlar bilen iberýär.
 
     Sebäp: "Al Qaryah" gözlense 136 maşyn -> 136 habar.
     Telegram sekuntda 1 habar goýberýär -> bot 2+ minut doňýar,
     hatda "flood control" jerimesi düşýär.
     """
-    if lang is None:
-        lang = lang_of(uid)
     st = _last_results.get(uid) or {}
     if title:
         st = {"title": title, "cars": cars_list, "sent": 0}
@@ -1197,7 +799,7 @@ async def send_batch(msg, uid, cars_list, title="", lang=None):
 
     for car in chunk:
         try:
-            await send_car_with_photo(msg, car, lang=lang)
+            await send_car_with_photo(msg, car)
             await asyncio.sleep(PHOTO_DELAY)
         except Exception as e:
             logger.error(f"send_batch: {e}")
@@ -1215,25 +817,24 @@ async def send_batch(msg, uid, cars_list, title="", lang=None):
     galan = len(cars_list) - st["sent"]
     if galan > 0:
         kb = InlineKeyboardMarkup([[
-            InlineKeyboardButton(T(lang, "batch_more", n=min(galan, MAX_PHOTO_BATCH)),
+            InlineKeyboardButton(f"⬇️ Ýene {min(galan, MAX_PHOTO_BATCH)} görkez",
                                  callback_data="more")
         ], [
-            InlineKeyboardButton(T(lang, "batch_wa"), url=TEKWAY_WHATSAPP)
+            InlineKeyboardButton("📱 WhatsApp-a ýaz", url=TEKWAY_WHATSAPP)
         ]])
         await msg.reply_text(
-            T(lang, "batch_shown", sent=st["sent"], total=len(cars_list), left=galan),
+            f"📋 *{st['sent']}/{len(cars_list)}* görkezildi.  Ýene *{galan}* maşyn bar.\n\n"
+            f"_Has takyk ýazsaň az çykar — meselem `Camry 2023`._",
             parse_mode="Markdown", reply_markup=kb)
     elif len(cars_list) > MAX_PHOTO_BATCH:
         await msg.reply_text(
-            T(lang, "batch_all", n=len(cars_list), w=w_car(lang, len(cars_list))),
+            f"✅ Hemmesi görkezildi — *{len(cars_list)}* maşyn.",
             parse_mode="Markdown", reply_markup=contact_keyboard())
 
 
-async def send_car_to_chat(bot, chat_id, car, lang=None):
-    if lang is None:
-        lang = lang_of(chat_id)
-    caption = build_caption(car, lang)
-    kb = auction_keyboard_for_car(car, lang)
+async def send_car_to_chat(bot, chat_id, car):
+    caption = build_caption(car)
+    kb = auction_keyboard_for_car(car)
     image_path = car.get("image_path", "")
     try:
         if image_path and Path(image_path).exists():
@@ -1259,57 +860,52 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown", reply_markup=ishgar_klawiatura())
     except Exception:
         pass
-    uid = update.effective_user.id
-
-    # 23.09: ilkinji gezek gelen adam ilki DIL, soň ÝYL saýlaýar.
-    if user_lang(uid) is None:
-        await update.message.reply_text(
-            T(DEFAULT_LANG, "choose_lang"), parse_mode="Markdown",
-            reply_markup=dil_duwmeler())
-        return
-
-    await esasy_ekran(update.message, uid)
-
-
-async def esasy_ekran(msg, uid):
-    """Dil we ýyl saýlanandan soňky esasy ekran."""
-    lang = lang_of(uid)
-    cars0 = suzgucle(load_cars(), uid)
+    cars0 = load_cars()
     ex = suggest_text(cars0, 3)
-    await msg.reply_text(
-        T(lang, "start", ex=ex),
-        parse_mode="Markdown", reply_markup=esasy_menyu(lang),
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🚗 Maşyn gözle", callback_data="search")],
+        [InlineKeyboardButton("🏢 Auksion gözle", callback_data="auction")],
+        [InlineKeyboardButton("🔔 Ýatlatmalarym", callback_data="myalerts")],
+        [InlineKeyboardButton("📱 Habarlaşmak", callback_data="contact")],
+    ])
+    await update.message.reply_text(
+        "🚗 *Dubai Auksion | TEK AUTO MARKET*\n\n"
+        "Salam! Men şu günki Dubaý auksionlarynyň maşynlaryny gözlemäge kömek edýärin.\n\n"
+        "📌 Nähili ulanmaly:\n"
+        f"• Maşyn adyny ýaz — meselem: {ex}\n"
+        "• Auksion adyny ýaz — meselem: *Marhaba*, *Nojoom*\n"
+        "• Ýalňyş ýazsaň-da düşünýärin (`kamry`, `hunday`)\n"
+        "• Maşyn tapylmasa — düwme bilen ýatlatma goý\n"
+        "• /help — ähli komandalar",
+        parse_mode="Markdown", reply_markup=kb,
     )
-    if not db_is_fresh(load_cars()):
-        await msg.reply_text(T(lang, "not_ready"), parse_mode="Markdown",
-                             reply_markup=contact_keyboard())
+    cars = load_cars()
+    if not db_is_fresh(cars):
+        await update.message.reply_text(NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard())
     try:
         asyncio.create_task(check_alerts(context.bot))
     except Exception:
         pass
 
 
-async def dil_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/dil · /lang — dili üýtgetmek."""
-    await update.message.reply_text(T(DEFAULT_LANG, "choose_lang"),
-                                    parse_mode="Markdown", reply_markup=dil_duwmeler())
-
-
-async def yyl_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """/yyl · /year — ýyl süzgüjini üýtgetmek."""
-    lang = lang_of(update.effective_user.id)
-    await update.message.reply_text(T(lang, "choose_year"), parse_mode="Markdown",
-                                    reply_markup=yyl_duwmeler(lang))
-
-
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    lang = lang_of(update.effective_user.id)
-    cars = suzgucle(load_cars(), update.effective_user.id)
+    cars = load_cars()
     ex = ", ".join(f"`{x}`" for x in suggest_models(cars, 3))
     auks = sorted({c.get("auction", "").split()[0] for c in cars if c.get("auction")})[:3]
     exa = ", ".join(f"`{x}`" for x in auks) or "`Marhaba`"
     await update.message.reply_text(
-        T(lang, "help", ex=ex, exa=exa), parse_mode="Markdown",
+        "📋 *Komandalar:*\n\n"
+        f"🚗 *Maşyn gözlemek:* {ex}\n"
+        f"🏢 *Auksion gözlemek:* {exa}\n"
+        "🔎 Ýalňyş ýazsaň-da düşünýärin: `kamry`, `hunday`\n"
+        "🆔 *Kod boýunça:* `0813-013`\n\n"
+        "🔔 *Ýatlatma:* maşyn tapylmasa — düwmä bas\n"
+        "📋 */myalerts* — ýatlatmalarym\n"
+        "❌ */delalert Camry* — ýatlatmany poz\n"
+        "❌ */delalert all* — hemmesini poz\n\n"
+        "📊 */today* — şu günki ýagdaý\n"
+        "📱 */contact* — habarlaş",
+        parse_mode="Markdown",
     )
     # işgärlere goşmaça — müşderi bu bölümi görmeýär
     if _zk_rugsat(update.effective_user.id) and _zk_bar():
@@ -1322,18 +918,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    _u = getattr(update, "effective_user", None) or getattr(update, "from_user", None)
-    uid = _u.id if _u else 0
-    lang = lang_of(uid)
-    msg = update.message
     cars = load_cars()
     if not cars or not db_is_fresh(cars):
-        await msg.reply_text(T(lang, "not_ready"), parse_mode="Markdown", reply_markup=contact_keyboard())
-        return
-    cars = suzgucle(cars, uid)
-    if not cars:
-        await msg.reply_text(T(lang, "today_empty_year", y=user_min_year(uid)),
-                             parse_mode="Markdown")
+        await update.message.reply_text(NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard())
         return
     # ⚠️ 24.08 — ŞAHAMÇALAR AÝRY SANALÝAR.
     # Erkin: "şu gün 3 auksion bar, näme üçin ikisini görkezýär?"
@@ -1354,21 +941,20 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         (a, sh, w), n = x
         return (w or "99:99", -n)
 
-    text = T(lang, "today_title")
+    text = "📅 *Şu günki auksionlar:*\n\n"
     for (a, sh, w), n in sorted(counts.items(), key=_tertip):
         setir = f"🏢 *{esc(a)}*"
         if sh:
             setir += f" — {esc(sh)}"
         if w:
             setir += f"  ·  🕐 {esc(w)}"
-        text += setir + "\n     " + T(lang, "today_cars", n=n, w=w_car(lang, n)) + "\n\n"
-    text += T(lang, "today_total", n=len(cars), a=len(counts),
-              w=w_car(lang, len(cars)), wa=w_auc(lang, len(counts)))
-    await msg.reply_text(text, parse_mode="Markdown")
+        text += setir + f"\n     {n} maşyn\n\n"
+    text += f"✅ Jemi: *{len(cars)} maşyn*  ·  {len(counts)} auksion"
+    await update.message.reply_text(text, parse_mode="Markdown")
 
 
 async def contact_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(T(lang_of(update.effective_user.id), "contact_title"),
+    await update.message.reply_text("📱 *TEK AUTO MARKET*\n\nHabarlaş:",
                                     parse_mode="Markdown", reply_markup=contact_keyboard())
 
 
@@ -1408,26 +994,25 @@ async def alert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
     y = load_yatlatmas()
     y.setdefault(uid, [])
-    lang = lang_of(uid)
     if q not in y[uid]:
         y[uid].append(q)
         save_yatlatmas(y)
-        await update.message.reply_text(T(lang, "alert_set", q=esc(q)), parse_mode="Markdown")
+        await update.message.reply_text(f"✅ Ýatlatma goýuldy: *{esc(q)}*", parse_mode="Markdown")
     else:
-        await update.message.reply_text(T(lang, "alert_exists", q=esc(q)), parse_mode="Markdown")
+        await update.message.reply_text(f"ℹ️ Eýýäm bar: *{esc(q)}*", parse_mode="Markdown")
 
 
 async def myalerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = str(update.effective_user.id)
-    lang = lang_of(uid)
     my = load_yatlatmas().get(uid, [])
     if not my:
-        await update.message.reply_text(T(lang, "alerts_empty"))
+        await update.message.reply_text(
+            "🔔 Sizde ýatlatma ýok.\n\nMaşyn gözläniňizde tapylmasa — düwme bilen goýup bilersiňiz.")
         return
-    text = T(lang, "alerts_title")
+    text = "🔔 *Siziň ýatlatmalaryňyz:*\n\n"
     for i, a in enumerate(my, 1):
         text += f"{i}. {a}\n"
-    text += T(lang, "alerts_del")
+    text += "\n❌ Pozmak: `/delalert <ady>`"
     await update.message.reply_text(text, parse_mode="Markdown")
 
 
@@ -1582,11 +1167,9 @@ async def check_alerts(bot):
         today = get_today()
 
         for uid, keywords in y.items():
-            ulang = lang_of(uid)
-            u_cars = suzgucle(cars, uid)
             for kw in (keywords or []):
                 kwu = kw.upper()
-                matches = [c for c in u_cars
+                matches = [c for c in cars
                            if kwu in f"{c.get('brand','')} {c.get('model','')}".upper()]
                 if not matches:
                     continue
@@ -1596,10 +1179,12 @@ async def check_alerts(bot):
                 try:
                     await bot.send_message(
                         chat_id=int(uid),
-                        text=T(ulang, "alert_hit", q=kw, n=len(matches)),
+                        text=(f"🔔 *Ýatlatma!*\n\n"
+                              f"Siziň gözlän maşynyňyz *{kw}* şu gün auksionda bar!\n"
+                              f"Jemi: *{len(matches)}* sany"),
                         parse_mode="Markdown")
                     for car in matches[:5]:
-                        await send_car_to_chat(bot, int(uid), car, lang=ulang)
+                        await send_car_to_chat(bot, int(uid), car)
                     sent[key] = True
                     save_sent(sent)
                     logger.info(f"Alert: {uid} / {kw} / {len(matches)}")
@@ -2546,15 +2131,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     tl = text.lower()
     tu = text.upper()
     track_user(update, text)
-    uid_i = update.effective_user.id
-    lang = lang_of(uid_i)
     cars = load_cars()
-
-    # 23.09: dil saýlanmadyk bolsa ilki dil soralýar
-    if user_lang(uid_i) is None:
-        await update.message.reply_text(T(DEFAULT_LANG, "choose_lang"),
-                                        parse_mode="Markdown", reply_markup=dil_duwmeler())
-        return
 
     # Arka planda alertleri barla (blokirlemeya)
     try:
@@ -2574,47 +2151,45 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mcode = re.search(r'\b(\d{4})\s*[-–—/]\s*(\d{1,3})\b', tu)
     if mcode:
         want = f"{mcode.group(1)}-{int(mcode.group(2)):03d}"
-        # ⚠️ KOD gözlegi ÝYL SÜZGÜJINE BAGLY DÄL — TikTok-dan gelen adam
-        #    kody ýazsa hemişe jogap almaly.
         hit = [c for c in cars if str(c.get("code", "")).upper() == want]
         if hit:
             if fresh:
                 await update.message.reply_text(
-                    T(lang, "code_found", code=esc(want)), parse_mode="Markdown")
+                    f"🆔 *{esc(want)}* — tapyldy:", parse_mode="Markdown")
             else:
                 d = str(hit[0].get("date", ""))
                 ds = f"{d[6:8]}.{d[4:6]}" if len(d) == 8 else d
                 await update.message.reply_text(
-                    T(lang, "code_old", code=esc(want), d=ds), parse_mode="Markdown")
+                    f"🆔 *{esc(want)}* — tapyldy\n\n"
+                    f"⚠️ Bu maşyn *{ds}* auksionyndan. Şol auksion geçdi.\n"
+                    f"Goşmaça soragyňyz bolsa WhatsApp-a ýazyň 👇",
+                    parse_mode="Markdown")
             for car in hit:
-                await send_car_with_photo(update, car, lang=lang)
+                await send_car_with_photo(update, car)
             log_search(want, "found", None, len(hit))
             return
         log_search(want, "none")
         await update.message.reply_text(
-            T(lang, "code_none", code=esc(want)),
+            f"📭 *{esc(want)}* kody bilen maşyn tapylmady.\n\n"
+            "Kody ýene bir gezek barlaň — kartda ýazylan görnüşde ýazyň.",
             parse_mode="Markdown", reply_markup=contact_keyboard())
         return
 
     if not fresh:
-        await update.message.reply_text(T(lang, "not_ready"), parse_mode="Markdown", reply_markup=contact_keyboard())
+        await update.message.reply_text(NOT_READY_MSG, parse_mode="Markdown", reply_markup=contact_keyboard())
         return
-
-    # 23.09: ulanyjynyň ýyl saýlawy
-    cars = suzgucle(cars, uid_i)
 
     for key, aname in AUCTIONS.items():
         if key in tl:
             ac = [c for c in cars if aname.upper() in c.get("auction", "").upper()]
             if not ac:
-                await update.message.reply_text(T(lang, "auction_none", a=esc(aname)))
+                await update.message.reply_text(f"📭 {esc(aname)}-da şu gün maşyn ýok.")
                 return
             await update.message.reply_text(
-                T(lang, "auction_found", a=esc(aname), n=len(ac), w=w_car(lang, len(ac))),
-                parse_mode="Markdown")
+                f"🏢 *{esc(aname)}* — {len(ac)} maşyn tapyldy:", parse_mode="Markdown")
             log_search(text, "found", None, len(ac))
             await send_batch(update.message, str(update.effective_user.id),
-                             ac, title=aname, lang=lang)
+                             ac, title=aname)
             return
 
     found = [c for c in cars if tu in f"{c.get('brand','')} {c.get('model','')}".upper()]
@@ -2627,28 +2202,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not found:
         log_search(text, "none")
         kb = InlineKeyboardMarkup([[
-            InlineKeyboardButton(T(lang, "alert_btn", q=text[:30]),
+            InlineKeyboardButton(f"🔔 '{text[:30]}' çykanda habar ber",
                                  callback_data=cb_data("alert:", text))
         ]])
-        _my = user_min_year(uid_i)
-        _t = (T(lang, "not_found_year", q=esc(text), y=_my) if _my
-              else T(lang, "not_found", q=esc(text)))
-        await update.message.reply_text(_t, parse_mode="Markdown", reply_markup=kb)
+        await update.message.reply_text(
+            f"📭 *'{esc(text)}'* şu gün ýok.\n\nÇykanda habar bermegimi isleýäňizmi?",
+            parse_mode="Markdown", reply_markup=kb)
         return
 
     log_search(text, "fuzzy" if fuzzy_word else "found", fuzzy_word, len(found))
 
     if fuzzy_word:
         await update.message.reply_text(
-            T(lang, "found_fuzzy", s=esc(fuzzy_word.title()), n=len(found),
-              w=w_car(lang, len(found))), parse_mode="Markdown")
+            f"🔎 *{esc(fuzzy_word.title())}* diýip düşündim — {len(found)} maşyn tapyldy:",
+            parse_mode="Markdown")
     else:
         await update.message.reply_text(
-            T(lang, "found", q=esc(text), n=len(found), w=w_car(lang, len(found))),
-            parse_mode="Markdown")
+            f"🚗 *'{esc(text)}'* — {len(found)} maşyn tapyldy:", parse_mode="Markdown")
 
     await send_batch(update.message, str(update.effective_user.id),
-                     found, title=text, lang=lang)
+                     found, title=text)
 
 
 # ============================================================
@@ -2751,10 +2324,12 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if nam == "today":
             await today_command(q, context)
         elif nam == "gozle":
-            _l = lang_of(uid)
             await q.message.reply_text(
-                T(_l, "search_prompt"), parse_mode="Markdown",
-                reply_markup=suggest_keyboard(suzgucle(load_cars(), uid), 6))
+                "🔎 *Maşyn gözlemek*\n\n"
+                "Marka ýa model ýazyň — mysal üçin:\n"
+                "`camry` · `rav4` · `sonata` · `k5`\n\n"
+                "Ýyl hem goşup bilersiňiz: `camry 2023`",
+                parse_mode="Markdown")
         elif nam == "off":
             users = load_users()
             if uid in users:
@@ -2767,119 +2342,83 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "Yzyna açmak: /habar\_ac")
         return
 
-    # --- 23.09: DIL we ÝYL saýlamak ---
-    if d.startswith("lang:"):
-        lang = d[5:]
-        if lang not in ("tm", "ru"):
-            lang = DEFAULT_LANG
-        set_user_pref(q.from_user.id, lang=lang)
-        await q.message.reply_text(T(lang, "lang_saved"), parse_mode="Markdown")
-        if user_min_year(q.from_user.id) or "min_year" in (load_users().get(str(q.from_user.id)) or {}):
-            await esasy_ekran(q.message, q.from_user.id)
-        else:
-            await q.message.reply_text(T(lang, "choose_year"), parse_mode="Markdown",
-                                       reply_markup=yyl_duwmeler(lang))
-        return
-
-    if d.startswith("yyl:"):
-        try:
-            y = int(d[4:])
-        except ValueError:
-            y = 0
-        set_user_pref(q.from_user.id, min_year=y)
-        lang = lang_of(q.from_user.id)
-        await q.message.reply_text(
-            T(lang, "year_saved_all") if not y else T(lang, "year_saved", y=y),
-            parse_mode="Markdown")
-        await esasy_ekran(q.message, q.from_user.id)
-        return
-
-    if d == "setlang":
-        await q.message.reply_text(T(DEFAULT_LANG, "choose_lang"),
-                                   parse_mode="Markdown", reply_markup=dil_duwmeler())
-        return
-
-    if d == "setyear":
-        lang = lang_of(q.from_user.id)
-        await q.message.reply_text(T(lang, "choose_year"), parse_mode="Markdown",
-                                   reply_markup=yyl_duwmeler(lang))
-        return
-
     if d.startswith("alert:"):
         st = d[6:].strip()
         uid = str(q.from_user.id)
         y = load_yatlatmas()
         y.setdefault(uid, [])
         k = st.upper()
-        _lang = lang_of(uid)
         if k not in y[uid]:
             y[uid].append(k)
             save_yatlatmas(y)
-            await q.message.reply_text(T(_lang, "alert_set", q=esc(st)), parse_mode="Markdown")
+            await q.message.reply_text(
+                f"✅ Ýatlatma goýuldy: *{esc(st)}*\n\n"
+                f"Şol maşyn çykanda size habar bererin.\n"
+                f"Ýatlatmalar: /myalerts",
+                parse_mode="Markdown")
         else:
-            await q.message.reply_text(T(_lang, "alert_exists", q=esc(st)), parse_mode="Markdown")
+            await q.message.reply_text(f"ℹ️ *{esc(st)}* üçin ýatlatma eýýäm bar.", parse_mode="Markdown")
 
     elif d == "contact":
-        await q.message.reply_text(T(lang_of(q.from_user.id), "contact_title"),
+        await q.message.reply_text("📱 *TEK AUTO MARKET* bilen habarlaş:",
                                    parse_mode="Markdown", reply_markup=contact_keyboard())
     elif d == "search":
-        cars = suzgucle(load_cars(), q.from_user.id)
+        cars = load_cars()
         await q.message.reply_text(
-            T(lang_of(q.from_user.id), "search_prompt"),
+            "🚗 *Haýsy maşyny gözleýäň?*\n\n"
+            "Adyny ýaz ýa aşakdakylardan bir düwmä bas.\n"
+            "_Şu gün iň köp bar bolanlar:_",
             parse_mode="Markdown", reply_markup=suggest_keyboard(cars, 6))
 
     elif d.startswith("find:"):
         want = d[5:].strip()
-        lang = lang_of(q.from_user.id)
         cars = load_cars()
         if not db_is_fresh(cars):
-            await q.message.reply_text(T(lang, "not_ready"), parse_mode="Markdown",
+            await q.message.reply_text(NOT_READY_MSG, parse_mode="Markdown",
                                        reply_markup=contact_keyboard())
             return
-        cars = suzgucle(cars, q.from_user.id)
         wu = want.upper()
         found = [c for c in cars
                  if wu in f"{c.get('brand','')} {c.get('model','')}".upper()]
         if not found:
             _, found = fuzzy_find(want, cars)
         if not found:
-            await q.message.reply_text(T(lang, "not_found", q=esc(want)), parse_mode="Markdown")
+            await q.message.reply_text(f"📭 *{esc(want)}* şu gün ýok.", parse_mode="Markdown")
             return
         log_search(want, "found", None, len(found))
         await q.message.reply_text(
-            T(lang, "found", q=esc(want), n=len(found), w=w_car(lang, len(found))),
-            parse_mode="Markdown")
-        await send_batch(q.message, str(q.from_user.id), found, title=want, lang=lang)
+            f"🚗 *{esc(want)}* — {len(found)} maşyn tapyldy:", parse_mode="Markdown")
+        await send_batch(q.message, str(q.from_user.id), found, title=want)
 
     elif d == "more":
         uid = str(q.from_user.id)
         st = _last_results.get(uid)
         if not st or not st.get("cars"):
-            await q.message.reply_text(T(lang_of(uid), "more_lost"))
+            await q.message.reply_text(
+                "🔄 Gözleg ýatdan çykdy. Maşyn adyny täzeden ýazaý.")
             return
         await send_batch(q.message, uid, st["cars"])
 
     elif d == "auction":
-        lang = lang_of(q.from_user.id)
-        cars = suzgucle(load_cars(), q.from_user.id)
+        cars = load_cars()
         names = sorted({c.get("auction", "") for c in cars if c.get("auction")})
-        t = T(lang, "auction_prompt")
+        t = "🏢 *Haýsy auksiony gözleýäň?*\n\nŞu gün bar bolanlar:\n"
         for a in names:
             n = sum(1 for c in cars if c.get("auction") == a)
-            t += f"• *{a}* — " + T(lang, "today_cars", n=n, w=w_car(lang, n)) + "\n"
-        t += T(lang, "auction_prompt_end")
+            t += f"• *{a}* — {n} maşyn\n"
+        t += "\nAdyny ýaz — meselem: `Marhaba`"
         await q.message.reply_text(t, parse_mode="Markdown")
     elif d == "myalerts":
         uid = str(q.from_user.id)
-        lang = lang_of(uid)
         my = load_yatlatmas().get(uid, [])
         if not my:
-            await q.message.reply_text(T(lang, "alerts_empty"))
+            await q.message.reply_text(
+                "🔔 Sizde ýatlatma ýok.\n\nMaşyn gözläniňizde tapylmasa — düwme bilen goýup bilersiňiz.")
         else:
-            t = T(lang, "alerts_title")
+            t = "🔔 *Siziň ýatlatmalaryňyz:*\n\n"
             for i, a in enumerate(my, 1):
                 t += f"{i}. {esc(a)}\n"
-            t += T(lang, "alerts_del")
+            t += "\n❌ Pozmak: `/delalert <ady>`"
             await q.message.reply_text(t, parse_mode="Markdown")
 
 
@@ -2945,7 +2484,7 @@ def _habar_basyldy(nam, uid):
         logger.warning("habar basyldy: %s", e)
 
 
-def gundelik_habar_tekst(cars, today, lang=DEFAULT_LANG):
+def gundelik_habar_tekst(cars, today):
     """Gysga, gyzyklandyryjy habar. Uzyn sanaw YOK — ol /today-da."""
     bu_gun = [c for c in cars if str(c.get("date")) == today]
     if not bu_gun:
@@ -2968,29 +2507,25 @@ def gundelik_habar_tekst(cars, today, lang=DEFAULT_LANG):
     top = [m for m, _ in sorted(markalar.items(), key=lambda x: -x[1])[:4]]
 
     d = datetime.strptime(today, "%Y%m%d")
-    if lang == "ru":
-        sene = f"{d.day} {_RU_AYLAR[d.month - 1]}, {_RU_GUNLER[d.weekday()]}"
-    else:
-        sene = f"{d.day} {_AYLAR[d.month - 1]}, {_GUN_ATLARY[d.weekday()]}"
+    sene = f"{d.day} {_AYLAR[d.month - 1]}, {_GUN_ATLARY[d.weekday()]}"
 
     # ⚠️ 25.08 — Erkin sada gornushi saylady.
     # "tayyar", "baslayar" yaly sozler her gun gaytalansa gury sese
     # owrulya. Chenňek SAN — "584 masyn". Sozlem dine tanatma.
-    t = T(lang, "daily_title") + "\n\n"
+    t = "🌅 *Şu günki auksionlar*\n\n"
     t += f"📅 {sene}\n"
-    t += T(lang, "daily_cars", n=len(bu_gun), a=len(auk),
-           w=w_car(lang, len(bu_gun)), wa=w_auc(lang, len(auk))) + "\n"
+    t += f"🚗 *{len(bu_gun)} maşyn*  ·  {len(auk)} auksion\n"
     if sagatlar:
         t += f"🕐 {esc(sagatlar[0])} — {esc(sagatlar[-1])}\n"
     if yerler:
         t += f"📍 {esc(' · '.join(yerler))}\n"
     if top:
-        t += "\n" + T(lang, "daily_top", s=esc(" · ".join(top))) + "\n"
-    t += "\n" + T(lang, "daily_tail")
+        t += f"\n🔥 Iň köp: {esc(' · '.join(top))}\n"
+    t += "\n_Marka ýa model ýaz — men tapyp bereýin._"
     return t
 
 
-def _habar_duwmeler(lang=DEFAULT_LANG):
+def _habar_duwmeler():
     # ⚠️ 25.08 — "Bu habary ochur" DUWMESI AYRYLDY (Erkin).
     #   "her gun yekeje bildiris olaryn yuregine dushmez.
     #    son statistika seredip karar bereris."
@@ -2998,8 +2533,8 @@ def _habar_duwmeler(lang=DEFAULT_LANG):
     # belligi ishleya. Yagny biri sikayat etse, ishgar shol adam uchin
     # ochurip bilya — bot bloklanmaz. Duwmani yzyna getirmek bir setir.
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton(T(lang, "daily_btn_today"), callback_data="hbr:today")],
-        [InlineKeyboardButton(T(lang, "daily_btn_search"), callback_data="hbr:gozle")],
+        [InlineKeyboardButton("📅 Auksionlary gör", callback_data="hbr:today")],
+        [InlineKeyboardButton("🔎 Maşyn gözle", callback_data="hbr:gozle")],
     ])
 
 
@@ -3007,14 +2542,14 @@ async def gundelik_habar_ugrat(app, diňe_uid=None):
     """Habary ugradýar. diňe_uid berilse — synag, dine sho adama."""
     cars = load_cars()
     today = get_today()
-    if not gundelik_habar_tekst(cars, today):
+    t = gundelik_habar_tekst(cars, today)
+    if not t:
         return 0, 0, "maglumat yok"
 
+    kb = _habar_duwmeler()
     if diňe_uid:
-        _l = lang_of(diňe_uid)
-        _t = gundelik_habar_tekst(suzgucle(cars, diňe_uid), today, _l)
-        await app.bot.send_message(int(diňe_uid), _t or "", parse_mode="Markdown",
-                                   reply_markup=_habar_duwmeler(_l))
+        await app.bot.send_message(int(diňe_uid), t, parse_mode="Markdown",
+                                   reply_markup=kb)
         return 1, 0, "synag"
 
     users = load_users()
@@ -3022,12 +2557,6 @@ async def gundelik_habar_ugrat(app, diňe_uid=None):
     for uid, u in list(users.items()):
         if u.get("habar_ochuk") or u.get("bloklady"):
             continue
-        # her ulanyja OZ dilinde we OZ yyl suzgujine gora
-        ulang = u.get("lang") if u.get("lang") in ("tm", "ru") else DEFAULT_LANG
-        t = gundelik_habar_tekst(suzgucle(cars, uid), today, ulang)
-        if not t:
-            continue
-        kb = _habar_duwmeler(ulang)
         try:
             await app.bot.send_message(int(uid), t, parse_mode="Markdown",
                                        reply_markup=kb)
@@ -3160,10 +2689,6 @@ def main():
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("today", today_command))
     app.add_handler(CommandHandler("contact", contact_command))
-    app.add_handler(CommandHandler("dil", dil_command))
-    app.add_handler(CommandHandler("lang", dil_command))
-    app.add_handler(CommandHandler("yyl", yyl_command))
-    app.add_handler(CommandHandler("year", yyl_command))
     app.add_handler(CommandHandler("id", id_command))
     app.add_handler(CommandHandler("alert", alert_command))
     app.add_handler(CommandHandler("myalerts", myalerts_command))
