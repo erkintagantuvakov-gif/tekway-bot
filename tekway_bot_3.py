@@ -478,7 +478,9 @@ NOT_READY_MSG = (
 # gelse, ýyl süzgüji sebäpli "tapylmady" diýmeli däl.
 # ============================================================
 DEFAULT_LANG = "tm"
-YYL_WARIANTLAR = [0, 2022, 2023, 2024, 2025, 2026]
+# 23.09 (agşam): parser indi ÄHLI ýyllary baza salýar, şonuň üçin
+# süzgüçde köne ýyllar hem bar. 0 = çäk ýok.
+YYL_WARIANTLAR = [0, 2010, 2015, 2018, 2021, 2023, 2025]
 
 
 def user_lang(uid):
@@ -486,7 +488,7 @@ def user_lang(uid):
     try:
         u = load_users().get(str(uid)) or {}
         l = u.get("lang")
-        return l if l in ("tm", "ru") else None
+        return l if l in ("tm", "ru", "en") else None
     except Exception:
         return None
 
@@ -549,11 +551,19 @@ def _ru_plural(n, forms):
 
 
 def w_car(lang, n):
-    return _ru_plural(n, _RU_MASYN) if lang == "ru" else "maşyn"
+    if lang == "ru":
+        return _ru_plural(n, _RU_MASYN)
+    if lang == "en":
+        return "car" if int(n) == 1 else "cars"
+    return "maşyn"
 
 
 def w_auc(lang, n):
-    return _ru_plural(n, _RU_AUKSION) if lang == "ru" else "auksion"
+    if lang == "ru":
+        return _ru_plural(n, _RU_AUKSION)
+    if lang == "en":
+        return "auction" if int(n) == 1 else "auctions"
+    return "auksion"
 
 
 def T(lang, key, **kw):
@@ -566,10 +576,11 @@ def T(lang, key, **kw):
 
 
 def dil_duwmeler():
-    return InlineKeyboardMarkup([[
-        InlineKeyboardButton("🇹🇲 Türkmençe", callback_data="lang:tm"),
-        InlineKeyboardButton("🇷🇺 Русский", callback_data="lang:ru"),
-    ]])
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🇹🇲 Türkmençe", callback_data="lang:tm")],
+        [InlineKeyboardButton("🇷🇺 Русский", callback_data="lang:ru")],
+        [InlineKeyboardButton("🇬🇧 English", callback_data="lang:en")],
+    ])
 
 
 def yyl_duwmeler(lang):
@@ -586,6 +597,7 @@ def esasy_menyu(lang):
         [InlineKeyboardButton(T(lang, "menu_auction"), callback_data="auction")],
         [InlineKeyboardButton(T(lang, "menu_alerts"), callback_data="myalerts")],
         [InlineKeyboardButton(T(lang, "menu_year"), callback_data="setyear"),
+         InlineKeyboardButton(T(lang, "menu_country"), callback_data="setcountry"),
          InlineKeyboardButton(T(lang, "menu_lang"), callback_data="setlang")],
         [InlineKeyboardButton(T(lang, "menu_contact"), callback_data="contact")],
     ])
@@ -597,7 +609,7 @@ TEXTS = {
         "tm": "🌐 *Dil saýlaň / Выберите язык*",
         "ru": "🌐 *Dil saýlaň / Выберите язык*",
     },
-    "yyl_hemmesi": {"tm": "Hemmesi (2021-den ýokary)", "ru": "Все годы (от 2021)"},
+    "yyl_hemmesi": {"tm": "Ähli ýyllar", "ru": "Все годы"},
     "yyl_dan": {"tm": "{y}-den ýokary", "ru": "От {y} года"},
     "choose_year": {
         "tm": "📅 *Haýsy ýyldan başlap görkezeýin?*\n\n"
@@ -656,6 +668,7 @@ TEXTS = {
               "📊 */today* — şu günki ýagdaý\n"
               "🌐 */dil* — dili üýtget\n"
               "📅 */yyl* — ýyl süzgüji\n"
+              "🌍 */yurt* — ýurt\n"
               "📱 */contact* — habarlaş",
         "ru": "📋 *Команды:*\n\n"
               "🚗 *Поиск машины:* {ex}\n"
@@ -669,6 +682,7 @@ TEXTS = {
               "📊 */today* — что сегодня на аукционах\n"
               "🌐 */dil* — сменить язык\n"
               "📅 */yyl* — фильтр по году\n"
+              "🌍 */yurt* — страна\n"
               "📱 */contact* — связаться",
     },
     "not_ready": {
@@ -843,6 +857,7 @@ TEXTS = {
         "tm": "👔 *TEK topary* — düwmeler aşakda taýýar.",
         "ru": "👔 *Команда TEK* — кнопки внизу экрана.",
     },
+    "menu_country": {"tm": "🌍 Ýurt", "ru": "🌍 Страна"},
     # --- gündelik habar ---
     "daily_title": {
         "tm": "🌅 *Şu günki auksionlar*",
@@ -860,6 +875,188 @@ TEXTS = {
     "daily_btn_today": {"tm": "📅 Auksionlary gör", "ru": "📅 Показать аукционы"},
     "daily_btn_search": {"tm": "🔎 Maşyn gözle", "ru": "🔎 Найти машину"},
 }
+
+
+# ============================================================
+# IŇLIS DILI + ÝURT SAÝLAMAK        23.09.2026 (agşam) — Erkin
+# ------------------------------------------------------------
+# Erkin: "start basanlarynda ilki 3 sany dil çyksa we her dile
+#         basanlarynda ýurt saýlar ýaly etsek."
+#
+# Näme üçin ýurt soralýar:
+#   1) Türkmenistana 2021-den köne maşyn girmeýär -> TM saýlan adama
+#      awtomat 2021+ goýulýar, ýyl soralmaýar (bir düwme az).
+#   2) Beýleki ýurtlara çäk ýok -> olara ÄHLI ýyllar açylýar.
+#   3) Erkine statistika: müşderiler nireden gelýär.
+# Ulanyjy soň menýudan ýyly hem, ýurdy hem üýtgedip bilýär.
+# ============================================================
+YURTLAR = [
+    ("TM", {"tm": "🇹🇲 Türkmenistan", "ru": "🇹🇲 Туркменистан", "en": "🇹🇲 Turkmenistan"}),
+    ("UZ", {"tm": "🇺🇿 Özbegistan", "ru": "🇺🇿 Узбекистан", "en": "🇺🇿 Uzbekistan"}),
+    ("KZ", {"tm": "🇰🇿 Gazagystan", "ru": "🇰🇿 Казахстан", "en": "🇰🇿 Kazakhstan"}),
+    ("RU", {"tm": "🇷🇺 Russiýa", "ru": "🇷🇺 Россия", "en": "🇷🇺 Russia"}),
+    ("IR", {"tm": "🇮🇷 Eýran", "ru": "🇮🇷 Иран", "en": "🇮🇷 Iran"}),
+    ("AE", {"tm": "🇦🇪 BAE (Dubaý)", "ru": "🇦🇪 ОАЭ (Дубай)", "en": "🇦🇪 UAE (Dubai)"}),
+    ("XX", {"tm": "🌍 Başga ýurt", "ru": "🌍 Другая страна", "en": "🌍 Another country"}),
+]
+YURT_ATLARY = {k: v for k, v in YURTLAR}
+
+# TM -> 2021+ (gümrük düzgüni), galanlara çäk ýok
+YURT_MIN_YEAR = {"TM": 2021}
+
+
+def user_country(uid):
+    try:
+        u = load_users().get(str(uid)) or {}
+        c = u.get("country")
+        return c if c in YURT_ATLARY else None
+    except Exception:
+        return None
+
+
+def yurt_duwmeler(lang):
+    rows, row = [], []
+    for kod, atlar in YURTLAR:
+        row.append(InlineKeyboardButton(atlar.get(lang) or atlar["tm"],
+                                        callback_data=f"yurt:{kod}"))
+        if len(row) == 2:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    return InlineKeyboardMarkup(rows)
+
+
+TEXTS_EN = {
+    "choose_lang": "🌐 Dil saýlaň / Выберите язык / Choose language",
+    "yyl_hemmesi": "All years",
+    "yyl_dan": "From {y}",
+    "choose_year": "📅 *From which year should I show cars?*\n\n"
+                   "_You can change this any time from the menu._",
+    "year_saved_all": "✅ Showing cars of all years.",
+    "year_saved": "✅ Now showing only cars from *{y}* and newer.",
+    "lang_saved": "✅ Language: *English*",
+    "choose_country": "🌍 *Which country are you from?*\n\n"
+                      "_This sets which cars I show you by default._",
+    "country_saved_tm": "✅ Turkmenistan.\n\n"
+                        "Showing cars from *2021* and newer — older ones cannot be imported.\n"
+                        "You can change it with the 📅 button.",
+    "country_saved": "✅ {c}\n\nShowing cars of *all years*. "
+                     "You can narrow it with the 📅 button.",
+    "menu_search": "🚗 Find a car",
+    "menu_auction": "🏢 Find by auction",
+    "menu_alerts": "🔔 My alerts",
+    "menu_contact": "📱 Contact us",
+    "menu_lang": "🌐 Language",
+    "menu_year": "📅 Year",
+    "menu_country": "🌍 Country",
+    "start": "🚗 *Dubai Auksion | TEK AUTO MARKET*\n\n"
+             "Hello! I help you find cars at today's Dubai and Sharjah auctions.\n\n"
+             "📌 How to use:\n"
+             "• Type a make or model — for example: {ex}\n"
+             "• Or an auction name — for example: *Marhaba*, *Nojoom*\n"
+             "• Typos are fine (`camri`, `hunday`)\n"
+             "• No match? Set an alert with one button\n"
+             "• /help — all commands",
+    "help": "📋 *Commands:*\n\n"
+            "🚗 *Find a car:* {ex}\n"
+            "🏢 *Find an auction:* {exa}\n"
+            "🔎 Typos are fine: `camri`, `hunday`\n"
+            "🆔 *By code:* `0813-013`\n\n"
+            "🔔 *Alert:* if a car is not listed — press the button\n"
+            "📋 */myalerts* — my alerts\n"
+            "❌ */delalert Camry* — delete an alert\n"
+            "❌ */delalert all* — delete all\n\n"
+            "📊 */today* — what is on today\n"
+            "🌐 */dil* — change language\n"
+            "📅 */yyl* — year filter\n"
+            "🌍 */yurt* — country\n"
+            "📱 */contact* — contact us",
+    "not_ready": "⏳ *Today's auction data is not ready yet*\n\n"
+                 "It is usually updated every morning between **07:00 and 10:00** (Dubai time).\n"
+                 "Please try again a little later.\n\n"
+                 "📱 Urgent question? Write to us:",
+    "today_title": "📅 *Today's auctions:*\n\n",
+    "today_cars": "{n} {w}",
+    "today_total": "✅ Total: *{n} {w}*  ·  {a} {wa}",
+    "today_empty_year": "📭 No cars match your year filter ({y}+) today.\n\n"
+                        "Change the filter: /yyl",
+    "cap_time_both": "🕐 Auction: {d}, {t} (Dubai time)",
+    "cap_time_date": "📅 Auction: {d}",
+    "cap_time_time": "🕐 Auction: {t} (Dubai time)",
+    "cap_price": "💰 Starting bid: *{usd:,} USD* ({aed} AED)",
+    "cap_home": "🏠 Delivered: ~*{usd:,} USD*",
+    "cap_code": "🆔 Code: `{code}`",
+    "wa_btn": "🚗 I am interested in this car",
+    "wa_hello": "Hello! I am interested in this car:",
+    "wa_code": "🆔 Code: {code}",
+    "wa_price": "💰 Starting bid: {usd:,} USD ({aed} AED)",
+    "batch_shown": "📋 Showing *{sent}/{total}*.  *{left}* more cars.\n\n"
+                   "_Be more specific to narrow it down — for example `Camry 2023`._",
+    "batch_more": "⬇️ Show {n} more",
+    "batch_wa": "📱 Write on WhatsApp",
+    "batch_all": "✅ All shown — *{n}* {w}.",
+    "found": "🚗 *'{q}'* — found {n} {w}:",
+    "found_fuzzy": "🔎 I read that as *{s}* — found {n} {w}:",
+    "not_found": "📭 *'{q}'* is not listed today.\n\nShall I tell you when it appears?",
+    "not_found_year": "📭 *'{q}'* is not listed today — or it is older than your filter ({y}+).\n\n"
+                      "Change the filter: /yyl",
+    "alert_btn": "🔔 Tell me when '{q}' appears",
+    "code_found": "🆔 *{code}* — found:",
+    "code_old": "🆔 *{code}* — found\n\n"
+                "⚠️ This car is from the *{d}* auction, which is already over.\n"
+                "Any questions? Write to us on WhatsApp 👇",
+    "code_none": "📭 No car found with code *{code}*.\n\n"
+                 "Please check the code — type it exactly as on the card.",
+    "auction_none": "📭 No cars at {a} today.",
+    "auction_found": "🏢 *{a}* — found {n} {w}:",
+    "search_prompt": "🚗 *Which car are you looking for?*\n\n"
+                     "Type its name or tap a button below.\n"
+                     "_Most listed today:_",
+    "auction_prompt": "🏢 *Which auction?*\n\nRunning today:\n",
+    "auction_prompt_end": "\nType the name — for example: `Marhaba`",
+    "more_lost": "🔄 That search expired. Please type the car name again.",
+    "contact_title": "📱 Contact *TEK AUTO MARKET*:",
+    "alert_set": "✅ Alert saved: *{q}*\n\n"
+                 "I will message you when this car appears.\nMy alerts: /myalerts",
+    "alert_exists": "ℹ️ You already have an alert for *{q}*.",
+    "alerts_empty": "🔔 You have no alerts.\n\nIf a car is not listed — set an alert with the button.",
+    "alerts_title": "🔔 *Your alerts:*\n\n",
+    "alerts_del": "\n❌ Delete: `/delalert <name>`",
+    "alert_hit": "🔔 *Alert!*\n\nThe car you were looking for — *{q}* — is at today's auction!\nTotal: *{n}*",
+    "daily_title": "🌅 *Today's auctions*",
+    "daily_cars": "🚗 *{n} {w}*  ·  {a} {wa}",
+    "daily_top": "🔥 Most listed: {s}",
+    "daily_tail": "_Type a make or model — I will find it._",
+    "daily_btn_today": "📅 Show auctions",
+    "daily_btn_search": "🔎 Find a car",
+    "staff_panel": "👔 *TEK team* — buttons are ready below.",
+}
+
+for _k, _v in TEXTS_EN.items():
+    TEXTS.setdefault(_k, {})["en"] = _v
+
+# türkmen/rus dillerine "ýurt" düwmesiniň ýazgysy
+TEXTS.setdefault("menu_country", {}).update({"tm": "🌍 Ýurt", "ru": "🌍 Страна"})
+TEXTS.setdefault("choose_country", {}).update({
+    "tm": "🌍 *Siz haýsy ýurtdan?*\n\n_Bu haýsy maşynlaryň görkezilýändigini kesgitleýär._",
+    "ru": "🌍 *Из какой вы страны?*\n\n_От этого зависит, какие машины я показываю._",
+})
+TEXTS.setdefault("country_saved_tm", {}).update({
+    "tm": "✅ Türkmenistan.\n\n*2021* we ondan täze maşynlar görkeziler — "
+          "ondan köne maşyn Türkmenistana girmeýär.\n"
+          "Isleseň 📅 düwmesinden üýtgedip bilersiň.",
+    "ru": "✅ Туркменистан.\n\nПоказываю машины *2021* года и новее — "
+          "более старые в Туркменистан не ввозятся.\n"
+          "Изменить можно кнопкой 📅.",
+})
+TEXTS.setdefault("country_saved", {}).update({
+    "tm": "✅ {c}\n\n*Ähli ýyllar* görkeziler. "
+          "Isleseň 📅 düwmesinden çäklendirip bilersiň.",
+    "ru": "✅ {c}\n\nПоказываю машины *всех годов*. "
+          "Сузить можно кнопкой 📅.",
+})
+
 
 
 # ============================================================
@@ -1266,11 +1463,17 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         pass
     uid = update.effective_user.id
 
-    # 23.09: ilkinji gezek gelen adam ilki DIL, soň ÝYL saýlaýar.
+    # 23.09: ilkinji gezek gelen adam ilki DIL, soň ÝURT saýlaýar.
     if user_lang(uid) is None:
         await update.message.reply_text(
             T(DEFAULT_LANG, "choose_lang"), parse_mode="Markdown",
             reply_markup=dil_duwmeler())
+        return
+    if user_country(uid) is None:
+        _l = lang_of(uid)
+        await update.message.reply_text(
+            T(_l, "choose_country"), parse_mode="Markdown",
+            reply_markup=yurt_duwmeler(_l))
         return
 
     await esasy_ekran(update.message, uid)
@@ -1298,6 +1501,13 @@ async def dil_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/dil · /lang — dili üýtgetmek."""
     await update.message.reply_text(T(DEFAULT_LANG, "choose_lang"),
                                     parse_mode="Markdown", reply_markup=dil_duwmeler())
+
+
+async def yurt_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/yurt · /country — ýurdy üýtgetmek."""
+    lang = lang_of(update.effective_user.id)
+    await update.message.reply_text(T(lang, "choose_country"), parse_mode="Markdown",
+                                    reply_markup=yurt_duwmeler(lang))
 
 
 async def yyl_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -2163,11 +2373,15 @@ ISHGAR_DUWME = {
     "📋 Заказы": "sanaw",
     "🔄 Обновить": "tazele",
     "📅 Сегодня": "bugun",
+    "📋 Orders": "sanaw",
+    "🔄 Refresh": "tazele",
+    "📅 Today": "bugun",
 }
 
 _ISHGAR_PANEL = {
     "tm": ("📋 Sargytlar", "🔄 Täzele", "📅 Şu gün", "Maşyn gözlemek üçin ýaz…"),
     "ru": ("📋 Заказы", "🔄 Обновить", "📅 Сегодня", "Напишите марку машины…"),
+    "en": ("📋 Orders", "🔄 Refresh", "📅 Today", "Type a car make…"),
 }
 
 
@@ -2568,10 +2782,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = lang_of(uid_i)
     cars = load_cars()
 
-    # 23.09: dil saýlanmadyk bolsa ilki dil soralýar
+    # 23.09: dil/ýurt saýlanmadyk bolsa ilki şolar soralýar
     if user_lang(uid_i) is None:
         await update.message.reply_text(T(DEFAULT_LANG, "choose_lang"),
                                         parse_mode="Markdown", reply_markup=dil_duwmeler())
+        return
+    if user_country(uid_i) is None:
+        await update.message.reply_text(T(lang, "choose_country"),
+                                        parse_mode="Markdown", reply_markup=yurt_duwmeler(lang))
         return
 
     # Arka planda alertleri barla (blokirlemeya)
@@ -2800,20 +3018,36 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
 
-        # 23.09 ERKIN: "türkmenler giren wagty awtomat 2021-den ýokary bolar ýaly edäý"
-        # 🇹🇲 baýdagy = türkmen müşderi = hemme maşyn (baza eýýäm 2021+).
-        # Ýyl soragy SORALMAÝAR — bir düwme az, adam derrew gözläp başlaýar.
-        # Isleseler menýudaky "📅 Ýyl" düwmesinden üýtgedip bilýärler.
-        # Rus dilini saýlanlardan ýyl soralýar — olar dürli ýurtdan, isleg başga.
-        _bar = "min_year" in (load_users().get(str(q.from_user.id)) or {})
-        if lang == "tm" and not _bar:
-            set_user_pref(q.from_user.id, min_year=0)
-            await esasy_ekran(q.message, q.from_user.id)
-        elif _bar:
-            await esasy_ekran(q.message, q.from_user.id)
+        # Dilden soň ÝURT soralýar. Ýurt ýyl çägini özi kesgitleýär:
+        #   Türkmenistan -> 2021+ (ondan köne maşyn girmeýär)
+        #   beýleki ýurtlar -> ähli ýyllar
+        # Ýurt eýýäm bar bolsa gaýtadan soralmaýar.
+        if user_country(q.from_user.id) is None:
+            await q.message.reply_text(T(lang, "choose_country"), parse_mode="Markdown",
+                                       reply_markup=yurt_duwmeler(lang))
         else:
-            await q.message.reply_text(T(lang, "choose_year"), parse_mode="Markdown",
-                                       reply_markup=yyl_duwmeler(lang))
+            await esasy_ekran(q.message, q.from_user.id)
+        return
+
+    if d.startswith("yurt:"):
+        kod = d[5:]
+        if kod not in YURT_ATLARY:
+            kod = "XX"
+        lang = lang_of(q.from_user.id)
+        _y = YURT_MIN_YEAR.get(kod, 0)
+        set_user_pref(q.from_user.id, country=kod, min_year=_y)
+        if kod == "TM":
+            await q.message.reply_text(T(lang, "country_saved_tm"), parse_mode="Markdown")
+        else:
+            _at = YURT_ATLARY[kod].get(lang) or YURT_ATLARY[kod]["tm"]
+            await q.message.reply_text(T(lang, "country_saved", c=_at), parse_mode="Markdown")
+        await esasy_ekran(q.message, q.from_user.id)
+        return
+
+    if d == "setcountry":
+        lang = lang_of(q.from_user.id)
+        await q.message.reply_text(T(lang, "choose_country"), parse_mode="Markdown",
+                                   reply_markup=yurt_duwmeler(lang))
         return
 
     if d.startswith("yyl:"):
@@ -3005,6 +3239,8 @@ def gundelik_habar_tekst(cars, today, lang=DEFAULT_LANG):
     d = datetime.strptime(today, "%Y%m%d")
     if lang == "ru":
         sene = f"{d.day} {_RU_AYLAR[d.month - 1]}, {_RU_GUNLER[d.weekday()]}"
+    elif lang == "en":
+        sene = d.strftime("%d %B, %A")
     else:
         sene = f"{d.day} {_AYLAR[d.month - 1]}, {_GUN_ATLARY[d.weekday()]}"
 
@@ -3199,6 +3435,8 @@ def main():
     app.add_handler(CommandHandler("lang", dil_command))
     app.add_handler(CommandHandler("yyl", yyl_command))
     app.add_handler(CommandHandler("year", yyl_command))
+    app.add_handler(CommandHandler("yurt", yurt_command))
+    app.add_handler(CommandHandler("country", yurt_command))
     app.add_handler(CommandHandler("id", id_command))
     app.add_handler(CommandHandler("alert", alert_command))
     app.add_handler(CommandHandler("myalerts", myalerts_command))
