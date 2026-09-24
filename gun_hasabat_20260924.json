@@ -30,5 +30,13 @@
     "kept": 61,
     "rejected": 53,
     "time": "08:39"
+  },
+  {
+    "pdf": "PUSH TRIGGER 0924b.pdf",
+    "auction": "PUSH TRIGGER 0924b",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 0,
+    "time": "22:55"
   }
 ]
