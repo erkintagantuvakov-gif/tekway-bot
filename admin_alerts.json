@@ -236,5 +236,16 @@
     "rejected": 0,
     "reasons": {},
     "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: fatal: unable to access 'https://github.com/erkintagantuvakov-gif/tekway-bot.git/': Could not resolve host: github.com\n"
+  },
+  {
+    "id": "20260925|PUSH|Push: Command '['git', 'push']' timed ou",
+    "date": "20260925",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push: Command '['git', 'push']' timed out after 180 seconds"
   }
 ]
