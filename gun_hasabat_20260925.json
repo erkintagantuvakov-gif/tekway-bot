@@ -182,5 +182,13 @@
     "kept": 41,
     "rejected": 0,
     "time": "07:43"
+  },
+  {
+    "pdf": "PUSH TRIGGER 0925a.pdf",
+    "auction": "PUSH TRIGGER 0925a",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 0,
+    "time": "09:55"
   }
 ]
