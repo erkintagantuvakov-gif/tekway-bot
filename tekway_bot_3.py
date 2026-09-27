@@ -1183,14 +1183,31 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG):
 # ============================================================
 # BAZA
 # ============================================================
+# 27.09.2026 REWIZ — BAZA KESHI.
+# On: her duwme basylanda 680 KB JSON faylyny okap, JSON-a owurýärdi.
+# Gunde 1769 masyn + onlarca ulanyjy -> Railway-de nahili yuk.
+# Indi: fayl UYTGEMESE keshden berilya (mtime+olcheg barlanya).
+# Watcher taze baza push edende mtime uytgeya -> kesh ozi tazelenya.
+_cars_cache = None
+_cars_stamp = None
+
+
 def load_cars():
-    if CARS_DB_FILE.exists():
-        try:
-            with open(CARS_DB_FILE, "r", encoding="utf-8") as f:
-                return ensure_codes(json.load(f))
-        except Exception as e:
-            logger.error(f"DB okalmady: {e}")
-    return []
+    global _cars_cache, _cars_stamp
+    if not CARS_DB_FILE.exists():
+        return []
+    try:
+        st = CARS_DB_FILE.stat()
+        stamp = (st.st_mtime_ns, st.st_size)
+        if _cars_cache is not None and _cars_stamp == stamp:
+            return _cars_cache
+        with open(CARS_DB_FILE, "r", encoding="utf-8") as f:
+            cars = ensure_codes(json.load(f))
+        _cars_cache, _cars_stamp = cars, stamp
+        return cars
+    except Exception as e:
+        logger.error(f"DB okalmady: {e}")
+        return _cars_cache or []
 
 
 def load_yatlatmas():
@@ -1491,8 +1508,11 @@ async def esasy_ekran(msg, uid):
     if not db_is_fresh(load_cars()):
         await msg.reply_text(T(lang, "not_ready"), parse_mode="Markdown",
                              reply_markup=contact_keyboard())
+    # 27.09.2026 REWIZ: bu yerde "context" yokdy -> NameError.
+    # try/except ony yuvdyardy, shonun ucin gorunmeyardi, yone
+    # yatlatma barlagy esasy ekrandan HIC HACAN ishlanokdy.
     try:
-        asyncio.create_task(check_alerts(context.bot))
+        asyncio.create_task(check_alerts(msg.get_bot()))
     except Exception:
         pass
 
