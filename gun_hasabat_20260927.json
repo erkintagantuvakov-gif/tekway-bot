@@ -246,5 +246,45 @@
     "kept": 4,
     "rejected": 0,
     "time": "09:27"
+  },
+  {
+    "pdf": "MARHABA SAJAA BRANCH 4 SUNDAY 27-09-2026 -A.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 65,
+    "kept": 57,
+    "rejected": 0,
+    "time": "10:21"
+  },
+  {
+    "pdf": "MARHABA SAJAA BRANCH 4 SUNDAY 27-09-2026 -B.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 65,
+    "kept": 57,
+    "rejected": 0,
+    "time": "10:27"
+  },
+  {
+    "pdf": "MARHABA SAJAA BRANCH 4 SUNDAY 27-09-2026 -C.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 65,
+    "kept": 54,
+    "rejected": 0,
+    "time": "10:33"
+  },
+  {
+    "pdf": "MARHABA SAJAA BRANCH 4 SUNDAY 27-09-2026 -D.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 24,
+    "kept": 13,
+    "rejected": 0,
+    "time": "10:35"
+  },
+  {
+    "pdf": "PUSH TRIGGER 0927a.pdf",
+    "auction": "PUSH TRIGGER 0927a",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 0,
+    "time": "10:38"
   }
 ]
