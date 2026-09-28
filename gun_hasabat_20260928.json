@@ -1,0 +1,61 @@
+[
+  {
+    "pdf": "AL QARYAH MONDAY IND AREA 2 28-09-2026 -A.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 120,
+    "kept": 113,
+    "rejected": 7,
+    "tanalmadyk": [
+      "p1: 28 SEPTEMBER MONDAY AUCTION PM More Than Cars in Auction Industrial Area 2 Sharjah",
+      "p2: 28 PM اﻟﺸﺎرﻗﺔ2 اﻟﻤﻨﻄﻘﺔ اﻟﺼﻨﺎﻋﻴﺔ اﻟﺒﺚ اﻟﻤﺒﺎﺷﺮ",
+      "p21: 48,500 MON-28 SEP 5:15",
+      "p26: 4,500 MON-28 SEP 5:15",
+      "p29: 16,500 MON-28 SEP 5:15"
+    ],
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 7
+    },
+    "time": "06:55"
+  },
+  {
+    "pdf": "AL QARYAH MONDAY IND AREA 2 28-09-2026 -B.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 91,
+    "kept": 86,
+    "rejected": 5,
+    "tanalmadyk": [
+      "p1: 28 SEPTEMBER MONDAY AUCTION PM More Than Cars in Auction Industrial Area 2 Sharjah",
+      "p2: 28 PM اﻟﺸﺎرﻗﺔ2 اﻟﻤﻨﻄﻘﺔ اﻟﺼﻨﺎﻋﻴﺔ اﻟﺒﺚ اﻟﻤﺒﺎﺷﺮ",
+      "p5: 34,500 MON-28 SEP 5:15",
+      "p7: 2022 QIPA KPM 200 cc RWD INDUSTRIAL AREA 2 SHARJAH INDUSTRIAL AREA 2 SHARJAH INDUSTRIAL AREA 2 SHARJAH STARTING BID STARTING BID 2,500 MON-28 SEP 5:15"
+    ],
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 5
+    },
+    "time": "06:56"
+  },
+  {
+    "pdf": "MARHABA SOUQ BRANCH MONDAY 28-09-2026 -A.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 105,
+    "kept": 91,
+    "rejected": 14,
+    "tanalmadyk": [],
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 14
+    },
+    "time": "06:56"
+  },
+  {
+    "pdf": "MARHABA SOUQ BRANCH MONDAY 28-09-2026 -B.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 68,
+    "kept": 58,
+    "rejected": 10,
+    "tanalmadyk": [],
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 10
+    },
+    "time": "06:57"
+  }
+]

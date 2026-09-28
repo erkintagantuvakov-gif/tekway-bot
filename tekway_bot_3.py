@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import re
+import time
 from pathlib import Path
 from urllib.parse import quote
 from datetime import datetime, timezone, timedelta
@@ -1372,24 +1373,118 @@ def build_caption(car, lang=DEFAULT_LANG):
     return cap
 
 
+# ============================================================
+# TELEGRAM FILE_ID KESHI  (27.09.2026)
+# ------------------------------------------------------------
+# Mesele: bot her gezek surady DISKDEN Telegram-a ayratyn
+# yukleyardi. Bir masyn 50 gezek gorkezilse -> 50 gezek yukleme.
+# Netije: hayal jogap + Telegram "flood control" jerimesi.
+#
+# Cozgut: Telegram her surady 1-nji gezek alanda "file_id" berya.
+# Sol id-ni saklasak, 2-nji gezekden sonra surat YUKLENENOK -
+# Telegram ozi oz serwerinden bereya (takmynan 10 esse calt).
+#
+# Nira saklanya? /data/file_ids.json - Railway wolumy.
+#   cars_database.json her gije GitHub-dan calsyrylya, sonun ucin
+#   file_id-ni baza yazsak her gije yitardi. Wolum bolsa galya.
+#
+# Ac: image_path ("car_images/20260927/XXX.jpg").
+# 5 gunden kone gunler awtomat pozulya (baza bilen den).
+# ============================================================
+FID_FILE = _DATA_DIR / "file_ids.json"
+FID_SAKLA_GUN = 5
+_fid_map = {}
+_fid_uytgedi = False
+_fid_yazgy_wagt = 0.0
+FID_YAZGY_ARA = 60      # sekunt: fayla yygy-yygydan yazmazlyk ucin
+
+
+def _fid_yukle():
+    global _fid_map
+    try:
+        if FID_FILE.exists():
+            _fid_map = json.loads(FID_FILE.read_text(encoding="utf-8"))
+            if not isinstance(_fid_map, dict):
+                _fid_map = {}
+    except Exception as e:
+        logger.error(f"file_ids.json okalmady: {e}")
+        _fid_map = {}
+
+
+def _fid_yatda_sakla(mejbury=False):
+    """Kesh fayla yazylya. Her suratda dal - in kop 60 sekuntda 1 gezek."""
+    global _fid_uytgedi, _fid_yazgy_wagt
+    if not _fid_uytgedi:
+        return
+    if not mejbury and (time.time() - _fid_yazgy_wagt) < FID_YAZGY_ARA:
+        return
+    _fid_yazgy_wagt = time.time()
+    try:
+        # kone gunleri ayyr: "car_images/YYYYMMDD/..."
+        cak = (datetime.now() - timedelta(days=FID_SAKLA_GUN)).strftime("%Y%m%d")
+        taze = {}
+        for k, v in _fid_map.items():
+            bol = k.split("/")
+            gun = bol[1] if len(bol) > 2 and len(bol[1]) == 8 and bol[1].isdigit() else None
+            if gun is None or gun >= cak:
+                taze[k] = v
+        FID_FILE.write_text(json.dumps(taze, ensure_ascii=False), encoding="utf-8")
+        _fid_map.clear()
+        _fid_map.update(taze)
+        _fid_uytgedi = False
+    except Exception as e:
+        logger.error(f"file_ids.json yazylmady: {e}")
+
+
+def _fid_al(car):
+    """Bazadaky ya keshdaki file_id. Tapylmasa bos setir."""
+    fid = (car.get("telegram_file_id") or "").strip()
+    if fid:
+        return fid
+    return _fid_map.get(car.get("image_path") or "", "")
+
+
+def _fid_belle(car, message):
+    """Telegram-dan gelen jogapdan file_id-ni cykar we kesha yaz."""
+    global _fid_uytgedi
+    try:
+        ip = car.get("image_path") or ""
+        if not ip or not message or not getattr(message, "photo", None):
+            return
+        fid = message.photo[-1].file_id
+        if fid and _fid_map.get(ip) != fid:
+            _fid_map[ip] = fid
+            _fid_uytgedi = True
+    except Exception:
+        pass
+
+
+_fid_yukle()
+
+
 async def send_car_with_photo(update_or_message, car, keyboard=None, lang=DEFAULT_LANG):
     msg = update_or_message if hasattr(update_or_message, "reply_text") else update_or_message.message
     caption = build_caption(car, lang)
     kb = keyboard or auction_keyboard_for_car(car, lang)
 
-    file_id = car.get("telegram_file_id", "")
+    file_id = _fid_al(car)
     if file_id:
         try:
             await msg.reply_photo(photo=file_id, caption=caption, parse_mode="Markdown", reply_markup=kb)
             return
         except Exception as e:
+            # file_id koneldi (Telegram ony pozupdyr) -> keshden ayyr
             logger.error(f"file_id surat: {e}")
+            _fid_map.pop(car.get("image_path") or "", None)
 
     image_path = car.get("image_path", "")
     if image_path and Path(image_path).exists():
         try:
             with open(image_path, "rb") as photo:
-                await msg.reply_photo(photo=photo, caption=caption, parse_mode="Markdown", reply_markup=kb)
+                _m = await msg.reply_photo(photo=photo, caption=caption,
+                                           parse_mode="Markdown", reply_markup=kb)
+            _fid_belle(car, _m)          # indiki gezek yuklenmez
+            _fid_yatda_sakla()
             return
         except Exception as e:
             logger.error(f"Surat ugratmady: {e}")
@@ -1453,12 +1548,23 @@ async def send_car_to_chat(bot, chat_id, car, lang=None):
     caption = build_caption(car, lang)
     kb = auction_keyboard_for_car(car, lang)
     image_path = car.get("image_path", "")
+    _fid = _fid_al(car)
+    if _fid:
+        try:
+            await bot.send_photo(chat_id=chat_id, photo=_fid, caption=caption,
+                                 parse_mode="Markdown", reply_markup=kb)
+            return
+        except Exception as e:
+            logger.error(f"Alert file_id: {e}")
+            _fid_map.pop(image_path, None)
     try:
         if image_path and Path(image_path).exists():
             with open(image_path, "rb") as photo:
-                await bot.send_photo(chat_id=chat_id, photo=photo, caption=caption,
-                                     parse_mode="Markdown", reply_markup=kb)
-                return
+                _m = await bot.send_photo(chat_id=chat_id, photo=photo, caption=caption,
+                                          parse_mode="Markdown", reply_markup=kb)
+            _fid_belle(car, _m)
+            _fid_yatda_sakla()
+            return
     except Exception as e:
         logger.error(f"Alert surat: {e}")
     await bot.send_message(chat_id=chat_id, text=caption, parse_mode="Markdown", reply_markup=kb)

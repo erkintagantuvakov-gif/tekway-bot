@@ -5,3 +5,8 @@ __pycache__/
 cars_database.json.backup_*
 __pycache__/
 GIT_ARASSALA_BIR_GEZEK.bat
+
+# 27.09 - kone nusgalar (.bak_0918, .bak_0923_diller ...) repoda
+# gerek dal. Yerli kompyuterde galyar, GitHub-a gitmeya.
+*.bak_*
+*.backup_*
