@@ -9,6 +9,7 @@ import asyncio
 import json
 import logging
 import os
+import hashlib
 import re
 import time
 from pathlib import Path
@@ -313,6 +314,37 @@ def cb_data(prefix, text, limit=60):
             break
         out += ch
     return out
+
+
+# ============================================================
+# 29.09.2026 — ŞU GÜNKI AUKSIONLAR: SANAW -> DÜWME  (Erkin)
+# ------------------------------------------------------------
+# Erkin: "şu günki auksionlar diýenimde diňe spisok çykýar.
+#         üstüne basanda göni şol auksiondaky maşynlar görkezilsin."
+#
+# Mesele: müşderi sanawy görüp, soň markany ELDE ýazmalydy.
+# Indi: her auksionyň gapdalynda düwme — basýar, maşynlar gelýär.
+#
+# ⚠️ callback_data Telegram-da IŇ KÖP 64 BAÝT. Auksion ady +
+#    şahamça käwagt ondan uzyn (KHAT AL JAZEERA CARS AUCTION —
+#    Sajaa). Şonuň üçin ada däl-de, ondan ýasalan 10 harplyk
+#    DURNUKLY AÇAR iberilýär. Bot yzyna bazadan gözläp tapýar.
+#    Açar hemişe şol bir at+şahamça üçin şol bir netijäni berýär,
+#    şonuň üçin bot gaýtadan açylsa hem köne düwmeler işleýär.
+# ============================================================
+def auk_acar(a, sh=""):
+    """Auksion + şahamça üçin gysga durnukly açar."""
+    _t = f"{(a or '').strip()}|{(sh or '').strip()}".upper()
+    return hashlib.md5(_t.encode("utf-8")).hexdigest()[:10]
+
+
+def auk_gysga(a, sh=""):
+    """Düwmäniň ýazgysy üçin gysgaldylan at."""
+    ad = (a or "").strip()
+    ad = re.sub(r'\s*AUCTIONS?\s*$', '', ad, flags=re.I).strip()
+    if sh:
+        ad = f"{ad} — {sh}"
+    return ad or (a or "?")
 
 
 # Soňky netije (sahypalama üçin). Diňe ýatda, restartda ýitýär — zyýany ýok.
@@ -706,6 +738,11 @@ TEXTS = {
         "tm": "✅ Jemi: *{n} maşyn*  ·  {a} auksion",
         "ru": "✅ Всего: *{n} {w}*  ·  {a} {wa}",
     },
+    # 29.09: duwmeler goshuldy - musderi name etmelidigini bilsin
+    "today_tap": {
+        "tm": "\n\n👇 Auksionyň üstüne bas — maşynlar görkeziler",
+        "ru": "\n\n👇 Нажмите на аукцион — покажу машины",
+    },
     "today_empty_year": {
         "tm": "📭 Siziň ýyl süzgüjiňize ({y}+) görä şu gün maşyn ýok.\n\n"
               "Süzgüji üýtgetmek: /yyl",
@@ -980,6 +1017,7 @@ TEXTS_EN = {
     "today_title": "📅 *Today's auctions:*\n\n",
     "today_cars": "{n} {w}",
     "today_total": "✅ Total: *{n} {w}*  ·  {a} {wa}",
+    "today_tap": "\n\n👇 Tap an auction to see its cars",
     "today_empty_year": "📭 No cars match your year filter ({y}+) today.\n\n"
                         "Change the filter: /yyl",
     "cap_time_both": "🕐 Auction: {d}, {t} (Dubai time)",
@@ -1696,6 +1734,8 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return (w or "99:99", -n)
 
     text = T(lang, "today_title")
+    hatarlar = []
+    _duwme_acar = set()
     for (a, sh, w), n in sorted(counts.items(), key=_tertip):
         setir = f"🏢 *{esc(a)}*"
         if sh:
@@ -1703,9 +1743,20 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if w:
             setir += f"  ·  🕐 {esc(w)}"
         text += setir + "\n     " + T(lang, "today_cars", n=n, w=w_car(lang, n)) + "\n\n"
+        # 29.09: her auksion ucin duwme - basanda masynlar gelya.
+        # Bir auksionyn iki sagady bolsa (seyrek) ikinji duwme
+        # gaytalanmasyn - acar birmenzes bolsa atlanya.
+        _k = auk_acar(a, sh)
+        if _k not in _duwme_acar:
+            _duwme_acar.add(_k)
+            hatarlar.append([InlineKeyboardButton(
+                f"🏢 {auk_gysga(a, sh)}  ·  {n} 🚗",
+                callback_data=f"tda:{_k}")])
     text += T(lang, "today_total", n=len(cars), a=len(counts),
               w=w_car(lang, len(cars)), wa=w_auc(lang, len(counts)))
-    await msg.reply_text(text, parse_mode="Markdown")
+    text += T(lang, "today_tap")
+    await msg.reply_text(text, parse_mode="Markdown",
+                         reply_markup=InlineKeyboardMarkup(hatarlar) if hatarlar else None)
 
 
 async def contact_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -3245,6 +3296,32 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             T(lang, "found", q=esc(want), n=len(found), w=w_car(lang, len(found))),
             parse_mode="Markdown")
         await send_batch(q.message, str(q.from_user.id), found, title=want, lang=lang)
+
+    elif d.startswith("tda:"):
+        # 29.09: "Şu günki auksionlar" sanawyndaky düwme basyldy
+        uid = str(q.from_user.id)
+        lang = lang_of(uid)
+        acar = d[4:]
+        cars = load_cars()
+        if not cars or not db_is_fresh(cars):
+            await q.message.reply_text(T(lang, "not_ready"), parse_mode="Markdown",
+                                       reply_markup=contact_keyboard())
+            return
+        cars = suzgucle(cars, uid)
+        sel = [c for c in cars
+               if auk_acar(c.get("auction"), c.get("auction_branch")) == acar]
+        if not sel:
+            # baza gije täzelendi — şol auksion indi ýok
+            await q.message.reply_text(T(lang, "more_lost"))
+            return
+        _a = (sel[0].get("auction") or "").strip()
+        _sh = (sel[0].get("auction_branch") or "").strip()
+        _ady = f"{_a} — {_sh}" if _sh else _a
+        log_search(_ady, "found", None, len(sel))
+        await q.message.reply_text(
+            T(lang, "auction_found", a=esc(_ady), n=len(sel), w=w_car(lang, len(sel))),
+            parse_mode="Markdown")
+        await send_batch(q.message, uid, sel, title=_ady, lang=lang)
 
     elif d == "more":
         uid = str(q.from_user.id)
