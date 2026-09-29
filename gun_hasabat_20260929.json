@@ -303,5 +303,23 @@
       "tanalmady (marka/yyl tapylmady)": 1
     },
     "time": "08:53"
+  },
+  {
+    "pdf": "1790617989298-myFile-1790617989178.pdf",
+    "auction": "1790617989298-myFile-1790617989178",
+    "pages": 306,
+    "kept": 300,
+    "rejected": 6,
+    "tanalmadyk": [
+      "p1: 29 September 2026 TUESDAY SAJAA AUCTION LIVE STREAM More Than Cars in Auction",
+      "p2: ﻣﺰاد اﻟﺼﺠﻌﺔ ﻳﻮم اﻟﺜﻼﺛﺎء ﺳﺒﺘﻤﺒﺮ29 2026 اﻟﺒﺚ اﻟﻤﺒﺎﺷﺮ",
+      "p4: TUESDAY 29 SEP",
+      "p5: ﺳﺒﺘﻤﺒﺮ29 اﻟﺜﻼﺛﺎء"
+    ],
+    "ocr_halas": 3,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 6
+    },
+    "time": "09:23"
   }
 ]
