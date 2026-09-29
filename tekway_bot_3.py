@@ -730,7 +730,7 @@ TEXTS = {
     },
     # --- today ---
     "today_title": {
-        "tm": "📅 *Şu günki auksionlar:*\n\n",
+        "tm": "📅 *Şu günki auksionlar*\n\n",
         "ru": "📅 *Сегодняшние аукционы:*\n\n",
     },
     "today_cars": {"tm": "{n} maşyn", "ru": "{n} {w}"},
@@ -1733,28 +1733,32 @@ async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         (a, sh, w), n = x
         return (w or "99:99", -n)
 
+    # ============================================================
+    # 29.09.2026 (2-nji düzediş) — TEKST SANAWY AÝRYLDY
+    # Erkin: "ýokarky sanaw we aşaky düwmeler şol bir zady
+    #         gaýtalaýar, ekran gaty uzyn bolýar."
+    # Indi: ýokarda DIŇE jemi (näçe maşyn, näçe auksion),
+    #       galan ähli maglumat DÜWMÄNIŇ ÖZÜNDE —
+    #       at, şahamça, sagat, maşyn sany.
+    # ============================================================
     text = T(lang, "today_title")
-    hatarlar = []
-    _duwme_acar = set()
-    for (a, sh, w), n in sorted(counts.items(), key=_tertip):
-        setir = f"🏢 *{esc(a)}*"
-        if sh:
-            setir += f" — {esc(sh)}"
-        if w:
-            setir += f"  ·  🕐 {esc(w)}"
-        text += setir + "\n     " + T(lang, "today_cars", n=n, w=w_car(lang, n)) + "\n\n"
-        # 29.09: her auksion ucin duwme - basanda masynlar gelya.
-        # Bir auksionyn iki sagady bolsa (seyrek) ikinji duwme
-        # gaytalanmasyn - acar birmenzes bolsa atlanya.
-        _k = auk_acar(a, sh)
-        if _k not in _duwme_acar:
-            _duwme_acar.add(_k)
-            hatarlar.append([InlineKeyboardButton(
-                f"🏢 {auk_gysga(a, sh)}  ·  {n} 🚗",
-                callback_data=f"tda:{_k}")])
     text += T(lang, "today_total", n=len(cars), a=len(counts),
               w=w_car(lang, len(cars)), wa=w_auc(lang, len(counts)))
     text += T(lang, "today_tap")
+    hatarlar = []
+    _duwme_acar = set()
+    for (a, sh, w), n in sorted(counts.items(), key=_tertip):
+        # Bir auksionyn iki sagady bolsa (seyrek) ikinji duwme
+        # gaytalanmasyn - acar birmenzes bolsa atlanya.
+        _k = auk_acar(a, sh)
+        if _k in _duwme_acar:
+            continue
+        _duwme_acar.add(_k)
+        _yaz = f"🏢 {auk_gysga(a, sh)}"
+        if w:
+            _yaz += f" · 🕐 {w}"
+        _yaz += f" · {n} 🚗"
+        hatarlar.append([InlineKeyboardButton(_yaz, callback_data=f"tda:{_k}")])
     await msg.reply_text(text, parse_mode="Markdown",
                          reply_markup=InlineKeyboardMarkup(hatarlar) if hatarlar else None)
 
