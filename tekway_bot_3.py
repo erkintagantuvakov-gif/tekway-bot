@@ -1091,14 +1091,26 @@ TEXTS = {
 # ============================================================
 YURTLAR = [
     ("TM", {"tm": "🇹🇲 Türkmenistan", "ru": "🇹🇲 Туркменистан", "en": "🇹🇲 Turkmenistan"}),
-    ("UZ", {"tm": "🇺🇿 Özbegistan", "ru": "🇺🇿 Узбекистан", "en": "🇺🇿 Uzbekistan"}),
     ("KZ", {"tm": "🇰🇿 Gazagystan", "ru": "🇰🇿 Казахстан", "en": "🇰🇿 Kazakhstan"}),
     ("RU", {"tm": "🇷🇺 Russiýa", "ru": "🇷🇺 Россия", "en": "🇷🇺 Russia"}),
-    ("IR", {"tm": "🇮🇷 Eýran", "ru": "🇮🇷 Иран", "en": "🇮🇷 Iran"}),
+    ("KG", {"tm": "🇰🇬 Gyrgyzystan", "ru": "🇰🇬 Кыргызстан", "en": "🇰🇬 Kyrgyzstan"}),
+    ("AZ", {"tm": "🇦🇿 Azerbaýjan", "ru": "🇦🇿 Азербайджан", "en": "🇦🇿 Azerbaijan"}),
     ("AE", {"tm": "🇦🇪 BAE (Dubaý)", "ru": "🇦🇪 ОАЭ (Дубай)", "en": "🇦🇪 UAE (Dubai)"}),
     ("XX", {"tm": "🌍 Başga ýurt", "ru": "🌍 Другая страна", "en": "🌍 Another country"}),
 ]
-YURT_ATLARY = {k: v for k, v in YURTLAR}
+
+# ⚠️ 29.09.2026 — Erkin: "Eýran we Özbegistany aýyr, ýerine
+#    Gyrgyzystan we Azerbaýjan goý."
+#    Olar DÜWMEDEN aýryldy, emma şu aşakda GALÝAR. Sebäbi: öň
+#    "Özbegistan" saýlan müşderiniň ýazgysy bazada dur. Ol sanawdan
+#    bütinleý pozulsa, bot ony "ýurt saýlanmadyk" hasaplap, adamdan
+#    ÝENE ýurt sorardy — müşderi üçin bir bökdençlik.
+#    Indi köne saýlaw ykrar edilýär, ýöne täze adam olary görmeýär.
+YURT_KONE = [
+    ("UZ", {"tm": "🇺🇿 Özbegistan", "ru": "🇺🇿 Узбекистан", "en": "🇺🇿 Uzbekistan"}),
+    ("IR", {"tm": "🇮🇷 Eýran", "ru": "🇮🇷 Иран", "en": "🇮🇷 Iran"}),
+]
+YURT_ATLARY = {k: v for k, v in (YURTLAR + YURT_KONE)}
 
 # TM -> 2021+ (gümrük düzgüni), galanlara çäk ýok
 YURT_MIN_YEAR = {"TM": 2021}
