@@ -1972,22 +1972,22 @@ def _users_sahypa(sahypa=0, tertip="last"):
     bas = sahypa * USERS_SAHYPA
     bolek = items[bas:bas + USERS_SAHYPA]
 
-    t = "👥 *ULANYJYLAR*\n\n"
-    t += f"Jemi: *{jemi}*\n"
-    t += f"🆕 Täze — bugün *{taze_bugun}* · hepde *{taze_hepde}*\n"
-    t += f"🟢 Aktiw — bugün *{akt_bugun}* · hepde *{akt_hepde}*\n"
-    t += f"🔍 Jemi gözleg: *{gozleg}*\n"
-    t += "━━━━━━━━━━━━━━━\n"
-    t += f"_Tertip: {tert_ady}_\n\n"
+    # ⚠️ 29.09 (2-nji düzediş) — Erkin: "ýenede uzyn, kompaktnyja bolsun".
+    # Indi: 1 ulanyjy = 1 SETIR. Baslyk 1 setir. Aýryjy çyzyklar aýryldy.
+    # Sene "2026-09-29" däl-de "29.09" — giňlik tygşytlanýar.
+    t = (f"👥 *{jemi} ulanyjy* · 🟢 {akt_bugun} bugün · "
+         f"🆕 {taze_bugun} täze · 🔍 {gozleg}\n\n")
 
     for i, (_uid, u) in enumerate(bolek, bas + 1):
-        ad = esc(u.get("name", "?"))[:22]
-        un = f" @{esc(u['username'])}" if u.get("username") else ""
+        ad = esc(u.get("name", "?"))[:18]
+        un = f" @{esc(u['username'])[:14]}" if u.get("username") else ""
         sn = u.get("searches", 0)
-        sg = esc(str(u.get("last_seen", ""))[:10])
-        t += f"*{i}.* {ad}{un}\n     🔍 {sn} · {sg}\n"
+        _ls = str(u.get("last_seen", ""))[:10].split("-")     # 2026-09-29
+        sg = f"{_ls[2]}.{_ls[1]}" if len(_ls) == 3 else ""
+        t += f"{i}. {ad}{un} — 🔍{sn} · {sg}\n"
 
-    t += f"\n━━━━━━━━━━━━━━━\n{bas+1}–{min(bas+USERS_SAHYPA, len(items))} / {len(items)}"
+    t += (f"\n_{bas+1}–{min(bas+USERS_SAHYPA, len(items))} / {len(items)}"
+          f"  ·  {tert_ady}_")
 
     nav = []
     if sahypa > 0:

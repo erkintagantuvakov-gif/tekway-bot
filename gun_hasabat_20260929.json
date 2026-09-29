@@ -347,5 +347,18 @@
       "tanalmady (marka/yyl tapylmady)": 1
     },
     "time": "09:45"
+  },
+  {
+    "pdf": "PUSH TRIGGER 0929g.pdf",
+    "auction": "PUSH TRIGGER 0929g",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 1,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 1
+    },
+    "time": "09:54"
   }
 ]
