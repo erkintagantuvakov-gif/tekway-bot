@@ -1919,39 +1919,99 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(txt, parse_mode="Markdown")
 
 
+# ============================================================
+# 29.09.2026 — /users SAHYPALANDY  (Erkin)
+# ------------------------------------------------------------
+# Erkin: "users komanda berenimde bir topar uzyn spisok çykýar.
+#         maňa akkuratnyja düşnüklije bolup görüner ýaly gerek."
+#
+# On: 40 ulanyjy bir habarda, ekrana sygmaýardy.
+# Indi:
+#   * ÝOKARDA gysga maglumat karty (jemi, täze, aktiw, gözleg)
+#   * AŞAGYNDA 10 ulanyjy
+#   * ◀ ▶ düwmeler bilen sahypalama
+#   * Tertibi çalyşmak: soňky gelen / iň köp gözlän
+#
+# ⚠️ Düwme basylanda TÄZE HABAR IBERILMEÝÄR - şol bir habar
+#    üýtgedilýär (edit_message_text). Şonuň üçin çat hapalanmaýar.
+# ============================================================
+USERS_SAHYPA = 10
+
+
+def _users_sahypa(sahypa=0, tertip="last"):
+    """(tekst, duwmeler) gaytarya."""
+    users = load_users()
+    if not users:
+        return "📊 Entek ulanyjy ýok.", None
+
+    today = get_today()
+    from datetime import timedelta as _td
+    now = datetime.now(DUBAI_TZ)
+    week = set((now - _td(days=i)).strftime("%Y%m%d") for i in range(7))
+
+    def _first_day(u):
+        return str(u.get("first_seen", ""))[:10].replace("-", "")
+
+    jemi = len(users)
+    taze_bugun = sum(1 for u in users.values() if _first_day(u) == today)
+    taze_hepde = sum(1 for u in users.values() if _first_day(u) in week)
+    akt_bugun = sum(1 for u in users.values() if today in u.get("days", []))
+    akt_hepde = sum(1 for u in users.values() if week & set(u.get("days", [])))
+    gozleg = sum(u.get("searches", 0) for u in users.values())
+
+    if tertip == "top":
+        items = sorted(users.items(), key=lambda x: -x[1].get("searches", 0))
+        tert_ady = "🔍 iň köp gözlän"
+    else:
+        items = sorted(users.items(), key=lambda x: x[1].get("last_seen", ""),
+                       reverse=True)
+        tert_ady = "🕐 soňky gelen"
+
+    sahypalar = max(1, (len(items) + USERS_SAHYPA - 1) // USERS_SAHYPA)
+    sahypa = max(0, min(sahypa, sahypalar - 1))
+    bas = sahypa * USERS_SAHYPA
+    bolek = items[bas:bas + USERS_SAHYPA]
+
+    t = "👥 *ULANYJYLAR*\n\n"
+    t += f"Jemi: *{jemi}*\n"
+    t += f"🆕 Täze — bugün *{taze_bugun}* · hepde *{taze_hepde}*\n"
+    t += f"🟢 Aktiw — bugün *{akt_bugun}* · hepde *{akt_hepde}*\n"
+    t += f"🔍 Jemi gözleg: *{gozleg}*\n"
+    t += "━━━━━━━━━━━━━━━\n"
+    t += f"_Tertip: {tert_ady}_\n\n"
+
+    for i, (_uid, u) in enumerate(bolek, bas + 1):
+        ad = esc(u.get("name", "?"))[:22]
+        un = f" @{esc(u['username'])}" if u.get("username") else ""
+        sn = u.get("searches", 0)
+        sg = esc(str(u.get("last_seen", ""))[:10])
+        t += f"*{i}.* {ad}{un}\n     🔍 {sn} · {sg}\n"
+
+    t += f"\n━━━━━━━━━━━━━━━\n{bas+1}–{min(bas+USERS_SAHYPA, len(items))} / {len(items)}"
+
+    nav = []
+    if sahypa > 0:
+        nav.append(InlineKeyboardButton("◀", callback_data=f"usr:{tertip}:{sahypa-1}"))
+    nav.append(InlineKeyboardButton(f"{sahypa+1}/{sahypalar}", callback_data="usr:noop"))
+    if sahypa < sahypalar - 1:
+        nav.append(InlineKeyboardButton("▶", callback_data=f"usr:{tertip}:{sahypa+1}"))
+
+    if tertip == "top":
+        calys = InlineKeyboardButton("🕐 Soňky gelen boýunça", callback_data="usr:last:0")
+    else:
+        calys = InlineKeyboardButton("🔍 Iň köp gözlän boýunça", callback_data="usr:top:0")
+
+    return t, InlineKeyboardMarkup([nav, [calys]])
+
+
 async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ulanyjylaryn sanawy - dine ADMIN"""
     uid = update.effective_user.id
     if uid != ADMIN_ID:
         await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
         return
-
-    users = load_users()
-    if not users:
-        await update.message.reply_text("📊 Entek ulanyjy ýok.")
-        return
-
-    # Sonky gelen boyunca sortla
-    items = sorted(users.items(), key=lambda x: x[1].get("last_seen", ""), reverse=True)
-
-    # 13.09 DUZEDIS - /users ISLEMEYARDI
-    # Ulanyjynyn adynda "_" ya "*" bolsa (mysal: "Mr_Tiktok"), Telegram
-    # "Can't parse entities" berya we HABAR ASLA IBERILMEYA.
-    # Onki setir: txt += f"{i}. {name} {un}..."  -> ad gacyrylman goyulyardy.
-    # Indi: esc() bilen gacyrylya + _send_md_safe ulanylya (ol basartmasa
-    # bellik-siz gaytadan iberya, bot hic haçan dymmaly dal).
-    txt = f"👥 *Ulanyjylar ({len(items)}):*\n\n"
-    for i, (uid_s, u) in enumerate(items[:40], 1):
-        name = esc(u.get("name", "?"))
-        un = f"@{esc(u['username'])}" if u.get("username") else ""
-        s = u.get("searches", 0)
-        last = esc(u.get("last_seen", "")[:10])
-        txt += f"{i}. {name} {un}\n   🔍{s} · {last}\n"
-
-    if len(items) > 40:
-        txt += f"\n... ýene {len(items)-40} sany"
-
-    await _send_md_safe(update.message, txt)
+    t, kb = _users_sahypa(0, "last")
+    await _send_md_safe(update.message, t, reply_markup=kb)
 
 
 # ============================================================
@@ -3300,6 +3360,26 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             T(lang, "found", q=esc(want), n=len(found), w=w_car(lang, len(found))),
             parse_mode="Markdown")
         await send_batch(q.message, str(q.from_user.id), found, title=want, lang=lang)
+
+    elif d.startswith("usr:"):
+        # 29.09: /users sahypalama. Taze habar iberilmeya - sol bir
+        # habar uytgedilya, cat hapalanmasyn.
+        if q.from_user.id != ADMIN_ID:
+            return
+        _p = d.split(":")
+        if len(_p) < 3 or _p[1] == "noop":
+            return
+        try:
+            _t, _kb = _users_sahypa(int(_p[2]), _p[1])
+        except Exception as _e:
+            logger.error("users sahypa: %s", _e)
+            return
+        try:
+            await q.message.edit_text(_t, parse_mode="Markdown", reply_markup=_kb)
+        except Exception as _e:
+            # "message is not modified" ya markdown yalnyshy - dymmaly dal
+            if "not modified" not in str(_e).lower():
+                await q.message.reply_text(_t, reply_markup=_kb)
 
     elif d.startswith("tda:"):
         # 29.09: "Şu günki auksionlar" sanawyndaky düwme basyldy
