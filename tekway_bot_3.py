@@ -1700,9 +1700,14 @@ def _fid_belle(car, message):
 _fid_yukle()
 
 
-async def send_car_with_photo(update_or_message, car, keyboard=None, lang=DEFAULT_LANG):
+async def send_car_with_photo(update_or_message, car, keyboard=None, lang=DEFAULT_LANG,
+                              gosmaca=""):
+    """gosmaca: kartyn ashagyna goshmaca setir (29.09 - baha gozegciligi
+    sebabi kartyn OZUNDE gorunsin, ayry habar bolup cat-y hapalamasyn)."""
     msg = update_or_message if hasattr(update_or_message, "reply_text") else update_or_message.message
     caption = build_caption(car, lang)
+    if gosmaca:
+        caption += "\n" + gosmaca
     kb = keyboard or auction_keyboard_for_car(car, lang)
 
     file_id = _fid_al(car)
@@ -2348,6 +2353,154 @@ async def alert_loop(app):
 
 
 # ============================================================
+# BAHA GÖZEGÇILIGI — AWTOMAT   (29.09.2026 — Erkin makullady)
+# ------------------------------------------------------------
+# Erkin: "Baha barlagyny awtomat edeýinmi?" -> "Howa."
+#
+# ⚠️ MESELE
+#   Bahalar surata seredip okalýar (OCR). Käwagt ýalňyş okaýar:
+#       "135,000" -> 35000   (bir sifr düşýär)
+#       "82,000"  -> 2000
+#       "65,000"  -> 6500
+#   Müşderi ýalňyş baha görse — biz ýalan maglumat berdik.
+#   1 296 maşyny elden barlamak mümkin däl.
+#
+# ⚠️ NÄME ÜÇIN BOTDA, KOMPÝUTERDE DÄL
+#   `baha_barla.py` her suraty gaýtadan OCR edýär — 5-10 minut.
+#   Ony watcher-e goşsak, gijeki push şonça haýallaýar we
+#   180 sekuntlyk çäge sygmaýar. Şonuň üçin BOTDA diňe SAN
+#   DÜZGÜNLERI işleýär — OCR gerek däl, 1 sekunt, howp ýok.
+#   OCR-li doly barlag `9_BAHALARY_BARLA.bat` bolup galýar.
+#
+# 29.09 hakyky synag: 1 296 maşyndan 33 sanysy güman edildi (2%).
+#
+# NÄHILI GÖRÜNÝÄR
+#   Erkine günde BIR habar gelýär (sanaw ýok, gysga):
+#       ⚠️ Baha gözegçiligi — 33 maşyn güman edilýär
+#       [🚗 Görkez]  <- basanda kartlar surat bilen gelýär
+#   Sanawy habaryň içine ýazmaýarys — Erkin uzyn sanawy halamaýar.
+# ============================================================
+BAHA_GOZEG_FILE = _DATA_DIR / "baha_gozeg.json"
+BAHA_IN_AZ = 1000            # sundan arzan = güman
+BAHA_IN_KOP = 400000         # sundan gymmat = güman
+BAHA_ESSE = 6.0              # topar ortaçasyndan näçe esse tapawut
+BAHA_TOPAR_IN_AZ = 8         # deňeşdirmek üçin toparda iň az näçe maşyn
+BAHA_MAX_KART = 40           # bir gezekde iň köp näçe kart iberilsin
+
+_baha_kesh = {}              # {sene: [(kod, sebap), ...]} — RAM
+
+
+def baha_subhe(cars, sene):
+    """Şol günüň güman edilýän bahalaryny gaýtarýar: [(car, [sebap])].
+
+    ⚠️ TOPAR = AUKSION + ÝYL (3-lük). Diňe auksion boýunça
+    deňeşdirmek ÝALŇYŞ: bir auksionda 2024 BMW X7 (179 000) hem,
+    2013 Kia (3 000) hem bar — ikisi-de HAKYKY.
+    """
+    gun = [c for c in cars if str(c.get("date")) == str(sene)]
+    if not gun:
+        return []
+
+    def _topar(c):
+        try:
+            y = int(c.get("year") or 0)
+        except Exception:
+            y = 0
+        return (c.get("auction") or "?", y // 3)
+
+    top = {}
+    for c in gun:
+        if c.get("price"):
+            top.setdefault(_topar(c), []).append(c["price"])
+    orta = {}
+    for k, v in top.items():
+        if len(v) >= BAHA_TOPAR_IN_AZ:
+            v = sorted(v)
+            n = len(v)
+            orta[k] = v[n // 2] if n % 2 else (v[n // 2 - 1] + v[n // 2]) / 2
+
+    netije = []
+    for c in gun:
+        try:
+            p = int(c.get("price") or 0)
+        except Exception:
+            p = 0
+        sebap = []
+        if p == 0:
+            sebap.append("baha ýok")
+        else:
+            if p < BAHA_IN_AZ:
+                sebap.append(f"gaty arzan (<{BAHA_IN_AZ})")
+            if p > BAHA_IN_KOP:
+                sebap.append(f"gaty gymmat (>{BAHA_IN_KOP})")
+            m = orta.get(_topar(c))
+            if m:
+                if p > m * BAHA_ESSE:
+                    sebap.append(f"ortaçadan ÝOKARY ({p / m:.0f} esse)")
+                elif p * BAHA_ESSE < m:
+                    sebap.append(f"ortaçadan PES ({m / p:.0f} esse)")
+            if p % 50 != 0:
+                sebap.append("togalak san däl")
+        if sebap:
+            netije.append((c, sebap))
+
+    # iň howplusy ýokarda: "baha ýok" > "ortaçadan" > galany
+    def _agram(s):
+        if "baha ýok" in s[1]:
+            return 0
+        if any("ortaça" in x for x in s[1]):
+            return 1
+        return 2
+
+    netije.sort(key=_agram)
+    return netije
+
+
+async def baha_gozeg_loop(app):
+    """Her gün BIR gezek Erkine güman edilýän bahalar barada habar."""
+    await asyncio.sleep(180)
+    while True:
+        try:
+            cars = load_cars()
+            today = get_today()
+            if cars and db_is_fresh(cars) and habar_wagtymy():
+                try:
+                    st = json.loads(BAHA_GOZEG_FILE.read_text(encoding="utf-8"))
+                except Exception:
+                    st = {}
+                if st.get("gun") != today:
+                    subhe = baha_subhe(cars, today)
+                    # ⚠️ ILKI BELLIK, SOŇ UGRAT — habar ugratmak birnäçe
+                    #    sekunt dowam edýär, loop ýene gelse IKI GEZEK gitmez.
+                    _json_yaz(BAHA_GOZEG_FILE, {"gun": today, "san": len(subhe)})
+                    _baha_kesh[today] = [(get_car_code(c), s) for c, s in subhe]
+                    if subhe:
+                        nm = {}
+                        for _c, ss in subhe:
+                            for x in ss:
+                                k = x.split(" (")[0]
+                                nm[k] = nm.get(k, 0) + 1
+                        setirler = "\n".join(
+                            f"   • {v} sany — {k}"
+                            for k, v in sorted(nm.items(), key=lambda a: -a[1]))
+                        kb = InlineKeyboardMarkup([[InlineKeyboardButton(
+                            f"🚗 Şu {min(len(subhe), BAHA_MAX_KART)} maşyny görkez",
+                            callback_data=f"bsh:{today}")]])
+                        await app.bot.send_message(
+                            ADMIN_ID,
+                            f"⚠️ *Baha gözegçiligi — {today[6:8]}.{today[4:6]}*\n\n"
+                            f"{len(subhe)} maşynyň bahasy güman edilýär "
+                            f"({len(subhe) * 100 // max(len([c for c in cars if str(c.get('date')) == today]), 1)}%)\n\n"
+                            f"{setirler}\n\n"
+                            f"_Doly OCR barlagy: 9\\_BAHALARY\\_BARLA.bat_",
+                            parse_mode="Markdown", reply_markup=kb)
+                        logger.info("Baha gozegciligi: %d subheli", len(subhe))
+        except Exception as e:
+            logger.error("baha_gozeg_loop: %s", e)
+        await asyncio.sleep(1800)
+
+
+# ============================================================
 # MAGLUMAT GOZEGÇILIGI — Erkine duýduryş
 # Sagat 10:00 bolup şu günki maşyn gelmedik bolsa — admin-e habar.
 # (board 12.08, 3-nji priýoritet)
@@ -2566,6 +2719,7 @@ async def post_init(app):
     asyncio.create_task(alert_loop(app))
     asyncio.create_task(data_watch_loop(app))
     asyncio.create_task(gundelik_habar_loop(app))
+    asyncio.create_task(baha_gozeg_loop(app))
     if ZK is not None and ZK.isleyarmi():
         ZK._hb_oka()          # 26.08: onki habarlar diskden okalya
         asyncio.create_task(zakaz_gozegcilik(app))
@@ -3517,6 +3671,36 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # zakaz düwmeleri (diňe işgärler)
     if d.startswith(("zk:", "zkg:", "zkk:", "zks:", "zkm:")):
         await _zk_callback(q, context, d)
+        return
+
+    # Baha gozegciligi duwmesi (29.09) - dine admin
+    if d.startswith("bsh:"):
+        if q.from_user.id != ADMIN_ID:
+            return
+        _sn = d[4:]
+        _cars = load_cars()
+        _kodlar = [k for k, _s in _baha_kesh.get(_sn, [])]
+        if not _kodlar:
+            # bot tazeden achylypdyr - RAM bosaldy, gaytadan hasapla
+            _kodlar = [get_car_code(c) for c, _s in baha_subhe(_cars, _sn)]
+        _sebap = dict(_baha_kesh.get(_sn, []))
+        _sel = [c for c in _cars if get_car_code(c) in _kodlar][:BAHA_MAX_KART]
+        if not _sel:
+            await q.message.reply_text("📭 Ol maşynlar indi bazada ýok (baza täzelendi).")
+            return
+        await q.message.reply_text(
+            f"⚠️ *{len(_sel)} güman edilýän baha* — {_sn[6:8]}.{_sn[4:6]}\n\n"
+            f"_Ýalňyşyny tapsaň maňa kody bilen ýaz, düzederin._",
+            parse_mode="Markdown")
+        for _c in _sel:
+            try:
+                _ss = _sebap.get(get_car_code(_c)) or []
+                await send_car_with_photo(
+                    q, _c, lang=DEFAULT_LANG,
+                    gosmaca=("⚠️ _" + esc(", ".join(_ss)) + "_") if _ss else "")
+                await asyncio.sleep(PHOTO_DELAY)
+            except Exception as _e:
+                logger.error("bsh kart: %s", _e)
         return
 
     # Gundelik habaryn duwmeleri (25.08)
