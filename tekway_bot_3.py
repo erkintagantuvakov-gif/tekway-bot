@@ -42,6 +42,98 @@ ALERTS_FILE = _DATA_DIR / "yatlatmas.json"
 SENT_FILE = _DATA_DIR / "sent_alerts.json"
 USERS_FILE = _DATA_DIR / "users.json"
 
+# ============================================================
+# 29.09.2026 — HOWPSUZ (ATOMIK) ÝAZUW + GÜNDELIK ÄTIÝAÇLYK
+# ------------------------------------------------------------
+# ⚠️ TAPYLAN HOWP (rewiziýa 29.09):
+#   Ähli /data faýllary "open(..., 'w')" bilen ýazylýardy.
+#   'w' ilki faýly BOŞADÝAR, soň ýazýar. Eger şol pursatda
+#   Railway konteýneri öçse (her gije push edilende ÖÇÝÄR!),
+#   users.json ýarym ýa-da BOŞ galýar -> load_users() {} gaýtarýar
+#   -> 1951 müşderi BIRDEN ÝITÝÄR. Yzyna getirmek mümkin däl.
+#
+# Çözgüt:
+#   1) Ilki .tmp faýla ýaz, fsync et, soň os.replace bilen çalyş.
+#      os.replace ATOMIK — ýa köne faýl, ýa täze faýl. Ýarym ýok.
+#   2) users.json we yatlatmas.json her gün 1 gezek kopýalanýar:
+#      users_2026-09-29.json ... soňky 7 gün saklanýar.
+#   3) Faýl bozulan bolsa — iň täze ätiýaçlykdan awtomat dikeldilýär.
+# ============================================================
+_YEDEK_DIR = _DATA_DIR / "yedek"
+_YEDEK_GUN = 7
+_yedek_edilen = {}
+
+
+def _json_yaz(path, data, indent=None):
+    """Atomik ýazuw. Şowsuz bolsa köne faýl ZEPERLENMEÝÄR."""
+    path = Path(path)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=indent)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+        return True
+    except Exception as e:
+        logger.error("_json_yaz(%s): %s", path.name, e)
+        try:
+            if tmp.exists():
+                tmp.unlink()
+        except Exception:
+            pass
+        return False
+
+
+def _yedekle(path):
+    """Günde 1 gezek nusga al, 7 günden köne nusgalary poz."""
+    try:
+        path = Path(path)
+        if not path.exists() or path.stat().st_size < 5:
+            return
+        gun = datetime.now(DUBAI_TZ).strftime("%Y-%m-%d")
+        if _yedek_edilen.get(path.name) == gun:
+            return
+        _YEDEK_DIR.mkdir(parents=True, exist_ok=True)
+        nusga = _YEDEK_DIR / f"{path.stem}_{gun}{path.suffix}"
+        if not nusga.exists():
+            nusga.write_bytes(path.read_bytes())
+        _yedek_edilen[path.name] = gun
+        kone = sorted(_YEDEK_DIR.glob(f"{path.stem}_*{path.suffix}"))
+        for f in kone[:-_YEDEK_GUN]:
+            try:
+                f.unlink()
+            except Exception:
+                pass
+    except Exception as e:
+        logger.warning("_yedekle(%s): %s", path, e)
+
+
+def _json_oka(path, boş=None):
+    """Faýl bozulan bolsa iň täze ätiýaçlykdan dikeldýär."""
+    path = Path(path)
+    boş = {} if boş is None else boş
+    if path.exists():
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error("BOZULAN FAÝL %s: %s — ätiýaçlyk gözlenýär", path.name, e)
+    try:
+        nusgalar = sorted(_YEDEK_DIR.glob(f"{path.stem}_*{path.suffix}"))
+        for n in reversed(nusgalar):
+            try:
+                with open(n, "r", encoding="utf-8") as f:
+                    d = json.load(f)
+                logger.error("DIKELDILDI: %s <- %s (%s ýazgy)", path.name, n.name, len(d))
+                return d
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return boş
+
+
 # Admin - dine su ulanyjy /stats gorup bilya
 ADMIN_ID = 8997411258
 
@@ -160,6 +252,29 @@ SYNONYMS = {
     "maksima": "maxima",
     "aksent": "accent", "aksant": "accent",
     "tellurayd": "telluride",
+    # --- 29.09.2026: RUSÇA ÝAZYLYŞLAR ---
+    # Rus müşderi köpelýär. Kiril latyna öwrülenden soň käbir söz
+    # meňzeşlik barlagyndan geçenokdy ("Спортейдж" -> "sporteydj",
+    # meňzeşlik 0.70, çäk bolsa 0.78). Aşakdaky sanaw hakyky rus
+    # ýazylyşyndan AWTOMAT hasaplandy (_norm bilen barlanan).
+    "akcent": "accent", "akkord": "accord", "benc": "mercedes",
+    "ekvinoks": "equinox", "eskaleyd": "escalade",
+    "folksvagen": "volkswagen", "forranner": "4runner",
+    "haylender": "highlander", "henday": "hyundai", "hunday": "hyundai",
+    "kadenza": "cadenza", "kamri": "camry", "kaptiva": "captiva",
+    "karnival": "carnival", "kashkay": "qashqai", "korolla": "corolla",
+    "kreta": "creta", "kruzak": "land cruiser",
+    "land kruzer": "land cruiser", "lend kruzer": "land cruiser",
+    "leksus": "lexus", "maksima": "maxima", "mersedes": "mercedes",
+    "mersedes benc": "mercedes", "odissey": "odyssey",
+    "padjero": "pajero", "palisad": "palisade", "pasfaynder": "pathfinder",
+    "patrul": "patrol", "pikanto": "picanto", "rav 4": "rav4",
+    "rendj rover": "range rover", "renj rover": "range rover",
+    "sekvoya": "sequoia", "sekvoyya": "sequoia", "shevrole": "chevrolet",
+    "sid": "ceed", "siena": "sienna", "sivik": "civic",
+    "sporteydj": "sportage", "taho": "tahoe", "takoma": "tacoma",
+    "travers": "traverse", "tuareg": "touareg", "tukson": "tucson",
+    "tussan": "tucson",
 }
 
 
@@ -463,7 +578,7 @@ def log_search(query, kind, matched=None, n=0):
             if len(d[sec]) > 400:
                 d[sec] = dict(sorted(d[sec].items(), key=lambda x: -x[1])[:300])
 
-        SEARCH_FILE.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+        _json_yaz(SEARCH_FILE, d)
     except Exception as e:
         logger.error(f"log_search: {e}")
 
@@ -891,6 +1006,52 @@ TEXTS = {
         "tm": "🔔 *Ýatlatma!*\n\nSiziň gözlän maşynyňyz *{q}* şu gün auksionda bar!\nJemi: *{n}* sany",
         "ru": "🔔 *Напоминание!*\n\nМашина, которую вы искали — *{q}* — сегодня на аукционе!\nВсего: *{n}* шт.",
     },
+    # 29.09.2026 REWIZ — ÖŇ DIŇE TÜRKMENÇE ÝAZYLAN MÜŞDERI HABARLARY.
+    # Rus müşderi /alert ýazsa türkmençe jogap alýardy.
+    "alert_help": {
+        "tm": "🔔 `/alert Camry` — Camry çykanda habar ber\n\n"
+              "Ýa-da maşyn gözläniňizde tapylmasa — düwmä basyň.",
+        "ru": "🔔 `/alert Camry` — сообщу, когда появится Camry\n\n"
+              "Или нажмите кнопку, если машина не нашлась при поиске.",
+    },
+    "delalert_help": {
+        "tm": "❌ `/delalert Camry` — şony pozar\n`/delalert all` — hemmesini",
+        "ru": "❌ `/delalert Camry` — удалит это\n`/delalert all` — удалит все",
+    },
+    "alerts_cleared": {
+        "tm": "✅ Ähli ýatlatmalar pozuldy.",
+        "ru": "✅ Все уведомления удалены.",
+    },
+    "alert_deleted": {
+        "tm": "✅ Pozuldy: *{q}*",
+        "ru": "✅ Удалено: *{q}*",
+    },
+    "alert_notfound": {
+        "tm": "❌ *{q}* tapylmady.",
+        "ru": "❌ *{q}* не найдено.",
+    },
+    "err_generic": {
+        "tm": "⚠️ Bir zat ýalňyş gitdi — ýazgy alyndy, düzediler.\n"
+              "_Gaýtadan synanyşyp gör._",
+        "ru": "⚠️ Что-то пошло не так — мы записали ошибку и исправим.\n"
+              "_Попробуйте ещё раз._",
+    },
+    "daily_off": {
+        "tm": "🔕 Gündelik habar öçürildi.\n\n"
+              "Bot öňküsi ýaly işleýär — islän wagtyňyz marka ýazyp "
+              "maşyn gözläp bilersiňiz.\n\n"
+              "Yzyna açmak: /habar\\_ac",
+        "ru": "🔕 Ежедневная рассылка отключена.\n\n"
+              "Бот работает как прежде — в любой момент напишите марку "
+              "и найдёте машину.\n\n"
+              "Включить обратно: /habar\\_ac",
+    },
+    "daily_on": {
+        "tm": "🔔 Gündelik habar yzyna açyldy.\n\n"
+              "Her gün ir bilen şol günki auksionlar barada gysgaça habar bererin.",
+        "ru": "🔔 Ежедневная рассылка включена.\n\n"
+              "Каждое утро буду коротко сообщать об аукционах этого дня.",
+    },
     "staff_panel": {
         "tm": "👔 *TEK topary* — düwmeler aşakda taýýar.",
         "ru": "👔 *Команда TEK* — кнопки внизу экрана.",
@@ -1069,6 +1230,19 @@ TEXTS_EN = {
     "daily_tail": "_Type a make or model — I will find it._",
     "daily_btn_today": "📅 Show auctions",
     "daily_btn_search": "🔎 Find a car",
+    "alert_help": "🔔 `/alert Camry` — I'll notify you when a Camry shows up\n\n"
+                  "Or press the button when a search finds nothing.",
+    "delalert_help": "❌ `/delalert Camry` — removes it\n`/delalert all` — removes all",
+    "alerts_cleared": "✅ All alerts removed.",
+    "alert_deleted": "✅ Removed: *{q}*",
+    "alert_notfound": "❌ *{q}* not found.",
+    "err_generic": "⚠️ Something went wrong — it's logged and will be fixed.\n"
+                   "_Please try again._",
+    "daily_off": "🔕 Daily update turned off.\n\n"
+                 "The bot still works — type a brand any time to search.\n\n"
+                 "Turn back on: /habar\\_ac",
+    "daily_on": "🔔 Daily update turned back on.\n\n"
+                "Every morning I'll send a short note about that day's auctions.",
     "staff_panel": "👔 *TEK team* — buttons are ready below.",
 }
 
@@ -1250,19 +1424,13 @@ def load_cars():
 
 
 def load_yatlatmas():
-    if ALERTS_FILE.exists():
-        try:
-            with open(ALERTS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {}
+    return _json_oka(ALERTS_FILE, {})
 
 
 def save_yatlatmas(y):
     try:
-        with open(ALERTS_FILE, "w", encoding="utf-8") as f:
-            json.dump(y, f, ensure_ascii=False, indent=2)
+        _yedekle(ALERTS_FILE)
+        _json_yaz(ALERTS_FILE, y, indent=2)
     except Exception as e:
         logger.error(f"yatlatmas yazylmady: {e}")
 
@@ -1279,8 +1447,7 @@ def load_sent():
 
 def save_sent(s):
     try:
-        with open(SENT_FILE, "w", encoding="utf-8") as f:
-            json.dump(s, f, ensure_ascii=False, indent=2)
+        _json_yaz(SENT_FILE, s, indent=2)
     except Exception as e:
         logger.error(f"sent yazylmady: {e}")
 
@@ -1288,21 +1455,12 @@ def save_sent(s):
 
 
 def load_users():
-    if USERS_FILE.exists():
-        try:
-            with open(USERS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {}
+    return _json_oka(USERS_FILE, {})
 
 
 def save_users(u):
-    try:
-        with open(USERS_FILE, "w", encoding="utf-8") as f:
-            json.dump(u, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        logger.error(f"users yazylmady: {e}")
+    _yedekle(USERS_FILE)
+    _json_yaz(USERS_FILE, u, indent=2)
 
 
 def track_user(update, query_text=""):
@@ -1463,8 +1621,7 @@ def _sargyt_sonky_yukle():
 
 def _sargyt_sonky_yaz():
     try:
-        SARGYT_SONKY_FILE.write_text(
-            json.dumps(_sargyt_sonky, ensure_ascii=False), encoding="utf-8")
+        _json_yaz(SARGYT_SONKY_FILE, _sargyt_sonky)
     except Exception as e:
         logger.error("sargyt_sonky yazylmady: %s", e)
 
@@ -1509,7 +1666,7 @@ def _fid_yatda_sakla(mejbury=False):
             gun = bol[1] if len(bol) > 2 and len(bol[1]) == 8 and bol[1].isdigit() else None
             if gun is None or gun >= cak:
                 taze[k] = v
-        FID_FILE.write_text(json.dumps(taze, ensure_ascii=False), encoding="utf-8")
+        _json_yaz(FID_FILE, taze)
         _fid_map.clear()
         _fid_map.update(taze)
         _fid_uytgedi = False
@@ -1839,8 +1996,7 @@ async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def alert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text(
-            "🔔 `/alert Camry` — Camry çykanda habar ber\n\n"
-            "Ýa-da maşyn gözläniňizde tapylmasa — düwmä basyň.",
+            T(lang_of(update.effective_user.id), "alert_help"),
             parse_mode="Markdown")
         return
     q = " ".join(context.args).upper()
@@ -1871,9 +2027,10 @@ async def myalerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def delalert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    lang = lang_of(update.effective_user.id)
     if not context.args:
         await update.message.reply_text(
-            "❌ `/delalert Camry` — şony pozar\n`/delalert all` — hemmesini", parse_mode="Markdown")
+            T(lang, "delalert_help"), parse_mode="Markdown")
         return
     uid = str(update.effective_user.id)
     y = load_yatlatmas()
@@ -1882,15 +2039,17 @@ async def delalert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if arg == "ALL":
         y[uid] = []
         save_yatlatmas(y)
-        await update.message.reply_text("✅ Ähli ýatlatmalar pozuldy.")
+        await update.message.reply_text(T(lang, "alerts_cleared"))
         return
     if arg in my:
         my.remove(arg)
         y[uid] = my
         save_yatlatmas(y)
-        await update.message.reply_text(f"✅ Pozuldy: *{esc(arg)}*", parse_mode="Markdown")
+        await update.message.reply_text(T(lang, "alert_deleted", q=esc(arg)),
+                                        parse_mode="Markdown")
     else:
-        await update.message.reply_text(f"❌ *{esc(arg)}* tapylmady.", parse_mode="Markdown")
+        await update.message.reply_text(T(lang, "alert_notfound", q=esc(arg)),
+                                        parse_mode="Markdown")
 
 
 
@@ -2144,6 +2303,19 @@ async def check_alerts(bot):
                 kwu = kw.upper()
                 matches = [c for c in u_cars
                            if kwu in f"{c.get('brand','')} {c.get('model','')}".upper()]
+                # ⚠️ 29.09.2026 REWIZ — TAPYLAN UÝLY ÝALŇYŞLYK:
+                #   Ýatlatma DIŇE gönümel deňeşdirilýärdi. Rus müşderi
+                #   "Камри" gözläp düwmä bassa, ýatlatma "КАМРИ" bolup
+                #   ýazylýardy — baza bolsa latyn ("CAMRY").
+                #   Netije: şol ýatlatma HIÇ HAÇAN işlemeýärdi, müşderi
+                #   boş ýere garaşýardy. Indi gözlegdäki ýaly fuzzy
+                #   (kiril + ýalňyş ýazuw) barlagy hem edilýär.
+                if not matches:
+                    try:
+                        _fw, matches = fuzzy_find(kw, u_cars)
+                    except Exception as _fe:
+                        logger.warning("alert fuzzy (%s): %s", kw, _fe)
+                        matches = []
                 if not matches:
                     continue
                 key = f"{uid}|{kwu}|{today}"
@@ -2196,7 +2368,7 @@ def _load_warn():
 
 def _save_warn(d):
     try:
-        WARN_FILE.write_text(json.dumps(d), encoding="utf-8")
+        _json_yaz(WARN_FILE, d)
     except Exception as e:
         logger.error(f"warn save: {e}")
 
@@ -2291,7 +2463,7 @@ async def check_parser_alerts(bot):
                 continue
             yeni.append(a)
         if not yeni and sent:
-            SENT_ADMIN_FILE.write_text(json.dumps(sorted(sent)), encoding="utf-8")
+            _json_yaz(SENT_ADMIN_FILE, sorted(sent))
 
         for a in yeni:
             d = str(a.get("date", ""))
@@ -2318,7 +2490,7 @@ async def check_parser_alerts(bot):
                 logger.error(f"parser alert ugradylmady: {e}")
 
         if yeni:
-            SENT_ADMIN_FILE.write_text(json.dumps(sorted(sent)), encoding="utf-8")
+            _json_yaz(SENT_ADMIN_FILE, sorted(sent))
     except Exception as e:
         logger.error(f"check_parser_alerts: {e}")
 
@@ -2414,13 +2586,30 @@ async def post_init(app):
     try:
         from telegram import BotCommand, BotCommandScopeChat, BotCommandScopeDefault
 
-        # Mushderiler uchin — sada
-        await app.bot.set_my_commands([
-            BotCommand("start", "Başla"),
-            BotCommand("today", "Şu günki auksionlar"),
-            BotCommand("help", "Kömek"),
-            BotCommand("contact", "Habarlaşmak"),
-        ], scope=BotCommandScopeDefault())
+        # Mushderiler uchin — sada.
+        # 29.09.2026 REWIZ: on menyu DINE TURKMENCHEDI. Rus musderi
+        # Telegramyn gok "Menu" duwmesine basanda "Başla / Kömek"
+        # gorýardi we dushunenokdy. Indi Telegram ulanyjynyn OZ
+        # dil sazlamasyna gora gorkezya (language_code).
+        _MENYU = {
+            None: [("start", "Başla"), ("today", "Şu günki auksionlar"),
+                   ("lang", "Dil / Язык / Language"),
+                   ("help", "Kömek"), ("contact", "Habarlaşmak")],
+            "ru": [("start", "Старт"), ("today", "Аукционы сегодня"),
+                   ("lang", "Dil / Язык / Language"),
+                   ("help", "Помощь"), ("contact", "Связаться")],
+            "en": [("start", "Start"), ("today", "Today's auctions"),
+                   ("lang", "Dil / Язык / Language"),
+                   ("help", "Help"), ("contact", "Contact us")],
+        }
+        for _lc, _cmds in _MENYU.items():
+            try:
+                await app.bot.set_my_commands(
+                    [BotCommand(c, t) for c, t in _cmds],
+                    scope=BotCommandScopeDefault(),
+                    language_code=_lc)
+            except Exception as e:
+                logger.warning("Menyu (%s) goyulmady: %s", _lc, e)
 
         # Ishgarler uchin — sargyt komandalary hem bar
         _ishgarler = set(ZK.STAFF_IDS) if ZK else set()
@@ -3283,10 +3472,11 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
             elif update.message:
                 ch = update.message
         if ch:
-            await ch.reply_text(
-                "⚠️ Bir zat ýalňyş gitdi — ýazgy alyndy, düzediler.\n"
-                "_Gaýtadan synanyşyp gör._",
-                parse_mode="Markdown")
+            try:
+                _el = lang_of(ch.chat_id)
+            except Exception:
+                _el = DEFAULT_LANG
+            await ch.reply_text(T(_el, "err_generic"), parse_mode="Markdown")
     except Exception:
         pass
 
@@ -3346,17 +3536,16 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if uid in users:
                 users[uid]["habar_ochuk"] = True
                 save_users(users)
-            await q.message.reply_text(
-                "🔕 Gündelik habar öçürildi.\n\n"
-                "Bot öňküsi ýaly işleýär — islän wagtyňyz marka ýazyp "
-                "maşyn gözläp bilersiňiz.\n\n"
-                "Yzyna açmak: /habar\_ac")
+            await q.message.reply_text(T(lang_of(uid), "daily_off"))
         return
 
     # --- 23.09: DIL we ÝYL saýlamak ---
     if d.startswith("lang:"):
         lang = d[5:]
-        if lang not in ("tm", "ru"):
+        # 29.09 DUZEDIS: duwmede "English" bardy, yone bu yerde "en"
+        # kabul edilenokdy -> musderi Inlis dilini saylasa DYMYP
+        # turkmence galyardy. Indi uc dilem ishleya.
+        if lang not in ("tm", "ru", "en"):
             lang = DEFAULT_LANG
         set_user_pref(q.from_user.id, lang=lang)
         await q.message.reply_text(T(lang, "lang_saved"), parse_mode="Markdown")
@@ -3610,8 +3799,7 @@ def _habar_yagdayi():
 
 def _habar_yaz(d):
     try:
-        HABAR_FILE.write_text(json.dumps(d, ensure_ascii=False, indent=2),
-                              encoding="utf-8")
+        _json_yaz(HABAR_FILE, d, indent=2)
     except Exception as e:
         logger.error("habar yagdayi yazylmady: %s", e)
 
@@ -3721,7 +3909,7 @@ async def gundelik_habar_ugrat(app, diňe_uid=None):
         if u.get("habar_ochuk") or u.get("bloklady"):
             continue
         # her ulanyja OZ dilinde we OZ yyl suzgujine gora
-        ulang = u.get("lang") if u.get("lang") in ("tm", "ru") else DEFAULT_LANG
+        ulang = u.get("lang") if u.get("lang") in ("tm", "ru", "en") else DEFAULT_LANG
         t = gundelik_habar_tekst(suzgucle(cars, uid), today, ulang)
         if not t:
             continue
@@ -3796,8 +3984,7 @@ async def habar_ochur_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     if uid in users:
         users[uid]["habar_ochuk"] = True
         save_users(users)
-    await update.message.reply_text(
-        "🔕 Gündelik habar öçürildi.\n\nYzyna açmak: /habar\_ac")
+    await update.message.reply_text(T(lang_of(uid), "daily_off"))
 
 
 async def habar_ac_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -3807,9 +3994,7 @@ async def habar_ac_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if uid in users:
         users[uid]["habar_ochuk"] = False
         save_users(users)
-    await update.message.reply_text(
-        "🔔 Gündelik habar yzyna açyldy.\n\n"
-        "Her gün ir bilen şol günki auksionlar barada gysgaça habar bererin.")
+    await update.message.reply_text(T(lang_of(uid), "daily_on"))
 
 
 async def habar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
