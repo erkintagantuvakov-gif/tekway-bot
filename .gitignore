@@ -10,3 +10,8 @@ GIT_ARASSALA_BIR_GEZEK.bat
 # gerek dal. Yerli kompyuterde galyar, GitHub-a gitmeya.
 *.bak_*
 *.backup_*
+
+# 30.09 - Telegram surat yukleyji: token we kanal ID.
+# BULAR HIC HACAN GitHub-a GITMELI DAL.
+.bot_token.txt
+.surat_kanaly.txt

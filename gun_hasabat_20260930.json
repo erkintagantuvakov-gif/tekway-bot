@@ -1,0 +1,70 @@
+[
+  {
+    "pdf": "AL NUKHBAH WEDNESDAY 30 SEP 2026.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 243,
+    "kept": 200,
+    "rejected": 43,
+    "tanalmadyk": [
+      "p1: 23 / NOVEMBER / 2024 السبت",
+      "p2: 23 / NOVEMBER / 2024 السبت",
+      "p3: 23 / NOVEMBER / 2024 السبت",
+      "p4: 23 / NOVEMBER / 2024 السبت",
+      "p5: 23 / NOVEMBER / 2024 السبت",
+      "p6: 23 / NOVEMBER / 2024 السبت"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "marka bos (reklama sahypasy)": 37,
+      "tanalmady (marka/yyl tapylmady)": 6
+    },
+    "time": "01:14"
+  },
+  {
+    "pdf": "AL QARYAH WEDNESDAY AUCTION 30-SEPTEMBER-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 216,
+    "kept": 213,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p1: 30 SEPTEMBER WEDNESDAY AUCTION PM More Than Cars in Auction Industrial Area 2 Sharjah",
+      "p2: 30ﻣﺰاد ﻳﻮم ا\u001aرﺑﻌﺎء PM اﻟﺸﺎرﻗﺔ2 اﻟﻤﻨﻄﻘﺔ اﻟﺼﻨﺎﻋﻴﺔ اﻟﺒﺚ اﻟﻤﺒﺎﺷﺮ"
+    ],
+    "ocr_halas": 4,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "01:15"
+  },
+  {
+    "pdf": "Fadak Cars Auction 30-9-2026 INDUSTRIAL AREA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 83,
+    "kept": 79,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: FIND US NOW YOU ARE ONE STEP AWAY FROM YOUR DREAM CAR AUCTION ON EVERY SATURDAY, SUNDAY, WEDNESDAY & FRIDAY.",
+      "p2: 4 Auction Days / اﻟﻤﺰاد أﻳﺎم Industrial Area 2 Branch ٢ اﻟﺼﻨﺎﻋﻴﺔ اﻟﻤﻨﻄﻘﺔ ﻓﺮع SATURDAY / اﻟﺴﺒﺖ WEDNESDAY / اﻷرﺑﻌﺎءSUNDAY / اﻷﺣﺪ Sajja Branch اﻟﺼﺠﻌﺔ ﻓﺮع https://m",
+      "p3: @FadakCarsAuction @FadakCarsAuction @FadakCarsAuction www.FadakAuctions.com NOW NOW FOLLOW US",
+      "p4: 30/SEPTEMBER/2026 WEDNESDAY AUCTION 06:15 PM Industrial Area 2 Branch"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "01:16"
+  },
+  {
+    "pdf": "Marhaba Cars Auction Wednesday 30 SEPTEMBER 2026 Souq Branch.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 178,
+    "kept": 145,
+    "rejected": 33,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 33
+    },
+    "time": "01:17"
+  }
+]

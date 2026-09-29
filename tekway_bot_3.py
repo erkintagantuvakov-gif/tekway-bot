@@ -1395,8 +1395,12 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG):
     if price:
         usd = aed_to_usd(price)
         text += T(lang, "wa_price", usd=usd, aed=price) + "\n"
+    # ⚠️ 30.09.2026 — SURAT SALGYSY DIŇE REPODA BAR BOLSA
+    #   Surat Telegram-a göçürilse (telegram_file_id bar bolsa) ol
+    #   GitHub-a ÝÜKLENMEÝÄR — şonuň üçin salgy ölen bolardy.
+    #   Işgär maşyny kod boýunça botdan tapyp bilýär.
     img = car.get("image_path", "")
-    if img:
+    if img and not (car.get("telegram_file_id") or "").strip():
         text += f"📸 https://raw.githubusercontent.com/erkintagantuvakov-gif/tekway-bot/main/{img}"
 
     wa_url = f"https://wa.me/971522371195?text={quote(text)}"
