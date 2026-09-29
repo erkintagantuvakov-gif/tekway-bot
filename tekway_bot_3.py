@@ -1920,44 +1920,91 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ============================================================
-# 29.09.2026 — /users SAHYPALANDY  (Erkin)
+# 29.09.2026 — /users INTERFEÝSI  (Erkin, 3-nji düzediş)
 # ------------------------------------------------------------
-# Erkin: "users komanda berenimde bir topar uzyn spisok çykýar.
-#         maňa akkuratnyja düşnüklije bolup görüner ýaly gerek."
+# Erkin: "users diýip ýazamda spisok görünmegini islämok.
+#         Diňe näçe users bardygyny göreýin, akkuratnyja bolsun.
+#         Spisogy bir knopka basamda çyksyn. Owadanja interfeýs."
 #
-# On: 40 ulanyjy bir habarda, ekrana sygmaýardy.
-# Indi:
-#   * ÝOKARDA gysga maglumat karty (jemi, täze, aktiw, gözleg)
-#   * AŞAGYNDA 10 ulanyjy
-#   * ◀ ▶ düwmeler bilen sahypalama
-#   * Tertibi çalyşmak: soňky gelen / iň köp gözlän
+# Netije — IKI GATLAK:
+#   1) /users  -> DIŇE san karty (sanaw ýok)
+#   2) düwme   -> sanaw, 10-dan, ◀ ▶ bilen, "⬅ Yza" bilen karta dolanýar
 #
-# ⚠️ Düwme basylanda TÄZE HABAR IBERILMEÝÄR - şol bir habar
-#    üýtgedilýär (edit_message_text). Şonuň üçin çat hapalanmaýar.
+# ⚠️ San karty ``` blok içinde — Telegram ony MONOSPACE edip görkezýär,
+#    şonuň üçin sanlar bir hatarda dur (owadan görünýär).
+#    Blok içinde * we _ bellik däl, ýagny at gaçyrmak gerek däl.
+# ⚠️ Düwme basylanda TÄZE HABAR IBERILMEÝÄR — şol bir habar üýtgedilýär.
 # ============================================================
 USERS_SAHYPA = 10
 
 
-def _users_sahypa(sahypa=0, tertip="last"):
-    """(tekst, duwmeler) gaytarya."""
+def _users_sanlar():
+    """Statistika sanlary - bir ýerde hasaplanýar."""
     users = load_users()
-    if not users:
-        return "📊 Entek ulanyjy ýok.", None
-
     today = get_today()
     from datetime import timedelta as _td
     now = datetime.now(DUBAI_TZ)
-    week = set((now - _td(days=i)).strftime("%Y%m%d") for i in range(7))
+    hepde = set((now - _td(days=i)).strftime("%Y%m%d") for i in range(7))
+    ay = set((now - _td(days=i)).strftime("%Y%m%d") for i in range(30))
 
-    def _first_day(u):
+    def _ilkinji(u):
         return str(u.get("first_seen", ""))[:10].replace("-", "")
 
-    jemi = len(users)
-    taze_bugun = sum(1 for u in users.values() if _first_day(u) == today)
-    taze_hepde = sum(1 for u in users.values() if _first_day(u) in week)
-    akt_bugun = sum(1 for u in users.values() if today in u.get("days", []))
-    akt_hepde = sum(1 for u in users.values() if week & set(u.get("days", [])))
-    gozleg = sum(u.get("searches", 0) for u in users.values())
+    v = users.values()
+    y = load_yatlatmas()
+    return {
+        "jemi": len(users),
+        "akt_gun": sum(1 for u in v if today in u.get("days", [])),
+        "akt_hep": sum(1 for u in v if hepde & set(u.get("days", []))),
+        "akt_ay": sum(1 for u in v if ay & set(u.get("days", []))),
+        "taze_gun": sum(1 for u in v if _ilkinji(u) == today),
+        "taze_hep": sum(1 for u in v if _ilkinji(u) in hepde),
+        "taze_ay": sum(1 for u in v if _ilkinji(u) in ay),
+        "gozleg": sum(u.get("searches", 0) for u in v),
+        "yatlat": sum(1 for k in y.values() if k),
+    }
+
+
+def _san(n):
+    """1951 -> '1 951' (okamak aňsat)."""
+    return f"{n:,}".replace(",", " ")
+
+
+def _users_stat():
+    """Esasy kart — /users şuny görkezýär."""
+    d = _users_sanlar()
+    if not d["jemi"]:
+        return "📊 Entek ulanyjy ýok.", None
+    # ⚠️ Blogyň içinde EMOJI ULANYLANOK — emoji monospace däl,
+    #    goýulsa sanlar bir hatardan süýşýär we kart bozulýar.
+    _c = "  ──────────────────────\n"
+    g = "```\n"
+    g += f"  JEMI ULANYJY  {_san(d['jemi']):>8}\n"
+    g += _c
+    g += f"  Aktiw  bugün  {_san(d['akt_gun']):>8}\n"
+    g += f"         hepde  {_san(d['akt_hep']):>8}\n"
+    g += f"         aý     {_san(d['akt_ay']):>8}\n"
+    g += _c
+    g += f"  Täze   bugün  {_san(d['taze_gun']):>8}\n"
+    g += f"         hepde  {_san(d['taze_hep']):>8}\n"
+    g += f"         aý     {_san(d['taze_ay']):>8}\n"
+    g += _c
+    g += f"  Jemi gözleg   {_san(d['gozleg']):>8}\n"
+    g += f"  Ýatlatma      {_san(d['yatlat']):>8}\n"
+    g += "```"
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📋 Ulanyjylaryň sanawy", callback_data="usr:l:last:0")],
+        [InlineKeyboardButton("🔝 Iň köp gözlenen", callback_data="usr:q"),
+         InlineKeyboardButton("🔄 Täzele", callback_data="usr:stat")],
+    ])
+    return "👥 *ULANYJYLAR*\n\n" + g, kb
+
+
+def _users_sahypa(sahypa=0, tertip="last"):
+    """Sanaw sahypasy — diňe düwme basylanda görkezilýär."""
+    users = load_users()
+    if not users:
+        return "📊 Entek ulanyjy ýok.", None
 
     if tertip == "top":
         items = sorted(users.items(), key=lambda x: -x[1].get("searches", 0))
@@ -1972,45 +2019,55 @@ def _users_sahypa(sahypa=0, tertip="last"):
     bas = sahypa * USERS_SAHYPA
     bolek = items[bas:bas + USERS_SAHYPA]
 
-    # ⚠️ 29.09 (2-nji düzediş) — Erkin: "ýenede uzyn, kompaktnyja bolsun".
-    # Indi: 1 ulanyjy = 1 SETIR. Baslyk 1 setir. Aýryjy çyzyklar aýryldy.
-    # Sene "2026-09-29" däl-de "29.09" — giňlik tygşytlanýar.
-    t = (f"👥 *{jemi} ulanyjy* · 🟢 {akt_bugun} bugün · "
-         f"🆕 {taze_bugun} täze · 🔍 {gozleg}\n\n")
-
+    t = f"👥 *Sanaw*  ·  _{tert_ady}_\n\n"
     for i, (_uid, u) in enumerate(bolek, bas + 1):
         ad = esc(u.get("name", "?"))[:18]
         un = f" @{esc(u['username'])[:14]}" if u.get("username") else ""
-        sn = u.get("searches", 0)
-        _ls = str(u.get("last_seen", ""))[:10].split("-")     # 2026-09-29
+        _ls = str(u.get("last_seen", ""))[:10].split("-")
         sg = f"{_ls[2]}.{_ls[1]}" if len(_ls) == 3 else ""
-        t += f"{i}. {ad}{un} — 🔍{sn} · {sg}\n"
-
-    t += (f"\n_{bas+1}–{min(bas+USERS_SAHYPA, len(items))} / {len(items)}"
-          f"  ·  {tert_ady}_")
+        t += f"{i}. {ad}{un} — 🔍{u.get('searches', 0)} · {sg}\n"
+    t += f"\n_{bas+1}–{min(bas+USERS_SAHYPA, len(items))} / {len(items)}_"
 
     nav = []
     if sahypa > 0:
-        nav.append(InlineKeyboardButton("◀", callback_data=f"usr:{tertip}:{sahypa-1}"))
+        nav.append(InlineKeyboardButton("◀", callback_data=f"usr:l:{tertip}:{sahypa-1}"))
     nav.append(InlineKeyboardButton(f"{sahypa+1}/{sahypalar}", callback_data="usr:noop"))
     if sahypa < sahypalar - 1:
-        nav.append(InlineKeyboardButton("▶", callback_data=f"usr:{tertip}:{sahypa+1}"))
+        nav.append(InlineKeyboardButton("▶", callback_data=f"usr:l:{tertip}:{sahypa+1}"))
 
-    if tertip == "top":
-        calys = InlineKeyboardButton("🕐 Soňky gelen boýunça", callback_data="usr:last:0")
+    calys = (InlineKeyboardButton("🕐 Soňky gelen", callback_data="usr:l:last:0")
+             if tertip == "top" else
+             InlineKeyboardButton("🔍 Iň köp gözlän", callback_data="usr:l:top:0"))
+    return t, InlineKeyboardMarkup([
+        nav, [calys],
+        [InlineKeyboardButton("⬅ Yza", callback_data="usr:stat")],
+    ])
+
+
+def _users_gozlegler():
+    """Iň köp gözlenen sözler."""
+    from collections import Counter
+    qc = Counter()
+    for u in load_users().values():
+        for q in u.get("queries", []):
+            qc[q.upper()] += 1
+    if not qc:
+        t = "🔝 *Iň köp gözlenen*\n\n_Entek gözleg ýok._"
     else:
-        calys = InlineKeyboardButton("🔍 Iň köp gözlän boýunça", callback_data="usr:top:0")
-
-    return t, InlineKeyboardMarkup([nav, [calys]])
+        t = "🔝 *Iň köp gözlenen*\n\n```\n"
+        for i, (w, n) in enumerate(qc.most_common(12), 1):
+            t += f"  {i:>2}. {w[:18]:<18} {_san(n):>5}\n"
+        t += "```"
+    return t, InlineKeyboardMarkup([
+        [InlineKeyboardButton("⬅ Yza", callback_data="usr:stat")]])
 
 
 async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Ulanyjylaryn sanawy - dine ADMIN"""
-    uid = update.effective_user.id
-    if uid != ADMIN_ID:
+    """Ulanyjylar - dine ADMIN. Diňe san karty, sanaw düwmede."""
+    if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
         return
-    t, kb = _users_sahypa(0, "last")
+    t, kb = _users_stat()
     await _send_md_safe(update.message, t, reply_markup=kb)
 
 
@@ -3362,24 +3419,32 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await send_batch(q.message, str(q.from_user.id), found, title=want, lang=lang)
 
     elif d.startswith("usr:"):
-        # 29.09: /users sahypalama. Taze habar iberilmeya - sol bir
-        # habar uytgedilya, cat hapalanmasyn.
+        # 29.09: /users interfeysi. Taze habar iberilmeya - sol bir
+        # habar uytgedilya (edit_message_text), cat hapalanmasyn.
         if q.from_user.id != ADMIN_ID:
             return
         _p = d.split(":")
-        if len(_p) < 3 or _p[1] == "noop":
+        _rej = _p[1] if len(_p) > 1 else ""
+        if _rej == "noop":
             return
         try:
-            _t, _kb = _users_sahypa(int(_p[2]), _p[1])
+            if _rej == "stat":
+                _t, _kb = _users_stat()
+            elif _rej == "q":
+                _t, _kb = _users_gozlegler()
+            elif _rej == "l":
+                _t, _kb = _users_sahypa(int(_p[3]), _p[2])
+            else:
+                return
         except Exception as _e:
-            logger.error("users sahypa: %s", _e)
+            logger.error("users interfeys: %s", _e)
             return
         try:
             await q.message.edit_text(_t, parse_mode="Markdown", reply_markup=_kb)
         except Exception as _e:
-            # "message is not modified" ya markdown yalnyshy - dymmaly dal
             if "not modified" not in str(_e).lower():
-                await q.message.reply_text(_t, reply_markup=_kb)
+                logger.error("users edit: %s", _e)
+                await q.message.reply_text(re.sub(r'[*_`]', '', _t), reply_markup=_kb)
 
     elif d.startswith("tda:"):
         # 29.09: "Şu günki auksionlar" sanawyndaky düwme basyldy
