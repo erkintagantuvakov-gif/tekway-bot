@@ -1429,6 +1429,49 @@ def build_caption(car, lang=DEFAULT_LANG):
 # Ac: image_path ("car_images/20260927/XXX.jpg").
 # 5 gunden kone gunler awtomat pozulya (baza bilen den).
 # ============================================================
+# ============================================================
+# 29.09.2026 — SARGYT HABARYNDA "MAŞYNLARY GÖRKEZ" DÜWMESI
+# ------------------------------------------------------------
+# Erkin: "Eýýup üçin 9 maşyn tapyldy diýip ýazýar, ol ýerde diňe
+#         kod bar. Men ol maşynlary görjek bolsam, ýeke-ýeke kod
+#         ýazyp gözlemeli bolýan."
+#
+# Indi habaryň aşagynda düwme — basýar, şol maşynlar surat bilen
+# gelýär. Kod ýazmak gerek däl.
+#
+# ⚠️ Näme üçin kodlar AÝRY FAÝLDA?
+#    callback_data 64 baýt. Bir kod 9 harp, 7 kod = 70 harp —
+#    sygmaýar. Şonuň üçin düwmä diňe SARGYT kody ýazylýar
+#    (mysal "sar:ST-9"), kod sanawy bolsa şu faýlda durýar.
+#    /data-da — bot täzeden açylsa hem düwme işlemegini dowam edýär.
+# ============================================================
+SARGYT_SONKY_FILE = _DATA_DIR / "sargyt_sonky.json"
+_sargyt_sonky = {}
+
+
+def _sargyt_sonky_yukle():
+    global _sargyt_sonky
+    try:
+        if SARGYT_SONKY_FILE.exists():
+            _sargyt_sonky = json.loads(SARGYT_SONKY_FILE.read_text(encoding="utf-8"))
+            if not isinstance(_sargyt_sonky, dict):
+                _sargyt_sonky = {}
+    except Exception as e:
+        logger.error("sargyt_sonky okalmady: %s", e)
+        _sargyt_sonky = {}
+
+
+def _sargyt_sonky_yaz():
+    try:
+        SARGYT_SONKY_FILE.write_text(
+            json.dumps(_sargyt_sonky, ensure_ascii=False), encoding="utf-8")
+    except Exception as e:
+        logger.error("sargyt_sonky yazylmady: %s", e)
+
+
+_sargyt_sonky_yukle()
+
+
 FID_FILE = _DATA_DIR / "file_ids.json"
 FID_SAKLA_GUN = 5
 _fid_map = {}
@@ -2960,17 +3003,26 @@ async def _sargyt_habar_isle(app, hasabat=None):
         for c in taze:
             gorlen.add(get_car_code(c))
 
-        kodlar = ", ".join(f"`{get_car_code(c)}`" for c in taze[:8])
+        # 29.09: kod sanawy aýryldy — ýerine DÜWME.
+        # Kodlar faýlda saklanýar, düwmä diňe sargyt kody ýazylýar.
+        _sargyt_sonky[z["kod"]] = [get_car_code(c) for c in taze]
+        _sargyt_sonky_yaz()
         _tekst = (f"🔔 *SARGYT ÜÇIN MAŞYN TAPYLDY*\n\n"
                   f"`{z['kod']}` — {esc(z['at'])}\n"
                   f"🚗 {esc(z['isleg'])}\n"
                   f"💰 {ZK._byujet_yaz(z)}\n\n"
-                  f"*{len(taze)}* täze maşyn: {kodlar}\n\n"
-                  f"_Görmek üçin_ `/sargyt {z['kod']}`")
+                  f"✅ *{len(taze)}* täze maşyn tapyldy")
+        _kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(f"🚗 Şu {len(taze)} maşyny görkez",
+                                  callback_data=f"sar:{z['kod']}")],
+            [InlineKeyboardButton("🔎 Ähli gabat gelýänler",
+                                  callback_data=f"zkg:{z['kod']}")],
+        ])
         for _al in alyjylar:
             try:
                 await app.bot.send_message(chat_id=int(_al), text=_tekst,
-                                           parse_mode="Markdown")
+                                           parse_mode="Markdown",
+                                           reply_markup=_kb)
                 ugradyldy += 1
             except Exception as e:
                 logger.error("sargyt habar (%s): %s", _al, e)
@@ -3417,6 +3469,29 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             T(lang, "found", q=esc(want), n=len(found), w=w_car(lang, len(found))),
             parse_mode="Markdown")
         await send_batch(q.message, str(q.from_user.id), found, title=want, lang=lang)
+
+    elif d.startswith("sar:"):
+        # 29.09: sargyt habaryndaky "maşynlary görkez" düwmesi
+        _zk = d[4:]
+        uid = str(q.from_user.id)
+        lang = lang_of(uid)
+        _kodlar = set(_sargyt_sonky.get(_zk) or [])
+        cars = load_cars()
+        if not cars or not db_is_fresh(cars):
+            await q.message.reply_text(T(lang, "not_ready"), parse_mode="Markdown",
+                                       reply_markup=contact_keyboard())
+            return
+        sel = [c for c in cars if get_car_code(c) in _kodlar]
+        if not sel:
+            # baza gije täzelendi — köne kodlar indi ýok
+            await q.message.reply_text(
+                f"📭 Ol maşynlar indi bazada ýok (baza täzelendi).\n\n"
+                f"Häzirki gabat gelýänleri görmek üçin: `/sargyt {esc(_zk)}`",
+                parse_mode="Markdown")
+            return
+        await q.message.reply_text(
+            f"🚗 *{esc(_zk)}* — {len(sel)} maşyn", parse_mode="Markdown")
+        await send_batch(q.message, uid, sel, title=f"Sargyt {_zk}", lang=lang)
 
     elif d.startswith("usr:"):
         # 29.09: /users interfeysi. Taze habar iberilmeya - sol bir
