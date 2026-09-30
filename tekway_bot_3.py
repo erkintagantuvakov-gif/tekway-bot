@@ -295,8 +295,24 @@ def build_vocab(cars):
     return vocab
 
 
-def fuzzy_find(query, cars):
-    """(tapylan_soz, masynlar) gaytarya. Tapmasa (None, [])."""
+def fuzzy_find(query, cars, dine_takyk=False):
+    """(tapylan_soz, masynlar) gaytarya. Tapmasa (None, []).
+
+    dine_takyk=True  -> DINE sinonim/kiril owrulmesi ishleya,
+                        MENZESHLIK (difflib) barlagy ISHLEMEYA.
+
+    ⚠️ 30.09.2026 — NAM UCHIN BU GEREK (Erkin tapdy):
+      Menzeshlik barlagy GOZLEG uchin gowy: adam yazya, bot
+      "sen sheyle yazdyn, men muny tapdym" diyip GORKEZYA.
+      Emma YATLATMA-da ol ALDAYA: bot "senin gozlan
+      EXPEDITION masynyn geldi" diyip yazya-da, ashagynda
+      BASGA masyn gorkezya.
+      Hakyky mysal (30.09 bazasy):
+          "CRUZE"   -> Hyundai Santa Cruz     (0.78 menzeshlik)
+          "STINGER" -> Corvette Stingray
+      Musderi ynamy gidya. Sonun uchin yatlatmada dine
+      sinonim/kiril owrulmesi ulanylya - ol 100% ynamly.
+    """
     q = _norm(query)
     if not q:
         return None, []
@@ -326,7 +342,7 @@ def fuzzy_find(query, cars):
                 break
 
     # 3. Meňzeşlik boýunça (ýalňyş harp, ýitirilen harp)
-    if not target:
+    if not target and not dine_takyk:
         vocab = build_vocab(cars)
         if not vocab:
             return None, []
@@ -1006,6 +1022,16 @@ TEXTS = {
         "tm": "🔔 *Ýatlatma!*\n\nSiziň gözlän maşynyňyz *{q}* şu gün auksionda bar!\nJemi: *{n}* sany",
         "ru": "🔔 *Напоминание!*\n\nМашина, которую вы искали — *{q}* — сегодня на аукционе!\nВсего: *{n}* шт.",
     },
+    # 30.09.2026 — ÝATLATMA SÖZI BILEN TAPYLAN SÖZ DEŇ DÄL BOLSA.
+    # Mysal: müşderi "Камри" ýazypdyr, bazada "Camry". Öň habarda
+    # diňe "Камри" ýazylýardy, kartda bolsa "Toyota Camry" — müşderi
+    # "bot başga maşyn görkezýär" diýip düşünýärdi. Indi ikisem bar.
+    "alert_hit_alias": {
+        "tm": "🔔 *Ýatlatma!*\n\nSiz *{q}* diýip ýazypdyňyz — "
+              "bazada ol *{s}*.\nŞu gün auksionda *{n}* sany bar!",
+        "ru": "🔔 *Напоминание!*\n\nВы искали *{q}* — "
+              "в базе это *{s}*.\nСегодня на аукционе *{n}* шт.!",
+    },
     # 29.09.2026 REWIZ — ÖŇ DIŇE TÜRKMENÇE ÝAZYLAN MÜŞDERI HABARLARY.
     # Rus müşderi /alert ýazsa türkmençe jogap alýardy.
     "alert_help": {
@@ -1242,6 +1268,9 @@ TEXTS_EN = {
     "daily_tail": "_Type a make or model — I will find it._",
     "daily_btn_today": "📅 Show auctions",
     "daily_btn_search": "🔎 Find a car",
+    "alert_hit_alias": "🔔 *Alert!*\n\nYou asked for *{q}* — "
+                       "in our database it is *{s}*.\n"
+                       "Today's auction has *{n}*!",
     "alert_help": "🔔 `/alert Camry` — I'll notify you when a Camry shows up\n\n"
                   "Or press the button when a search finds nothing.",
     "delalert_help": "❌ `/delalert Camry` — removes it\n`/delalert all` — removes all",
@@ -2297,7 +2326,36 @@ async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ============================================================
 # ALERT BARLAG (background)
 # ============================================================
+# ⚠️ 30.09.2026 — IKI BARLAG BIR WAGTDA ISHLEMESIN (Erkin tapdy)
+#   handle_message HER habarda check_alerts-i arka planda
+#   isledyardi, alert_loop bolsa her 10 minutda. Netije: IKI-UC
+#   barlag BIR WAGTDA ishleyardi we habarlar BIRI-BIRINE GIRYARDI:
+#       "Senin gozlan EXPEDITION geldi"   <- 1-nji barlagdan
+#       [Toyota Camry karty]              <- 2-nji barlagdan
+#   Musderi "bot masynlary garysdyryar" diyip goryar.
+#   Sonun ustune "sent" faylyny ikisem ayry okayardy ->
+#   ayny alert IKI GEZEK gidip bilyardi.
+#   Indi: bir wagtda DINE BIR barlag. Beylekisi dymyp gecya.
+_alert_gulp = None
+
+
+def _alert_gulp_al():
+    global _alert_gulp
+    if _alert_gulp is None:
+        _alert_gulp = asyncio.Lock()
+    return _alert_gulp
+
+
 async def check_alerts(bot):
+    gulp = _alert_gulp_al()
+    if gulp.locked():
+        logger.info("check_alerts: onki barlag isleyar - gecirildi")
+        return
+    async with gulp:
+        await _check_alerts_ic(bot)
+
+
+async def _check_alerts_ic(bot):
     try:
         cars = load_cars()
         if not cars:
@@ -2331,9 +2389,12 @@ async def check_alerts(bot):
                 #   Netije: şol ýatlatma HIÇ HAÇAN işlemeýärdi, müşderi
                 #   boş ýere garaşýardy. Indi gözlegdäki ýaly fuzzy
                 #   (kiril + ýalňyş ýazuw) barlagy hem edilýär.
+                _tapylan = None
                 if not matches:
                     try:
-                        _fw, matches = fuzzy_find(kw, u_cars)
+                        # dine_takyk: sinonim/kiril HAWA, menzeshlik YOK.
+                        # Sebabi fuzzy_find dokumentasiyasynda.
+                        _tapylan, matches = fuzzy_find(kw, u_cars, dine_takyk=True)
                     except Exception as _fe:
                         logger.warning("alert fuzzy (%s): %s", kw, _fe)
                         matches = []
@@ -2343,10 +2404,16 @@ async def check_alerts(bot):
                 if sent.get(key):
                     continue
                 try:
+                    # Tapylan soz sorag bilen den dal bolsa (mysal
+                    # "Камри" -> "camry") - HABARDA IKISEM yazylya.
+                    # Yogsam tekst bir zat, kart baska zat bolup gorunya.
+                    if _tapylan and _norm(_tapylan) != _norm(kw):
+                        _tekst = T(ulang, "alert_hit_alias", q=esc(kw),
+                                   s=esc(str(_tapylan).title()), n=len(matches))
+                    else:
+                        _tekst = T(ulang, "alert_hit", q=kw, n=len(matches))
                     await bot.send_message(
-                        chat_id=int(uid),
-                        text=T(ulang, "alert_hit", q=kw, n=len(matches)),
-                        parse_mode="Markdown")
+                        chat_id=int(uid), text=_tekst, parse_mode="Markdown")
                     for car in matches[:5]:
                         await send_car_to_chat(bot, int(uid), car, lang=ulang)
                     sent[key] = True
