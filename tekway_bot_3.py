@@ -347,9 +347,16 @@ def fuzzy_find(query, cars, dine_takyk=False):
         if not vocab:
             return None, []
         best, score = None, 0.0
+        # ⚠️ 30.09.2026 — DINE SANDAN DURAN BOLEK NYSHANA BOLMALY DAL.
+        #   Erkin: "Lexus es 350 diyip yazamda basga-basga masynlar cykyar."
+        #   Sebabi: "350" hem bolek hokmunde deneshdirilyardi we
+        #   vocab-da "350" bar (Gle 350, Rx 350, Is 350...). Netije:
+        #   nyshana "350" bolup, MERCEDES Gle 350-em, LEXUS Rx 350-em
+        #   gelyardi. San marka-model boyunca PAYLASYLYAN - ol hic zat
+        #   anyklamaya. Indi sandan duran bolek gecirilya.
         for cand in vocab:
             for piece in [q] + q.split():
-                if len(piece) < 3:
+                if len(piece) < 3 or piece.isdigit():
                     continue
                 r = difflib.SequenceMatcher(None, piece, cand).ratio()
                 # sozun basy den gelse - bal gos
@@ -364,8 +371,18 @@ def fuzzy_find(query, cars, dine_takyk=False):
         return None, []
 
     tn = _norm(target)
-    found = [c for c in cars
-             if tn in _norm(f"{c.get('brand','')} {c.get('model','')}")]
+    # ⚠️ 30.09.2026 — GYSGA NYSHANA SOZ SERHEDI BILEN GOZLENYA.
+    #   On "in" ulanylyardy, yagny bolek hem bolsa gabat gelyardi:
+    #       "gle" -> "Jeep WranGLEr"  ← nadogry
+    #       "rio" -> "PatRIOt"
+    #   5 harpdan gysga nyshanada indi doly soz gerek.
+    if len(tn) < 5:
+        _re_tn = re.compile(rf"\b{re.escape(tn)}\b")
+        found = [c for c in cars
+                 if _re_tn.search(_norm(f"{c.get('brand','')} {c.get('model','')}"))]
+    else:
+        found = [c for c in cars
+                 if tn in _norm(f"{c.get('brand','')} {c.get('model','')}")]
     if not found:
         # sinonim marka bolsa - dine markadan gozle
         found = [c for c in cars if tn in _norm(c.get("brand", ""))]
@@ -681,6 +698,12 @@ def set_user_pref(uid, **kw):
         logger.error("set_user_pref: %s", e)
 
 
+# 30.09.2026 — "Ähli ýyllary görkez" düwmesi basylanda müşderi
+# soragyny GAÝTADAN ÝAZMAZ ÝALY, soňky sorag RAM-da saklanýar.
+# Diňe soňky 60 adam — ýat dolmasyn (send_batch-daky ýaly kada).
+_son_gozleg = {}
+
+
 def suzgucle(cars, uid):
     """Ulanyjynyň saýlan ýylyndan pes maşynlary aýyrýar."""
     y = user_min_year(uid)
@@ -943,6 +966,28 @@ TEXTS = {
               "Süzgüji üýtgetmek: /yyl",
         "ru": "📭 *'{q}'* сегодня нет — или машина старше вашего фильтра ({y}+).\n\n"
               "Изменить фильтр: /yyl",
+    },
+    # 30.09.2026 — sorag doly tapylmady, dine bir bolegi tapyldy.
+    "found_partial": {
+        "tm": "📭 *'{q}'* takyk tapylmady.\n\n"
+              "🔎 *{s}* boýunça {n} maşyn bar — şolary görkezýärin:",
+        "ru": "📭 *'{q}'* точно не найдено.\n\n"
+              "🔎 По *{s}* есть {n} {w} — показываю их:",
+    },
+    # 30.09.2026 — gozleg tapdy, yone ULANYJYNYN YYL SUZGUJI aýyrdy.
+    "found_but_year": {
+        "tm": "🔎 *'{q}'* — şu gün *{n}* sany bar.\n\n"
+              "⚠️ Ýöne olaryň ählisi siziň ýyl süzgüjiňizden (*{y}+*) köne:\n"
+              "_{ys}_\n\n"
+              "Görmek üçin süzgüji aýryp bilersiňiz 👇",
+        "ru": "🔎 *'{q}'* — сегодня есть *{n}* шт.\n\n"
+              "⚠️ Но все они старше вашего фильтра (*{y}+*):\n"
+              "_{ys}_\n\n"
+              "Чтобы увидеть — снимите фильтр 👇",
+    },
+    "show_all_years_btn": {
+        "tm": "📅 Ähli ýyllary görkez",
+        "ru": "📅 Показать все годы",
     },
     "alert_btn": {
         "tm": "🔔 '{q}' çykanda habar ber",
@@ -1268,6 +1313,13 @@ TEXTS_EN = {
     "daily_tail": "_Type a make or model — I will find it._",
     "daily_btn_today": "📅 Show auctions",
     "daily_btn_search": "🔎 Find a car",
+    "found_partial": "📭 *'{q}'* was not found exactly.\n\n"
+                     "🔎 There are {n} {w} for *{s}* — showing those:",
+    "found_but_year": "🔎 *'{q}'* — there are *{n}* today.\n\n"
+                      "⚠️ But all of them are older than your year filter (*{y}+*):\n"
+                      "_{ys}_\n\n"
+                      "Tap below to remove the filter 👇",
+    "show_all_years_btn": "📅 Show all years",
     "alert_hit_alias": "🔔 *Alert!*\n\nYou asked for *{q}* — "
                        "in our database it is *{s}*.\n"
                        "Today's auction has *{n}*!",
@@ -1809,6 +1861,9 @@ async def send_batch(msg, uid, cars_list, title="", lang=None):
     # 19.08: bu ýat (RAM) hiç haçan arassalanmaýardy. Her müşderiniň
     # doly netije sanawy saklanýardy -> müşderi köpelse bot ýady dolýar.
     # Indi diňe soňky 60 müşderi saklanýar (sahypalama üçin şol ýeterlik).
+    if len(_son_gozleg) > 60:
+        for _k in list(_son_gozleg.keys())[:-60]:
+            _son_gozleg.pop(_k, None)
     if len(_last_results) > 60:
         for _k in list(_last_results.keys())[:-60]:
             _last_results.pop(_k, None)
@@ -3631,6 +3686,41 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     found = [c for c in cars if tu in f"{c.get('brand','')} {c.get('model','')}".upper()]
 
+    # ============================================================
+    # 30.09.2026 — "ÝYL SÜZGÜJI ÝUWDUP GOÝBERDIMI?"  (Erkin tapdy)
+    # ------------------------------------------------------------
+    # Erkin: "Lexus es 350 diýip ýazamda başga-başga maşynlar çykýar."
+    #
+    # Hakyky sebäbi: bazada 4 sany Lexus Es 350 BAR —
+    #   2018, 2013, 2009, 2007.
+    # Erkiniň ýurdy Türkmenistan -> süzgüç 2021+ -> DÖRDÜSI-DE
+    # aýrylýar -> gönümel gözleg boş -> fuzzy işe girip diňe
+    # "lexus" sözüni tapýar -> ÄHLI Lexus gelýär (LX 700H, RX...).
+    #
+    # Müşderi üçin bu iň erbet ýagdaý: ol "ýok" diýen jogap hem
+    # alanok, ýalňyş maşyn alýar we bot bozuk diýip pikir edýär.
+    #
+    # Indi: süzgüçsiz hem barlaýarys. Maşyn BAR bolsa — aýdýarys
+    # näçe sanydygyny we haýsy ýyllardygyny, düwme bilen süzgüji
+    # aýryp bolýar. Fuzzy-a asla ýetmeýär.
+    # ============================================================
+    if not found and user_min_year(uid_i):
+        _son_gozleg[str(uid_i)] = text
+        _suzgucsiz = [c for c in load_cars()
+                      if str(c.get("date")) == get_today()
+                      and tu in f"{c.get('brand','')} {c.get('model','')}".upper()]
+        if _suzgucsiz:
+            _yyllar = sorted({int(c.get("year") or 0) for c in _suzgucsiz}, reverse=True)
+            _ys = ", ".join(str(y) for y in _yyllar[:6])
+            log_search(text, "none")
+            await update.message.reply_text(
+                T(lang, "found_but_year", q=esc(text), n=len(_suzgucsiz),
+                  y=user_min_year(uid_i), ys=esc(_ys)),
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(
+                    T(lang, "show_all_years_btn"), callback_data="yylq:0")]]))
+            return
+
     # --- Göni tapylmasa: ýalňyş/türkmençe/rusça ýazgy bolmagy mümkin ---
     fuzzy_word = None
     if not found:
@@ -3651,9 +3741,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     log_search(text, "fuzzy" if fuzzy_word else "found", fuzzy_word, len(found))
 
     if fuzzy_word:
-        await update.message.reply_text(
-            T(lang, "found_fuzzy", s=esc(fuzzy_word.title()), n=len(found),
-              w=w_car(lang, len(found))), parse_mode="Markdown")
+        # ⚠️ 30.09.2026 — DOLY DAL GABAT GELME ACYK AYDYLYA.
+        #   "Lexus es 350" -> fuzzy dine "lexus" tapya -> 35 Lexus
+        #   gelyardi we bot "Lexus diyip dusundim" diyyardi. Musderi
+        #   bolsa ES 350 sorapdy. Indi: "ES 350 tapylmady, Lexus
+        #   boyunca sular bar" diyip DOGRUSY aydylya.
+        _sorag_bolek = set(_norm(text).split())
+        _tapylan_bolek = set(_norm(fuzzy_word).split())
+        if _sorag_bolek - _tapylan_bolek:
+            _habar = T(lang, "found_partial", q=esc(text),
+                       s=esc(fuzzy_word.title()), n=len(found),
+                       w=w_car(lang, len(found)))
+        else:
+            _habar = T(lang, "found_fuzzy", s=esc(fuzzy_word.title()),
+                       n=len(found), w=w_car(lang, len(found)))
+        await update.message.reply_text(_habar, parse_mode="Markdown")
     else:
         await update.message.reply_text(
             T(lang, "found", q=esc(text), n=len(found), w=w_car(lang, len(found))),
@@ -3854,6 +3956,30 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lang = lang_of(q.from_user.id)
         await q.message.reply_text(T(lang, "choose_country"), parse_mode="Markdown",
                                    reply_markup=yurt_duwmeler(lang))
+        return
+
+    # 30.09: suzguci ayyr WE sonky soragy gaytadan gozle
+    if d.startswith("yylq:"):
+        set_user_pref(q.from_user.id, min_year=0)
+        _uid = str(q.from_user.id)
+        _l = lang_of(_uid)
+        _sorag = _son_gozleg.pop(_uid, "")
+        await q.message.reply_text(T(_l, "year_saved_all"), parse_mode="Markdown")
+        if not _sorag:
+            await esasy_ekran(q.message, q.from_user.id)
+            return
+        _tu = _sorag.upper()
+        _cars = suzgucle(load_cars(), _uid)
+        _f = [c for c in _cars
+              if _tu in f"{c.get('brand','')} {c.get('model','')}".upper()]
+        if not _f:
+            await esasy_ekran(q.message, q.from_user.id)
+            return
+        await q.message.reply_text(
+            T(_l, "found", q=esc(_sorag), n=len(_f), w=w_car(_l, len(_f))),
+            parse_mode="Markdown")
+        log_search(_sorag, "found", None, len(_f))
+        await send_batch(q.message, _uid, _f, title=_sorag, lang=_l)
         return
 
     if d.startswith("yyl:"):
