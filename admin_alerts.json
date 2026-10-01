@@ -247,5 +247,16 @@
     "rejected": 0,
     "reasons": {},
     "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push: Command '['git', 'push']' timed out after 180 seconds"
+  },
+  {
+    "id": "20261001|PUSH|Push bolmady: error: RPC failed; curl 55",
+    "date": "20261001",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: error: RPC failed; curl 55 Send failure: Connection was reset\nsend-pack: unexpected disconnect while reading sideband packet\nfatal: the remote end hung up unexp"
   }
 ]

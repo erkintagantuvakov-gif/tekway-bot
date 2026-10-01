@@ -2557,6 +2557,22 @@ def baha_subhe(cars, sene):
             n = len(v)
             orta[k] = v[n // 2] if n % 2 else (v[n // 2 - 1] + v[n // 2]) / 2
 
+    # ⚠️ 01.10.2026 — "BAHA ÝOK" HEMIŞE ÝALŇYŞLYK DÄL (Erkin tapdy).
+    #   Marhaba 01.10-da 205 maşyny "Starting Bid: 0" bilen goýdy —
+    #   surady özüm açyp gördüm, hakykatdanam nol. Bu auksionyň
+    #   düzgüni (no reserve), OCR ýalňyşlygy däl.
+    #   Eger bir auksionyň ýarysyndan köpüsi nolly bolsa — bu
+    #   düzgün, duýduryş gerek däl. Ýekeje-ikije nol bolsa — ol
+    #   hakykatdan OCR ýalňyşlygy bolup biler, duýdurylýar.
+    _auk_jemi, _auk_nol = {}, {}
+    for c in gun:
+        a = c.get("auction") or "?"
+        _auk_jemi[a] = _auk_jemi.get(a, 0) + 1
+        if not c.get("price"):
+            _auk_nol[a] = _auk_nol.get(a, 0) + 1
+    _nolsuz_auk = {a for a, n in _auk_nol.items()
+                   if n * 2 > _auk_jemi.get(a, 1)}
+
     netije = []
     for c in gun:
         try:
@@ -2565,7 +2581,8 @@ def baha_subhe(cars, sene):
             p = 0
         sebap = []
         if p == 0:
-            sebap.append("baha ýok")
+            if (c.get("auction") or "?") not in _nolsuz_auk:
+                sebap.append("baha ýok")
         else:
             if p < BAHA_IN_AZ:
                 sebap.append(f"gaty arzan (<{BAHA_IN_AZ})")

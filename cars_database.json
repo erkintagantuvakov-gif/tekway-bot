@@ -1,65 +1,5 @@
 [
  {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 1,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p001.jpg",
-  "telegram_file_id": "",
-  "code": "1001-001"
- },
- {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 2,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p002.jpg",
-  "telegram_file_id": "",
-  "code": "1001-002"
- },
- {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 3,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p003.jpg",
-  "telegram_file_id": "",
-  "code": "1001-003"
- },
- {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 4,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p004.jpg",
-  "telegram_file_id": "",
-  "code": "1001-004"
- },
- {
   "brand": "Nissan",
   "model": "Altima",
   "year": 2017,
@@ -673,21 +613,6 @@
   "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p045.jpg",
   "telegram_file_id": "",
   "code": "1001-149"
- },
- {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 46,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p046.jpg",
-  "telegram_file_id": "",
-  "code": "1001-005"
  },
  {
   "brand": "Nissan",
@@ -1321,21 +1246,6 @@
  },
  {
   "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 90,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p090.jpg",
-  "telegram_file_id": "",
-  "code": "1001-006"
- },
- {
-  "brand": "Lexus",
   "model": "Es 350",
   "year": 2015,
   "color": "",
@@ -1830,21 +1740,6 @@
   "code": "1001-179"
  },
  {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 125,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p125.jpg",
-  "telegram_file_id": "",
-  "code": "1001-007"
- },
- {
   "brand": "Nissan",
   "model": "Altima",
   "year": 2017,
@@ -2233,21 +2128,6 @@
   "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p151.jpg",
   "telegram_file_id": "",
   "code": "1001-106"
- },
- {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 152,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p152.jpg",
-  "telegram_file_id": "",
-  "code": "1001-008"
  },
  {
   "brand": "Nissan",
@@ -2820,21 +2700,6 @@
   "code": "1001-168"
  },
  {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 191,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p191.jpg",
-  "telegram_file_id": "",
-  "code": "1001-009"
- },
- {
   "brand": "Kia",
   "model": "Sedona",
   "year": 2016,
@@ -3013,21 +2878,6 @@
   "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p203.jpg",
   "telegram_file_id": "",
   "code": "1001-169"
- },
- {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 204,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p204.jpg",
-  "telegram_file_id": "",
-  "code": "1001-010"
  },
  {
   "brand": "Land Rover",
@@ -3223,36 +3073,6 @@
   "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p217.jpg",
   "telegram_file_id": "",
   "code": "1001-131"
- },
- {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 218,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p218.jpg",
-  "telegram_file_id": "",
-  "code": "1001-011"
- },
- {
-  "brand": "Lexus",
-  "model": "Rx 350",
-  "year": 2011,
-  "color": "",
-  "price": 23500,
-  "auction": "Marhaba Auctions",
-  "auction_branch": "IND 2",
-  "auction_time": "17:30",
-  "date": "20261001",
-  "page": 219,
-  "image_path": "car_images/20261001/Marhaba_Cars_Auction_Thursday_1_OCTOBER_2026_Main_Branch_IND_2_p219.jpg",
-  "telegram_file_id": "",
-  "code": "1001-012"
  },
  {
   "brand": "Lexus",
