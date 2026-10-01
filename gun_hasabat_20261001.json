@@ -1,0 +1,35 @@
+[
+  {
+    "pdf": "Marhaba Cars Auction Thursday 1 OCTOBER 2026 Main Branch IND 2.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 219,
+    "kept": 217,
+    "rejected": 2,
+    "tanalmadyk": [
+      "p51: 2023 MG RX-8",
+      "p120: 2024 MG ZS"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 2
+    },
+    "time": "07:31"
+  },
+  {
+    "pdf": "WEST CARS AUCTION 01-OCT-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 146,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p1: 01 OCT 26 06:00 PM THURSDAY AUCTION 146 CARS MORE THEN LIVE STREAMING 06-5267750 INDUSTRIAL AREA 2, SHARJAH-UAE WWW.WESTCARSAUCTIONS.COM GREEN LIGHT MAJORITY OF",
+      "p2: AUCTION DAYS & TIME THREE DAYS AUCTION IN A WEEK SATURDAYﻳﻮم اﻟﺴﺒﺖ TUESDAYﻳﻮم اﻟﺜﻼﺛﺎء THURSDAY 06:00 PM ﻳﻮم اﻟﺨﻤﻴﺲ",
+      "p3: CONTACT US 06-5267750 WHATSAPP 052-8231236 | 055-8558496 @WESTCARSAUCTIONS WESTCARSAUCTIONS@YAHOO.COM WWW.WESTCARSAUCTIONS.COM"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "07:31"
+  }
+]
