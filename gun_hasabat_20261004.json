@@ -52,19 +52,6 @@
     "time": "01:16"
   },
   {
-    "pdf": "AL BURAQ 04-10-2026 SUNDAY AUCTION.pdf",
-    "auction": "Al Buraq Cars Auction",
-    "pages": 70,
-    "kept": 66,
-    "rejected": 4,
-    "tanalmadyk": [],
-    "ocr_halas": 0,
-    "sebapler": {
-      "tanalmady (marka/yyl tapylmady)": 4
-    },
-    "time": "01:20"
-  },
-  {
     "pdf": "AL QARYAH SUNDAY SAJAA AUCTION 04-OCT-2026.pdf",
     "auction": "Al Qaryah Auctions",
     "pages": 285,
@@ -181,5 +168,18 @@
       "tanalmady (marka/yyl tapylmady)": 4
     },
     "time": "01:53"
+  },
+  {
+    "pdf": "PUSH_TRIGGER_20261004.pdf",
+    "auction": "PUSH_TRIGGER_20261004",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 1,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 1
+    },
+    "time": "02:04"
   }
 ]
