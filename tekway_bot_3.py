@@ -1,0 +1,4492 @@
+#!/usr/bin/env python3
+"""
+Dubai Auksion | TEK AUTO MARKET - Telegram Bot v4
+  - Sene barlagy (kone maglumat gorkezmeya)
+  - Alert ulgamy (duwme + awtomat barlag)
+  - USD hasap, unikal kod, WhatsApp deep link
+"""
+import asyncio
+import json
+import logging
+import os
+import hashlib
+import re
+import time
+from pathlib import Path
+from urllib.parse import quote
+from datetime import datetime, timezone, timedelta
+
+from telegram import (Update, InlineKeyboardButton, InlineKeyboardMarkup,
+                      ReplyKeyboardMarkup, KeyboardButton)
+from telegram.error import Forbidden
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    CallbackQueryHandler,
+    filters,
+    ContextTypes,
+)
+
+# ============================================================
+# SAZLAMALAR
+# ============================================================
+TOKEN = os.environ.get("BOT_TOKEN", "")
+TEKWAY_WHATSAPP = "https://wa.me/971522371195"
+TEKWAY_TELEGRAM = "https://t.me/+971522371195"
+CARS_DB_FILE = Path("cars_database.json")
+
+# Alert fayllary - Railway Volume bar bolsa /data
+_DATA_DIR = Path("/data") if Path("/data").exists() else Path(".")
+ALERTS_FILE = _DATA_DIR / "yatlatmas.json"
+SENT_FILE = _DATA_DIR / "sent_alerts.json"
+USERS_FILE = _DATA_DIR / "users.json"
+
+# ============================================================
+# 29.09.2026 — HOWPSUZ (ATOMIK) ÝAZUW + GÜNDELIK ÄTIÝAÇLYK
+# ------------------------------------------------------------
+# ⚠️ TAPYLAN HOWP (rewiziýa 29.09):
+#   Ähli /data faýllary "open(..., 'w')" bilen ýazylýardy.
+#   'w' ilki faýly BOŞADÝAR, soň ýazýar. Eger şol pursatda
+#   Railway konteýneri öçse (her gije push edilende ÖÇÝÄR!),
+#   users.json ýarym ýa-da BOŞ galýar -> load_users() {} gaýtarýar
+#   -> 1951 müşderi BIRDEN ÝITÝÄR. Yzyna getirmek mümkin däl.
+#
+# Çözgüt:
+#   1) Ilki .tmp faýla ýaz, fsync et, soň os.replace bilen çalyş.
+#      os.replace ATOMIK — ýa köne faýl, ýa täze faýl. Ýarym ýok.
+#   2) users.json we yatlatmas.json her gün 1 gezek kopýalanýar:
+#      users_2026-09-29.json ... soňky 7 gün saklanýar.
+#   3) Faýl bozulan bolsa — iň täze ätiýaçlykdan awtomat dikeldilýär.
+# ============================================================
+_YEDEK_DIR = _DATA_DIR / "yedek"
+_YEDEK_GUN = 7
+_yedek_edilen = {}
+
+
+def _json_yaz(path, data, indent=None):
+    """Atomik ýazuw. Şowsuz bolsa köne faýl ZEPERLENMEÝÄR."""
+    path = Path(path)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=indent)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+        return True
+    except Exception as e:
+        logger.error("_json_yaz(%s): %s", path.name, e)
+        try:
+            if tmp.exists():
+                tmp.unlink()
+        except Exception:
+            pass
+        return False
+
+
+def _yedekle(path):
+    """Günde 1 gezek nusga al, 7 günden köne nusgalary poz."""
+    try:
+        path = Path(path)
+        if not path.exists() or path.stat().st_size < 5:
+            return
+        gun = datetime.now(DUBAI_TZ).strftime("%Y-%m-%d")
+        if _yedek_edilen.get(path.name) == gun:
+            return
+        _YEDEK_DIR.mkdir(parents=True, exist_ok=True)
+        nusga = _YEDEK_DIR / f"{path.stem}_{gun}{path.suffix}"
+        if not nusga.exists():
+            nusga.write_bytes(path.read_bytes())
+        _yedek_edilen[path.name] = gun
+        kone = sorted(_YEDEK_DIR.glob(f"{path.stem}_*{path.suffix}"))
+        for f in kone[:-_YEDEK_GUN]:
+            try:
+                f.unlink()
+            except Exception:
+                pass
+    except Exception as e:
+        logger.warning("_yedekle(%s): %s", path, e)
+
+
+def _json_oka(path, boş=None):
+    """Faýl bozulan bolsa iň täze ätiýaçlykdan dikeldýär."""
+    path = Path(path)
+    boş = {} if boş is None else boş
+    if path.exists():
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error("BOZULAN FAÝL %s: %s — ätiýaçlyk gözlenýär", path.name, e)
+    try:
+        nusgalar = sorted(_YEDEK_DIR.glob(f"{path.stem}_*{path.suffix}"))
+        for n in reversed(nusgalar):
+            try:
+                with open(n, "r", encoding="utf-8") as f:
+                    d = json.load(f)
+                logger.error("DIKELDILDI: %s <- %s (%s ýazgy)", path.name, n.name, len(d))
+                return d
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return boş
+
+
+# Admin - dine su ulanyjy /stats gorup bilya
+ADMIN_ID = 8997411258
+
+USD_RATE = 3.67
+
+# --- Thread B: "Oye cenli baha" (Bugalter formulasy) ---
+# HAZIR OCHUK. Sebabi: mashyn heniz utulmadyk, anyk baha yok.
+# Bugalter anyk formula berende -> SHOW_HOME_PRICE = True et.
+HOME_PRICE_EXTRA_USD = 2300
+SHOW_HOME_PRICE = False   # True -> kartada gorkezer
+
+DUBAI_TZ = timezone(timedelta(hours=4))
+
+# 20.09.2026 ERKIN: "gije bir topar bildiriş gelýär, biz ýatýarys.
+# Sargytlar we beýleki habarlar 08:45-de gelsin."
+# PDF-ler 00:30-02:30 aralygynda işlenýär. Şol wagt çykan ähli awtomat
+# habarlar (sargyt, müşderi ýatlatmasy, "maglumat taýýar", parser
+# duýduryşy) SAKLANYP DURÝAR we 08:45-den soň iberilýär.
+# Bu Pawel-a hem ertir ir bazany barlap-düzetmäge wagt berýär.
+HABAR_BASLANYAR = (8, 45)    # Dubaý wagty (sagat, minut) — 20.09 Erkin: 09:30 giç, 08:45 et
+
+
+def habar_wagtymy():
+    """08:45-den soň bolsa True. Gijesine awtomat habar ugradylmaýar."""
+    now = datetime.now(DUBAI_TZ)
+    return (now.hour, now.minute) >= HABAR_BASLANYAR
+
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# --- ZAKAZ moduly (Notion -> işgärler). Token ýok bolsa dymýar. ---
+try:
+    import zakaz as ZK
+except Exception as _e:          # modul ýok bolsa bot öňki ýaly işlesin
+    ZK = None
+    logger.warning("zakaz moduly ýüklenmedi: %s", _e)
+
+
+# ============================================================
+# FUZZY GÖZLEG — ýalňyş / türkmençe / rusça ýazga çydamly
+# (Erkiniň esasy derdi, board 12.08)
+#   "kamry"  -> Camry      "hunday"  -> Hyundai
+#   "karola" -> Corolla    "камри"   -> Camry
+# ============================================================
+import difflib
+
+# türkmen we rus harplary -> latyn
+_TM_TRANS = str.maketrans({
+    "ý": "y", "Ý": "y", "ş": "s", "Ş": "s", "ç": "c", "Ç": "c",
+    "ň": "n", "Ň": "n", "ä": "a", "Ä": "a", "ö": "o", "Ö": "o",
+    "ü": "u", "Ü": "u", "ž": "z", "Ž": "z", "ı": "i", "İ": "i",
+})
+_CYR = {
+    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e",
+    "ж": "j", "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m",
+    "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
+    "ф": "f", "х": "h", "ц": "c", "ч": "ch", "ш": "sh", "щ": "sh",
+    "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya",
+}
+
+
+def _norm(s):
+    """Ýazgyny deňeşdirmäge taýýarla: kiçi harp, diakritika ýok, diňe harp/san."""
+    s = (s or "").strip().lower().translate(_TM_TRANS)
+    s = "".join(_CYR.get(ch, ch) for ch in s)
+    s = re.sub(r"[^a-z0-9]+", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+# Adam ýazýan görnüş -> hakyky at.  Çepdäki söz NORMALIZE edilen bolmaly.
+SYNONYMS = {
+    # --- markalar ---
+    "hunday": "hyundai", "hunda": "hyundai", "hyunday": "hyundai",
+    "hendai": "hyundai", "handai": "hyundai", "hyndai": "hyundai",
+    "henday": "hyundai", "hyenday": "hyundai", "hunday i": "hyundai",
+    "tayota": "toyota", "toyata": "toyota", "toyot": "toyota",
+    "nisan": "nissan", "nissa": "nissan", "nissan": "nissan",
+    "kiya": "kia", "kija": "kia",
+    "honda": "honda", "honde": "honda",
+    "mersedes": "mercedes", "merc": "mercedes", "mers": "mercedes",
+    "mercedes benz": "mercedes", "benz": "mercedes",
+    "lexsus": "lexus", "leksus": "lexus", "leks": "lexus",
+    "shevrole": "chevrolet", "shevrolye": "chevrolet", "chevrole": "chevrolet", "shevrolet": "chevrolet",
+    "bmv": "bmw", "beemwe": "bmw",
+    "folksvagen": "volkswagen", "folkswagen": "volkswagen", "vw": "volkswagen",
+    "mazde": "mazda", "forud": "ford",
+    # --- modeller ---
+    "kamry": "camry", "kamri": "camry", "camri": "camry", "kemri": "camry",
+    "karola": "corolla", "korolla": "corolla", "karolla": "corolla",
+    "elantre": "elantra", "elantara": "elantra", "elentra": "elantra",
+    "sonate": "sonata", "sanata": "sonata",
+    "tuson": "tucson", "taksan": "tucson", "tukson": "tucson",
+    "santafe": "santa fe", "santa fe": "santa fe", "santafey": "santa fe",
+    "sorenta": "sorento", "sorrento": "sorento",
+    "sportaj": "sportage", "sportage": "sportage",
+    "altime": "altima", "altyma": "altima",
+    "sentre": "sentra", "sentr": "sentra",
+    "rogu": "rogue", "rog": "rogue",
+    "kiks": "kicks",
+    "seltas": "seltos",
+    "forte": "forte", "fortey": "forte",
+    "karnival": "carnival", "carnaval": "carnival",
+    "sivik": "civic", "civik": "civic",
+    "akkord": "accord", "akord": "accord",
+    "malibu": "malibu", "malybu": "malibu",
+    "prius": "prius", "priyus": "prius",
+    "land kruzer": "land cruiser", "landkruzer": "land cruiser",
+    "kruzak": "land cruiser", "krizer": "land cruiser",
+    "prado": "prado", "parado": "prado",
+    "hayls": "hilux", "hilaks": "hilux", "haylaks": "hilux",
+    "rav": "rav4", "rav 4": "rav4", "raf4": "rav4",
+    "haylender": "highlander", "haylander": "highlander",
+    "avalon": "avalon", "awalon": "avalon",
+    "maksima": "maxima",
+    "aksent": "accent", "aksant": "accent",
+    "tellurayd": "telluride",
+    # --- 29.09.2026: RUSÇA ÝAZYLYŞLAR ---
+    # Rus müşderi köpelýär. Kiril latyna öwrülenden soň käbir söz
+    # meňzeşlik barlagyndan geçenokdy ("Спортейдж" -> "sporteydj",
+    # meňzeşlik 0.70, çäk bolsa 0.78). Aşakdaky sanaw hakyky rus
+    # ýazylyşyndan AWTOMAT hasaplandy (_norm bilen barlanan).
+    "akcent": "accent", "akkord": "accord", "benc": "mercedes",
+    "ekvinoks": "equinox", "eskaleyd": "escalade",
+    "folksvagen": "volkswagen", "forranner": "4runner",
+    "haylender": "highlander", "henday": "hyundai", "hunday": "hyundai",
+    "kadenza": "cadenza", "kamri": "camry", "kaptiva": "captiva",
+    "karnival": "carnival", "kashkay": "qashqai", "korolla": "corolla",
+    "kreta": "creta", "kruzak": "land cruiser",
+    "land kruzer": "land cruiser", "lend kruzer": "land cruiser",
+    "leksus": "lexus", "maksima": "maxima", "mersedes": "mercedes",
+    "mersedes benc": "mercedes", "odissey": "odyssey",
+    "padjero": "pajero", "palisad": "palisade", "pasfaynder": "pathfinder",
+    "patrul": "patrol", "pikanto": "picanto", "rav 4": "rav4",
+    "rendj rover": "range rover", "renj rover": "range rover",
+    "sekvoya": "sequoia", "sekvoyya": "sequoia", "shevrole": "chevrolet",
+    "sid": "ceed", "siena": "sienna", "sivik": "civic",
+    "sporteydj": "sportage", "taho": "tahoe", "takoma": "tacoma",
+    "travers": "traverse", "tuareg": "touareg", "tukson": "tucson",
+    "tussan": "tucson",
+}
+
+
+def build_vocab(cars):
+    """Bazadaky ähli marka/model sözlerini ýygna."""
+    vocab = {}
+    for c in cars:
+        b = _norm(c.get("brand"))
+        m = _norm(c.get("model"))
+        for t in ([b] if b else []) + (m.split() if m else []):
+            if len(t) >= 3:
+                vocab[t] = vocab.get(t, 0) + 1
+        if b and m:
+            first = m.split()[0]
+            if len(first) >= 3:
+                key = f"{b} {first}"
+                vocab[key] = vocab.get(key, 0) + 1
+    return vocab
+
+
+def fuzzy_find(query, cars, dine_takyk=False):
+    """(tapylan_soz, masynlar) gaytarya. Tapmasa (None, []).
+
+    dine_takyk=True  -> DINE sinonim/kiril owrulmesi ishleya,
+                        MENZESHLIK (difflib) barlagy ISHLEMEYA.
+
+    ⚠️ 30.09.2026 — NAM UCHIN BU GEREK (Erkin tapdy):
+      Menzeshlik barlagy GOZLEG uchin gowy: adam yazya, bot
+      "sen sheyle yazdyn, men muny tapdym" diyip GORKEZYA.
+      Emma YATLATMA-da ol ALDAYA: bot "senin gozlan
+      EXPEDITION masynyn geldi" diyip yazya-da, ashagynda
+      BASGA masyn gorkezya.
+      Hakyky mysal (30.09 bazasy):
+          "CRUZE"   -> Hyundai Santa Cruz     (0.78 menzeshlik)
+          "STINGER" -> Corvette Stingray
+      Musderi ynamy gidya. Sonun uchin yatlatmada dine
+      sinonim/kiril owrulmesi ulanylya - ol 100% ynamly.
+    """
+    q = _norm(query)
+    if not q:
+        return None, []
+
+    # 19.08 DUZEDIS — GYSGA MODEL ATLARY
+    # Onki kada: 3 harpdan gysga sorag ret edilyardi.
+    # Netije: "k5", "x5", "q5", "cx5", "gt" YALY HAKYKY MODELLER
+    # hic haçan tapylmaýardy. K5 bolsa in kop soralýan modelleriň biri.
+    # Indi: harp+san gornushi (k5, x5, q7, cx9, i8...) gonuden gozlenya.
+    if len(q) < 3:
+        if re.fullmatch(r'[a-z]{1,2}\d{1,2}', q):
+            found = [c for c in cars
+                     if re.search(rf'\b{re.escape(q)}\b',
+                                  _norm(f"{c.get('brand','')} {c.get('model','')}"))]
+            if found:
+                return q.upper(), found
+        return None, []
+
+    # 1. Göni sinonim
+    target = SYNONYMS.get(q)
+
+    # 2. Sözme-söz sinonim (mysal "gara kamry" -> "camry")
+    if not target:
+        for w in q.split():
+            if w in SYNONYMS:
+                target = SYNONYMS[w]
+                break
+
+    # 3. Meňzeşlik boýunça (ýalňyş harp, ýitirilen harp)
+    if not target and not dine_takyk:
+        vocab = build_vocab(cars)
+        if not vocab:
+            return None, []
+        best, score = None, 0.0
+        # ⚠️ 30.09.2026 — DINE SANDAN DURAN BOLEK NYSHANA BOLMALY DAL.
+        #   Erkin: "Lexus es 350 diyip yazamda basga-basga masynlar cykyar."
+        #   Sebabi: "350" hem bolek hokmunde deneshdirilyardi we
+        #   vocab-da "350" bar (Gle 350, Rx 350, Is 350...). Netije:
+        #   nyshana "350" bolup, MERCEDES Gle 350-em, LEXUS Rx 350-em
+        #   gelyardi. San marka-model boyunca PAYLASYLYAN - ol hic zat
+        #   anyklamaya. Indi sandan duran bolek gecirilya.
+        for cand in vocab:
+            for piece in [q] + q.split():
+                if len(piece) < 3 or piece.isdigit():
+                    continue
+                r = difflib.SequenceMatcher(None, piece, cand).ratio()
+                # sozun basy den gelse - bal gos
+                if cand.startswith(piece[:3]) or piece.startswith(cand[:3]):
+                    r += 0.06
+                if r > score:
+                    best, score = cand, r
+        if score >= 0.78:
+            target = best
+
+    if not target:
+        return None, []
+
+    tn = _norm(target)
+    # ⚠️ 30.09.2026 — GYSGA NYSHANA SOZ SERHEDI BILEN GOZLENYA.
+    #   On "in" ulanylyardy, yagny bolek hem bolsa gabat gelyardi:
+    #       "gle" -> "Jeep WranGLEr"  ← nadogry
+    #       "rio" -> "PatRIOt"
+    #   5 harpdan gysga nyshanada indi doly soz gerek.
+    if len(tn) < 5:
+        _re_tn = re.compile(rf"\b{re.escape(tn)}\b")
+        found = [c for c in cars
+                 if _re_tn.search(_norm(f"{c.get('brand','')} {c.get('model','')}"))]
+    else:
+        found = [c for c in cars
+                 if tn in _norm(f"{c.get('brand','')} {c.get('model','')}")]
+    if not found:
+        # sinonim marka bolsa - dine markadan gozle
+        found = [c for c in cars if tn in _norm(c.get("brand", ""))]
+    if not found:
+        return None, []
+    return target, found
+
+
+# ============================================================
+# HOWPSUZLYK KÖMEKÇILERI  (14.08 doly barlag)
+# ============================================================
+def esc(s):
+    """Markdown belgilerini zyýansyzlandyr.
+
+    Sebäp: müşderi `*` ýa `_` ýazsa, ýa OCR model adyna şol belgini goşsa,
+    Telegram "Markdown parse error" berýär we HABAR ASLA IBERILMEÝÄR.
+    """
+    s = str(s or "")
+    for ch in ("\\", "_", "*", "[", "]", "`"):
+        s = s.replace(ch, "\\" + ch)
+    return s
+
+
+def code_ok(s):
+    """`code` bellik ICINDE ulanmak ucin howpsuz tekst.
+
+    20.08: esc() "\\_" goşýardy, Telegram-yn köne Markdown-y bolsa
+    entity içinde gaçyrmagy kabul edenok -> habar iberilmeýär.
+    Kod belliginde diňe backtick howply — şony aýyrmak ýeterlik.
+    """
+    return str(s or "").replace("`", "'")
+
+
+async def _send_md_safe(msg, text, limit=3500, reply_markup=None):
+    """Uzyn teksti SETIR araçäginde bölüp iberýär.
+
+    20.08 sapagy — bot näme üçin dymýardy:
+      1) Tekst 3800 harpdan bölünende Markdown belgisi ORTASYNDAN kesilýärdi
+         (açylan `*` bir bölekde, ýapylany beýlekide) -> "Can't parse entities".
+      2) Ýalňyşlyk tutulmaýardy -> habar ASLA iberilmeýärdi, bot dymýardy.
+
+    Indi: setir araçäginde bölünýär, Markdown başartmasa şol bölek
+    bellik-siz gaýtadan iberilýär. Bot hiç haçan dymmaly däl.
+    """
+    parts, cur = [], ""
+    for line in str(text).split("\n"):
+        if len(cur) + len(line) + 1 > limit and cur:
+            parts.append(cur)
+            cur = ""
+        cur += line + "\n"
+    if cur.strip():
+        parts.append(cur)
+
+    for i, p in enumerate(parts):
+        # Duwme paneli DIŇE sonky bolege dakylya (24.08)
+        rm = reply_markup if i == len(parts) - 1 else None
+        try:
+            await msg.reply_text(p, parse_mode="Markdown", reply_markup=rm)
+        except Exception as e:
+            logger.error(f"Markdown basartmady, bellik-siz iberilya: {e}")
+            try:
+                await msg.reply_text(re.sub(r'[*_`\\]', '', p),
+                                     reply_markup=rm)
+            except Exception as e2:
+                logger.error(f"Habar asla iberilmedi: {e2}")
+
+
+def cb_data(prefix, text, limit=60):
+    """callback_data üçin howpsuz kesme.
+
+    Telegram çägi 64 BAÝT. Rus/türkmen harplary 2 baýt —
+    40 harp = 80 baýt -> BadRequest -> düwme döremeýär.
+    """
+    out = prefix
+    for ch in str(text or ""):
+        if len((out + ch).encode("utf-8")) > limit:
+            break
+        out += ch
+    return out
+
+
+# ============================================================
+# 29.09.2026 — ŞU GÜNKI AUKSIONLAR: SANAW -> DÜWME  (Erkin)
+# ------------------------------------------------------------
+# Erkin: "şu günki auksionlar diýenimde diňe spisok çykýar.
+#         üstüne basanda göni şol auksiondaky maşynlar görkezilsin."
+#
+# Mesele: müşderi sanawy görüp, soň markany ELDE ýazmalydy.
+# Indi: her auksionyň gapdalynda düwme — basýar, maşynlar gelýär.
+#
+# ⚠️ callback_data Telegram-da IŇ KÖP 64 BAÝT. Auksion ady +
+#    şahamça käwagt ondan uzyn (KHAT AL JAZEERA CARS AUCTION —
+#    Sajaa). Şonuň üçin ada däl-de, ondan ýasalan 10 harplyk
+#    DURNUKLY AÇAR iberilýär. Bot yzyna bazadan gözläp tapýar.
+#    Açar hemişe şol bir at+şahamça üçin şol bir netijäni berýär,
+#    şonuň üçin bot gaýtadan açylsa hem köne düwmeler işleýär.
+# ============================================================
+def auk_acar(a, sh=""):
+    """Auksion + şahamça üçin gysga durnukly açar."""
+    _t = f"{(a or '').strip()}|{(sh or '').strip()}".upper()
+    return hashlib.md5(_t.encode("utf-8")).hexdigest()[:10]
+
+
+def auk_gysga(a, sh=""):
+    """Düwmäniň ýazgysy üçin gysgaldylan at."""
+    ad = (a or "").strip()
+    ad = re.sub(r'\s*AUCTIONS?\s*$', '', ad, flags=re.I).strip()
+    if sh:
+        ad = f"{ad} — {sh}"
+    return ad or (a or "?")
+
+
+# Soňky netije (sahypalama üçin). Diňe ýatda, restartda ýitýär — zyýany ýok.
+_last_results = {}
+MAX_PHOTO_BATCH = 10       # bir gezekde näçe surat
+PHOTO_DELAY = 0.35         # suratlaryň arasy (Telegram flood goragy)
+
+
+# ============================================================
+# TEKLIPLER — şu günki bazadan alynýar
+# Sebäp (Erkin, 13.08): "Hilux" ýaly ÝOK maşyny teklip etsek,
+# müşderi hemişe "tapylmady" görýär -> negatiw duýgy.
+# Şoň üçin diňe HAKYKATDAN BAR maşynlar teklip edilýär.
+# ============================================================
+_JUNK_MODEL = {"cars", "auction", "industrial", "area", "fwd", "awd", "base",
+               "below", "avg", "new", "used", "sel", "le", "se", "lx", "ex"}
+# Iki sozli modeller - birinji soz yeterlik dal ("Santa" -> "Santa Fe")
+_TWO_WORD = {"santa", "land", "grand", "range", "model"}
+
+
+def _model_name(model):
+    parts = (model or "").split()
+    if not parts:
+        return ""
+    if parts[0].lower() in _TWO_WORD and len(parts) > 1:
+        return f"{parts[0]} {parts[1]}"
+    return parts[0]
+
+
+def suggest_models(cars, n=6, per_brand=2):
+    """Şu gün iň köp bolan modelleri gaýtarýar: ['Camry', 'Elantra', ...]"""
+    cnt = {}
+    for c in cars:
+        m = (c.get("model") or "").strip()
+        b = (c.get("brand") or "").strip()
+        if not m or not b:
+            continue
+        first = _model_name(m)
+        if len(first) < 2 or first.split()[0].lower() in _JUNK_MODEL:
+            continue
+        key = (b.title(), first.title())
+        cnt[key] = cnt.get(key, 0) + 1
+
+    out, used = [], {}
+    for (b, m), _ in sorted(cnt.items(), key=lambda x: -x[1]):
+        if used.get(b, 0) >= per_brand:
+            continue
+        used[b] = used.get(b, 0) + 1
+        out.append(m)
+        if len(out) >= n:
+            break
+    return out or ["Camry", "Elantra", "Sonata"]
+
+
+def suggest_text(cars, n=4):
+    s = suggest_models(cars, n)
+    return ", ".join(f"*{x}*" for x in s)
+
+
+def suggest_keyboard(cars, n=6):
+    """Basyp gözlär ýaly düwmeler."""
+    s = suggest_models(cars, n)
+    rows, row = [], []
+    for m in s:
+        row.append(InlineKeyboardButton(f"🚗 {m}", callback_data=f"find:{m[:30]}"))
+        if len(row) == 2:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    return InlineKeyboardMarkup(rows) if rows else None
+
+
+# ============================================================
+# GÖZLEG ÝAZGYSY — näme gözlenýär, näme tapylmaýar
+# Maksat: sinonim sanawyny hakyky müşderi ýazgysyna görä ösdürmek
+# ============================================================
+SEARCH_FILE = _DATA_DIR / "searches.json"
+
+
+def _load_searches():
+    try:
+        d = json.loads(SEARCH_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        d = {}
+    d.setdefault("found", {})    # göni tapylan:  "camry": 12
+    d.setdefault("fuzzy", {})    # düzedilen:     "kamry>camry": 5
+    d.setdefault("none", {})     # TAPYLMADY:     "hilux": 8   <- iň gymmatly
+    d.setdefault("last", [])     # soňky 300 gözleg
+    return d
+
+
+def log_search(query, kind, matched=None, n=0):
+    """kind: 'found' | 'fuzzy' | 'none'"""
+    try:
+        q = (query or "").strip()[:40]
+        if not q or q.startswith("/"):
+            return
+        d = _load_searches()
+        if kind == "fuzzy" and matched:
+            key = f"{q.lower()}>{matched}"
+            d["fuzzy"][key] = d["fuzzy"].get(key, 0) + 1
+        elif kind == "none":
+            d["none"][q.lower()] = d["none"].get(q.lower(), 0) + 1
+        else:
+            d["found"][q.lower()] = d["found"].get(q.lower(), 0) + 1
+
+        d["last"].append({
+            "t": datetime.now(DUBAI_TZ).strftime("%d.%m %H:%M"),
+            "q": q, "k": kind, "n": n,
+        })
+        d["last"] = d["last"][-300:]
+
+        # sanawlar çäksiz ösmesin
+        for sec in ("found", "fuzzy", "none"):
+            if len(d[sec]) > 400:
+                d[sec] = dict(sorted(d[sec].items(), key=lambda x: -x[1])[:300])
+
+        _json_yaz(SEARCH_FILE, d)
+    except Exception as e:
+        logger.error(f"log_search: {e}")
+
+
+# ============================================================
+# SENE BARLAGY
+# ============================================================
+def get_today():
+    return datetime.now(DUBAI_TZ).strftime("%Y%m%d")
+
+
+def db_is_fresh(cars):
+    if not cars:
+        return False
+    today = get_today()
+    dates = set(str(c.get("date", "")) for c in cars)
+    if not dates:
+        return False
+    return max(dates) == today
+
+
+NOT_READY_MSG = (
+    "⏳ *Bugünki auksion maglumaty entek taýýar däl*\n\n"
+    "Adatça her gün irden **07:00-10:00** aralygynda täzelenýär.\n"
+    "Biraz soňra ýene synanyşyň.\n\n"
+    "📱 Gyssagly sorag bolsa habarlaşyň:"
+)
+
+
+# ============================================================
+# DIL (tm / ru) + ÝYL SÜZGÜJI          23.09.2026 — Erkin
+# ------------------------------------------------------------
+# Erkin: "boty diňe TM müşderiler üçin däl-de beýleki ýurtlar
+#         üçinem edesim gelýär. rus dilinde. bota giren wagty
+#         ýyl saýlap bilsinler."
+#
+# Nähili işleýär:
+#   1) Ilkinji /start  -> dil soralýar (tm / ru)
+#   2) Soň            -> "haýsy ýyldan başlap görkezeýin?"
+#   3) Saýlaw users.json-da saklanýar (lang, min_year) — hemişelik.
+#   4) Menýuda "🌐 Dil" we "📅 Ýyl" düwmeleri — islendik wagt üýtget.
+#
+# Süzgüç DIŇE görkezilende işleýär — baza doly durýar.
+# KOD boýunça gözleg süzgüje BAGLY DÄL: müşderi TikTok-dan kod bilen
+# gelse, ýyl süzgüji sebäpli "tapylmady" diýmeli däl.
+# ============================================================
+DEFAULT_LANG = "tm"
+# 23.09 (agşam): parser indi ÄHLI ýyllary baza salýar, şonuň üçin
+# süzgüçde köne ýyllar hem bar. 0 = çäk ýok.
+YYL_WARIANTLAR = [0, 2010, 2015, 2018, 2021, 2023, 2025]
+
+
+def user_lang(uid):
+    """Ulanyjynyň dili. Saýlamadyk bolsa None."""
+    try:
+        u = load_users().get(str(uid)) or {}
+        l = u.get("lang")
+        return l if l in ("tm", "ru", "en") else None
+    except Exception:
+        return None
+
+
+def lang_of(uid):
+    """Dil, saýlanmadyk bolsa türkmençe."""
+    return user_lang(uid) or DEFAULT_LANG
+
+
+def user_min_year(uid):
+    try:
+        u = load_users().get(str(uid)) or {}
+        return int(u.get("min_year") or 0)
+    except Exception:
+        return 0
+
+
+def set_user_pref(uid, **kw):
+    try:
+        users = load_users()
+        uid = str(uid)
+        users.setdefault(uid, {})
+        users[uid].update(kw)
+        save_users(users)
+    except Exception as e:
+        logger.error("set_user_pref: %s", e)
+
+
+# 30.09.2026 — "Ähli ýyllary görkez" düwmesi basylanda müşderi
+# soragyny GAÝTADAN ÝAZMAZ ÝALY, soňky sorag RAM-da saklanýar.
+# Diňe soňky 60 adam — ýat dolmasyn (send_batch-daky ýaly kada).
+_son_gozleg = {}
+
+
+def suzgucle(cars, uid):
+    """Ulanyjynyň saýlan ýylyndan pes maşynlary aýyrýar."""
+    y = user_min_year(uid)
+    if not y:
+        return cars
+    out = []
+    for c in cars:
+        try:
+            if int(c.get("year") or 0) >= y:
+                out.append(c)
+        except Exception:
+            out.append(c)
+    return out
+
+
+_RU_MASYN = ("машина", "машины", "машин")
+_RU_AUKSION = ("аукцион", "аукциона", "аукционов")
+_RU_AYLAR = ["января", "февраля", "марта", "апреля", "мая", "июня",
+             "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+_RU_GUNLER = ["понедельник", "вторник", "среда", "четверг",
+              "пятница", "суббота", "воскресенье"]
+
+
+def _ru_plural(n, forms):
+    """1 машина · 2 машины · 5 машин"""
+    n = abs(int(n))
+    if n % 10 == 1 and n % 100 != 11:
+        return forms[0]
+    if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
+        return forms[1]
+    return forms[2]
+
+
+def w_car(lang, n):
+    if lang == "ru":
+        return _ru_plural(n, _RU_MASYN)
+    if lang == "en":
+        return "car" if int(n) == 1 else "cars"
+    return "maşyn"
+
+
+def w_auc(lang, n):
+    if lang == "ru":
+        return _ru_plural(n, _RU_AUKSION)
+    if lang == "en":
+        return "auction" if int(n) == 1 else "auctions"
+    return "auksion"
+
+
+def T(lang, key, **kw):
+    d = TEXTS.get(key) or {}
+    s = d.get(lang) or d.get("tm") or key
+    try:
+        return s.format(**kw) if kw else s
+    except Exception:
+        return s
+
+
+def dil_duwmeler():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🇹🇲 Türkmençe", callback_data="lang:tm")],
+        [InlineKeyboardButton("🇷🇺 Русский", callback_data="lang:ru")],
+        [InlineKeyboardButton("🇬🇧 English", callback_data="lang:en")],
+    ])
+
+
+def yyl_duwmeler(lang):
+    rows = []
+    for y in YYL_WARIANTLAR:
+        label = T(lang, "yyl_hemmesi") if not y else T(lang, "yyl_dan", y=y)
+        rows.append([InlineKeyboardButton(label, callback_data=f"yyl:{y}")])
+    return InlineKeyboardMarkup(rows)
+
+
+def esasy_menyu(lang):
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(T(lang, "menu_search"), callback_data="search")],
+        [InlineKeyboardButton(T(lang, "menu_auction"), callback_data="auction")],
+        [InlineKeyboardButton(T(lang, "menu_alerts"), callback_data="myalerts")],
+        [InlineKeyboardButton(T(lang, "menu_year"), callback_data="setyear"),
+         InlineKeyboardButton(T(lang, "menu_country"), callback_data="setcountry"),
+         InlineKeyboardButton(T(lang, "menu_lang"), callback_data="setlang")],
+        [InlineKeyboardButton(T(lang, "menu_contact"), callback_data="contact")],
+    ])
+
+
+TEXTS = {
+    # --- dil / ýyl ---
+    "choose_lang": {
+        "tm": "🌐 *Dil saýlaň / Выберите язык*",
+        "ru": "🌐 *Dil saýlaň / Выберите язык*",
+    },
+    "yyl_hemmesi": {"tm": "Ähli ýyllar", "ru": "Все годы"},
+    "yyl_dan": {"tm": "{y}-den ýokary", "ru": "От {y} года"},
+    "choose_year": {
+        "tm": "📅 *Haýsy ýyldan başlap görkezeýin?*\n\n"
+              "_Soň islendik wagt menýudan üýtgedip bilersiňiz._",
+        "ru": "📅 *С какого года показывать машины?*\n\n"
+              "_Позже можно изменить в меню в любой момент._",
+    },
+    "year_saved_all": {
+        "tm": "✅ Ähli ýyllar görkeziler.",
+        "ru": "✅ Показываю машины всех годов.",
+    },
+    "year_saved": {
+        "tm": "✅ Indi diňe *{y}* we ondan täze maşynlar görkeziler.",
+        "ru": "✅ Теперь показываю только машины *{y}* года и новее.",
+    },
+    "lang_saved": {
+        "tm": "✅ Dil: *Türkmençe*",
+        "ru": "✅ Язык: *Русский*",
+    },
+    # --- menýu ---
+    "menu_search": {"tm": "🚗 Maşyn gözle", "ru": "🚗 Поиск машины"},
+    "menu_auction": {"tm": "🏢 Auksion gözle", "ru": "🏢 Поиск по аукциону"},
+    "menu_alerts": {"tm": "🔔 Ýatlatmalarym", "ru": "🔔 Мои напоминания"},
+    "menu_contact": {"tm": "📱 Habarlaşmak", "ru": "📱 Связаться"},
+    "menu_lang": {"tm": "🌐 Dil", "ru": "🌐 Язык"},
+    "menu_year": {"tm": "📅 Ýyl", "ru": "📅 Год"},
+    # --- start / help ---
+    "start": {
+        "tm": "🚗 *Dubai Auksion | TEK AUTO MARKET*\n\n"
+              "Salam! Men şu günki Dubaý auksionlarynyň maşynlaryny gözlemäge kömek edýärin.\n\n"
+              "📌 Nähili ulanmaly:\n"
+              "• Maşyn adyny ýaz — meselem: {ex}\n"
+              "• Auksion adyny ýaz — meselem: *Marhaba*, *Nojoom*\n"
+              "• Ýalňyş ýazsaň-da düşünýärin (`kamry`, `hunday`)\n"
+              "• Maşyn tapylmasa — düwme bilen ýatlatma goý\n"
+              "• /help — ähli komandalar",
+        "ru": "🚗 *Dubai Auksion | TEK AUTO MARKET*\n\n"
+              "Здравствуйте! Я помогаю искать машины на сегодняшних аукционах Дубая и Шарджи.\n\n"
+              "📌 Как пользоваться:\n"
+              "• Напишите марку или модель — например: {ex}\n"
+              "• Или название аукциона — например: *Marhaba*, *Nojoom*\n"
+              "• Понимаю и с ошибками, и по-русски (`камри`, `хендай`)\n"
+              "• Если машины нет — поставьте напоминание кнопкой\n"
+              "• /help — все команды",
+    },
+    "help": {
+        "tm": "📋 *Komandalar:*\n\n"
+              "🚗 *Maşyn gözlemek:* {ex}\n"
+              "🏢 *Auksion gözlemek:* {exa}\n"
+              "🔎 Ýalňyş ýazsaň-da düşünýärin: `kamry`, `hunday`\n"
+              "🆔 *Kod boýunça:* `0813-013`\n\n"
+              "🔔 *Ýatlatma:* maşyn tapylmasa — düwmä bas\n"
+              "📋 */myalerts* — ýatlatmalarym\n"
+              "❌ */delalert Camry* — ýatlatmany poz\n"
+              "❌ */delalert all* — hemmesini poz\n\n"
+              "📊 */today* — şu günki ýagdaý\n"
+              "🌐 */dil* — dili üýtget\n"
+              "📅 */yyl* — ýyl süzgüji\n"
+              "🌍 */yurt* — ýurt\n"
+              "📱 */contact* — habarlaş",
+        "ru": "📋 *Команды:*\n\n"
+              "🚗 *Поиск машины:* {ex}\n"
+              "🏢 *Поиск аукциона:* {exa}\n"
+              "🔎 Понимаю с ошибками и по-русски: `камри`, `хендай`\n"
+              "🆔 *По коду:* `0813-013`\n\n"
+              "🔔 *Напоминание:* если машины нет — нажмите кнопку\n"
+              "📋 */myalerts* — мои напоминания\n"
+              "❌ */delalert Camry* — удалить напоминание\n"
+              "❌ */delalert all* — удалить все\n\n"
+              "📊 */today* — что сегодня на аукционах\n"
+              "🌐 */dil* — сменить язык\n"
+              "📅 */yyl* — фильтр по году\n"
+              "🌍 */yurt* — страна\n"
+              "📱 */contact* — связаться",
+    },
+    "not_ready": {
+        "tm": "⏳ *Bugünki auksion maglumaty entek taýýar däl*\n\n"
+              "Adatça her gün irden **07:00-10:00** aralygynda täzelenýär.\n"
+              "Biraz soňra ýene synanyşyň.\n\n"
+              "📱 Gyssagly sorag bolsa habarlaşyň:",
+        "ru": "⏳ *Данные сегодняшних аукционов ещё не готовы*\n\n"
+              "Обычно они обновляются каждое утро с **07:00 до 10:00** (время Дубая).\n"
+              "Попробуйте чуть позже.\n\n"
+              "📱 Если вопрос срочный — напишите нам:",
+    },
+    # --- today ---
+    "today_title": {
+        "tm": "📅 *Şu günki auksionlar*\n\n",
+        "ru": "📅 *Сегодняшние аукционы:*\n\n",
+    },
+    "today_cars": {"tm": "{n} maşyn", "ru": "{n} {w}"},
+    "today_total": {
+        "tm": "✅ Jemi: *{n} maşyn*  ·  {a} auksion",
+        "ru": "✅ Всего: *{n} {w}*  ·  {a} {wa}",
+    },
+    # 29.09: duwmeler goshuldy - musderi name etmelidigini bilsin
+    "today_tap": {
+        "tm": "\n\n👇 Auksionyň üstüne bas — maşynlar görkeziler",
+        "ru": "\n\n👇 Нажмите на аукцион — покажу машины",
+    },
+    "today_empty_year": {
+        "tm": "📭 Siziň ýyl süzgüjiňize ({y}+) görä şu gün maşyn ýok.\n\n"
+              "Süzgüji üýtgetmek: /yyl",
+        "ru": "📭 По вашему фильтру ({y}+) сегодня машин нет.\n\n"
+              "Изменить фильтр: /yyl",
+    },
+    # --- kart ---
+    "cap_time_both": {
+        "tm": "🕐 Auksion: {d}, {t} (Dubaý wagty)",
+        "ru": "🕐 Аукцион: {d}, {t} (время Дубая)",
+    },
+    "cap_time_date": {"tm": "📅 Auksion: {d}", "ru": "📅 Аукцион: {d}"},
+    "cap_time_time": {
+        "tm": "🕐 Auksion: {t} (Dubaý wagty)",
+        "ru": "🕐 Аукцион: {t} (время Дубая)",
+    },
+    "cap_price": {
+        "tm": "💰 Başlanýan bahasy: *{usd:,} USD* ({aed} AED)",
+        "ru": "💰 Стартовая цена: *{usd:,} USD* ({aed} AED)",
+    },
+    "cap_home": {
+        "tm": "🏠 Öýe çenli: ~*{usd:,} USD*-dan",
+        "ru": "🏠 С доставкой: ~*{usd:,} USD*",
+    },
+    "cap_code": {"tm": "🆔 Kod: `{code}`", "ru": "🆔 Код: `{code}`"},
+    "wa_btn": {
+        "tm": "🚗 Şu maşyny gyzyklanýan",
+        "ru": "🚗 Интересует эта машина",
+    },
+    "wa_hello": {
+        "tm": "Salam! Şu maşyny gyzyklanýan:",
+        "ru": "Здравствуйте! Меня интересует эта машина:",
+    },
+    "wa_code": {"tm": "🆔 Kod: {code}", "ru": "🆔 Код: {code}"},
+    "wa_price": {
+        "tm": "💰 Başlanýan bahasy: {usd:,} USD ({aed} AED)",
+        "ru": "💰 Стартовая цена: {usd:,} USD ({aed} AED)",
+    },
+    # --- sanaw ---
+    "batch_shown": {
+        "tm": "📋 *{sent}/{total}* görkezildi.  Ýene *{left}* maşyn bar.\n\n"
+              "_Has takyk ýazsaň az çykar — meselem `Camry 2023`._",
+        "ru": "📋 Показано *{sent}/{total}*.  Ещё *{left}* машин.\n\n"
+              "_Напишите точнее — например `Camry 2023`._",
+    },
+    "batch_more": {"tm": "⬇️ Ýene {n} görkez", "ru": "⬇️ Показать ещё {n}"},
+    "batch_wa": {"tm": "📱 WhatsApp-a ýaz", "ru": "📱 Написать в WhatsApp"},
+    "batch_all": {
+        "tm": "✅ Hemmesi görkezildi — *{n}* maşyn.",
+        "ru": "✅ Показаны все — *{n}* {w}.",
+    },
+    # --- gözleg ---
+    "found": {
+        "tm": "🚗 *'{q}'* — {n} maşyn tapyldy:",
+        "ru": "🚗 *'{q}'* — найдено {n} {w}:",
+    },
+    "found_fuzzy": {
+        "tm": "🔎 *{s}* diýip düşündim — {n} maşyn tapyldy:",
+        "ru": "🔎 Понял как *{s}* — найдено {n} {w}:",
+    },
+    "not_found": {
+        "tm": "📭 *'{q}'* şu gün ýok.\n\nÇykanda habar bermegimi isleýäňizmi?",
+        "ru": "📭 *'{q}'* сегодня нет.\n\nСообщить, когда появится?",
+    },
+    "not_found_year": {
+        "tm": "📭 *'{q}'* şu gün ýok — ýa-da siziň ýyl süzgüjiňizden ({y}+) pes.\n\n"
+              "Süzgüji üýtgetmek: /yyl",
+        "ru": "📭 *'{q}'* сегодня нет — или машина старше вашего фильтра ({y}+).\n\n"
+              "Изменить фильтр: /yyl",
+    },
+    # 30.09.2026 — sorag doly tapylmady, dine bir bolegi tapyldy.
+    "found_partial": {
+        "tm": "📭 *'{q}'* takyk tapylmady.\n\n"
+              "🔎 *{s}* boýunça {n} maşyn bar — şolary görkezýärin:",
+        "ru": "📭 *'{q}'* точно не найдено.\n\n"
+              "🔎 По *{s}* есть {n} {w} — показываю их:",
+    },
+    # 30.09.2026 — gozleg tapdy, yone ULANYJYNYN YYL SUZGUJI aýyrdy.
+    "found_but_year": {
+        "tm": "🔎 *'{q}'* — şu gün *{n}* sany bar.\n\n"
+              "⚠️ Ýöne olaryň ählisi siziň ýyl süzgüjiňizden (*{y}+*) köne:\n"
+              "_{ys}_\n\n"
+              "Görmek üçin süzgüji aýryp bilersiňiz 👇",
+        "ru": "🔎 *'{q}'* — сегодня есть *{n}* шт.\n\n"
+              "⚠️ Но все они старше вашего фильтра (*{y}+*):\n"
+              "_{ys}_\n\n"
+              "Чтобы увидеть — снимите фильтр 👇",
+    },
+    "show_all_years_btn": {
+        "tm": "📅 Ähli ýyllary görkez",
+        "ru": "📅 Показать все годы",
+    },
+    "alert_btn": {
+        "tm": "🔔 '{q}' çykanda habar ber",
+        "ru": "🔔 Сообщить, когда появится '{q}'",
+    },
+    "code_found": {"tm": "🆔 *{code}* — tapyldy:", "ru": "🆔 *{code}* — найдено:"},
+    "code_old": {
+        "tm": "🆔 *{code}* — tapyldy\n\n"
+              "⚠️ Bu maşyn *{d}* auksionyndan. Şol auksion geçdi.\n"
+              "Goşmaça soragyňyz bolsa WhatsApp-a ýazyň 👇",
+        "ru": "🆔 *{code}* — найдено\n\n"
+              "⚠️ Эта машина с аукциона *{d}*. Тот аукцион уже прошёл.\n"
+              "Если есть вопросы — напишите в WhatsApp 👇",
+    },
+    "code_none": {
+        "tm": "📭 *{code}* kody bilen maşyn tapylmady.\n\n"
+              "Kody ýene bir gezek barlaň — kartda ýazylan görnüşde ýazyň.",
+        "ru": "📭 Машина с кодом *{code}* не найдена.\n\n"
+              "Проверьте код — напишите его так, как указано на карточке.",
+    },
+    "auction_none": {
+        "tm": "📭 {a}-da şu gün maşyn ýok.",
+        "ru": "📭 На {a} сегодня машин нет.",
+    },
+    "auction_found": {
+        "tm": "🏢 *{a}* — {n} maşyn tapyldy:",
+        "ru": "🏢 *{a}* — найдено {n} {w}:",
+    },
+    "search_prompt": {
+        "tm": "🚗 *Haýsy maşyny gözleýäň?*\n\n"
+              "Adyny ýaz ýa aşakdakylardan bir düwmä bas.\n"
+              "_Şu gün iň köp bar bolanlar:_",
+        "ru": "🚗 *Какую машину ищете?*\n\n"
+              "Напишите название или нажмите кнопку ниже.\n"
+              "_Сегодня больше всего:_",
+    },
+    "auction_prompt": {
+        "tm": "🏢 *Haýsy auksiony gözleýäň?*\n\nŞu gün bar bolanlar:\n",
+        "ru": "🏢 *Какой аукцион ищете?*\n\nСегодня работают:\n",
+    },
+    "auction_prompt_end": {
+        "tm": "\nAdyny ýaz — meselem: `Marhaba`",
+        "ru": "\nНапишите название — например: `Marhaba`",
+    },
+    "more_lost": {
+        "tm": "🔄 Gözleg ýatdan çykdy. Maşyn adyny täzeden ýazaý.",
+        "ru": "🔄 Поиск устарел. Напишите название машины ещё раз.",
+    },
+    "contact_title": {
+        "tm": "📱 *TEK AUTO MARKET* bilen habarlaş:",
+        "ru": "📱 Связаться с *TEK AUTO MARKET*:",
+    },
+    # --- ýatlatma ---
+    "alert_set": {
+        "tm": "✅ Ýatlatma goýuldy: *{q}*\n\n"
+              "Şol maşyn çykanda size habar bererin.\nÝatlatmalar: /myalerts",
+        "ru": "✅ Напоминание сохранено: *{q}*\n\n"
+              "Сообщу, когда эта машина появится.\nМои напоминания: /myalerts",
+    },
+    "alert_exists": {
+        "tm": "ℹ️ *{q}* üçin ýatlatma eýýäm bar.",
+        "ru": "ℹ️ Напоминание для *{q}* уже есть.",
+    },
+    "alerts_empty": {
+        "tm": "🔔 Sizde ýatlatma ýok.\n\nMaşyn gözläniňizde tapylmasa — düwme bilen goýup bilersiňiz.",
+        "ru": "🔔 У вас нет напоминаний.\n\nЕсли машина не найдена — поставьте напоминание кнопкой.",
+    },
+    "alerts_title": {
+        "tm": "🔔 *Siziň ýatlatmalaryňyz:*\n\n",
+        "ru": "🔔 *Ваши напоминания:*\n\n",
+    },
+    "alerts_del": {
+        "tm": "\n❌ Pozmak: `/delalert <ady>`",
+        "ru": "\n❌ Удалить: `/delalert <название>`",
+    },
+    "alert_hit": {
+        "tm": "🔔 *Ýatlatma!*\n\nSiziň gözlän maşynyňyz *{q}* şu gün auksionda bar!\nJemi: *{n}* sany",
+        "ru": "🔔 *Напоминание!*\n\nМашина, которую вы искали — *{q}* — сегодня на аукционе!\nВсего: *{n}* шт.",
+    },
+    # 30.09.2026 — ÝATLATMA SÖZI BILEN TAPYLAN SÖZ DEŇ DÄL BOLSA.
+    # Mysal: müşderi "Камри" ýazypdyr, bazada "Camry". Öň habarda
+    # diňe "Камри" ýazylýardy, kartda bolsa "Toyota Camry" — müşderi
+    # "bot başga maşyn görkezýär" diýip düşünýärdi. Indi ikisem bar.
+    "alert_hit_alias": {
+        "tm": "🔔 *Ýatlatma!*\n\nSiz *{q}* diýip ýazypdyňyz — "
+              "bazada ol *{s}*.\nŞu gün auksionda *{n}* sany bar!",
+        "ru": "🔔 *Напоминание!*\n\nВы искали *{q}* — "
+              "в базе это *{s}*.\nСегодня на аукционе *{n}* шт.!",
+    },
+    # 29.09.2026 REWIZ — ÖŇ DIŇE TÜRKMENÇE ÝAZYLAN MÜŞDERI HABARLARY.
+    # Rus müşderi /alert ýazsa türkmençe jogap alýardy.
+    "alert_help": {
+        "tm": "🔔 `/alert Camry` — Camry çykanda habar ber\n\n"
+              "Ýa-da maşyn gözläniňizde tapylmasa — düwmä basyň.",
+        "ru": "🔔 `/alert Camry` — сообщу, когда появится Camry\n\n"
+              "Или нажмите кнопку, если машина не нашлась при поиске.",
+    },
+    "delalert_help": {
+        "tm": "❌ `/delalert Camry` — şony pozar\n`/delalert all` — hemmesini",
+        "ru": "❌ `/delalert Camry` — удалит это\n`/delalert all` — удалит все",
+    },
+    "alerts_cleared": {
+        "tm": "✅ Ähli ýatlatmalar pozuldy.",
+        "ru": "✅ Все уведомления удалены.",
+    },
+    "alert_deleted": {
+        "tm": "✅ Pozuldy: *{q}*",
+        "ru": "✅ Удалено: *{q}*",
+    },
+    "alert_notfound": {
+        "tm": "❌ *{q}* tapylmady.",
+        "ru": "❌ *{q}* не найдено.",
+    },
+    "err_generic": {
+        "tm": "⚠️ Bir zat ýalňyş gitdi — ýazgy alyndy, düzediler.\n"
+              "_Gaýtadan synanyşyp gör._",
+        "ru": "⚠️ Что-то пошло не так — мы записали ошибку и исправим.\n"
+              "_Попробуйте ещё раз._",
+    },
+    "daily_off": {
+        "tm": "🔕 Gündelik habar öçürildi.\n\n"
+              "Bot öňküsi ýaly işleýär — islän wagtyňyz marka ýazyp "
+              "maşyn gözläp bilersiňiz.\n\n"
+              "Yzyna açmak: /habar\\_ac",
+        "ru": "🔕 Ежедневная рассылка отключена.\n\n"
+              "Бот работает как прежде — в любой момент напишите марку "
+              "и найдёте машину.\n\n"
+              "Включить обратно: /habar\\_ac",
+    },
+    "daily_on": {
+        "tm": "🔔 Gündelik habar yzyna açyldy.\n\n"
+              "Her gün ir bilen şol günki auksionlar barada gysgaça habar bererin.",
+        "ru": "🔔 Ежедневная рассылка включена.\n\n"
+              "Каждое утро буду коротко сообщать об аукционах этого дня.",
+    },
+    "staff_panel": {
+        "tm": "👔 *TEK topary* — düwmeler aşakda taýýar.",
+        "ru": "👔 *Команда TEK* — кнопки внизу экрана.",
+    },
+    "menu_country": {"tm": "🌍 Ýurt", "ru": "🌍 Страна"},
+    # --- gündelik habar ---
+    "daily_title": {
+        "tm": "🌅 *Şu günki auksionlar*",
+        "ru": "🌅 *Сегодняшние аукционы*",
+    },
+    "daily_cars": {
+        "tm": "🚗 *{n} maşyn*  ·  {a} auksion",
+        "ru": "🚗 *{n} {w}*  ·  {a} {wa}",
+    },
+    "daily_top": {"tm": "🔥 Iň köp: {s}", "ru": "🔥 Больше всего: {s}"},
+    "daily_tail": {
+        "tm": "_Marka ýa model ýaz — men tapyp bereýin._",
+        "ru": "_Напишите марку или модель — я найду._",
+    },
+    "daily_btn_today": {"tm": "📅 Auksionlary gör", "ru": "📅 Показать аукционы"},
+    "daily_btn_search": {"tm": "🔎 Maşyn gözle", "ru": "🔎 Найти машину"},
+}
+
+
+# ============================================================
+# IŇLIS DILI + ÝURT SAÝLAMAK        23.09.2026 (agşam) — Erkin
+# ------------------------------------------------------------
+# Erkin: "start basanlarynda ilki 3 sany dil çyksa we her dile
+#         basanlarynda ýurt saýlar ýaly etsek."
+#
+# Näme üçin ýurt soralýar:
+#   1) Türkmenistana 2021-den köne maşyn girmeýär -> TM saýlan adama
+#      awtomat 2021+ goýulýar, ýyl soralmaýar (bir düwme az).
+#   2) Beýleki ýurtlara çäk ýok -> olara ÄHLI ýyllar açylýar.
+#   3) Erkine statistika: müşderiler nireden gelýär.
+# Ulanyjy soň menýudan ýyly hem, ýurdy hem üýtgedip bilýär.
+# ============================================================
+YURTLAR = [
+    ("TM", {"tm": "🇹🇲 Türkmenistan", "ru": "🇹🇲 Туркменистан", "en": "🇹🇲 Turkmenistan"}),
+    ("KZ", {"tm": "🇰🇿 Gazagystan", "ru": "🇰🇿 Казахстан", "en": "🇰🇿 Kazakhstan"}),
+    ("RU", {"tm": "🇷🇺 Russiýa", "ru": "🇷🇺 Россия", "en": "🇷🇺 Russia"}),
+    ("KG", {"tm": "🇰🇬 Gyrgyzystan", "ru": "🇰🇬 Кыргызстан", "en": "🇰🇬 Kyrgyzstan"}),
+    ("AZ", {"tm": "🇦🇿 Azerbaýjan", "ru": "🇦🇿 Азербайджан", "en": "🇦🇿 Azerbaijan"}),
+    ("AE", {"tm": "🇦🇪 BAE (Dubaý)", "ru": "🇦🇪 ОАЭ (Дубай)", "en": "🇦🇪 UAE (Dubai)"}),
+    ("XX", {"tm": "🌍 Başga ýurt", "ru": "🌍 Другая страна", "en": "🌍 Another country"}),
+]
+
+# ⚠️ 29.09.2026 — Erkin: "Eýran we Özbegistany aýyr, ýerine
+#    Gyrgyzystan we Azerbaýjan goý."
+#    Olar DÜWMEDEN aýryldy, emma şu aşakda GALÝAR. Sebäbi: öň
+#    "Özbegistan" saýlan müşderiniň ýazgysy bazada dur. Ol sanawdan
+#    bütinleý pozulsa, bot ony "ýurt saýlanmadyk" hasaplap, adamdan
+#    ÝENE ýurt sorardy — müşderi üçin bir bökdençlik.
+#    Indi köne saýlaw ykrar edilýär, ýöne täze adam olary görmeýär.
+YURT_KONE = [
+    ("UZ", {"tm": "🇺🇿 Özbegistan", "ru": "🇺🇿 Узбекистан", "en": "🇺🇿 Uzbekistan"}),
+    ("IR", {"tm": "🇮🇷 Eýran", "ru": "🇮🇷 Иран", "en": "🇮🇷 Iran"}),
+]
+YURT_ATLARY = {k: v for k, v in (YURTLAR + YURT_KONE)}
+
+# TM -> 2021+ (gümrük düzgüni), galanlara çäk ýok
+YURT_MIN_YEAR = {"TM": 2021}
+
+
+def user_country(uid):
+    try:
+        u = load_users().get(str(uid)) or {}
+        c = u.get("country")
+        return c if c in YURT_ATLARY else None
+    except Exception:
+        return None
+
+
+def yurt_duwmeler(lang):
+    rows, row = [], []
+    for kod, atlar in YURTLAR:
+        row.append(InlineKeyboardButton(atlar.get(lang) or atlar["tm"],
+                                        callback_data=f"yurt:{kod}"))
+        if len(row) == 2:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    return InlineKeyboardMarkup(rows)
+
+
+TEXTS_EN = {
+    "choose_lang": "🌐 Dil saýlaň / Выберите язык / Choose language",
+    "yyl_hemmesi": "All years",
+    "yyl_dan": "From {y}",
+    "choose_year": "📅 *From which year should I show cars?*\n\n"
+                   "_You can change this any time from the menu._",
+    "year_saved_all": "✅ Showing cars of all years.",
+    "year_saved": "✅ Now showing only cars from *{y}* and newer.",
+    "lang_saved": "✅ Language: *English*",
+    "choose_country": "🌍 *Which country are you from?*\n\n"
+                      "_This sets which cars I show you by default._",
+    "country_saved_tm": "✅ Turkmenistan.\n\n"
+                        "Showing cars from *2021* and newer — older ones cannot be imported.\n"
+                        "You can change it with the 📅 button.",
+    "country_saved": "✅ {c}\n\nShowing cars of *all years*. "
+                     "You can narrow it with the 📅 button.",
+    "menu_search": "🚗 Find a car",
+    "menu_auction": "🏢 Find by auction",
+    "menu_alerts": "🔔 My alerts",
+    "menu_contact": "📱 Contact us",
+    "menu_lang": "🌐 Language",
+    "menu_year": "📅 Year",
+    "menu_country": "🌍 Country",
+    "start": "🚗 *Dubai Auksion | TEK AUTO MARKET*\n\n"
+             "Hello! I help you find cars at today's Dubai and Sharjah auctions.\n\n"
+             "📌 How to use:\n"
+             "• Type a make or model — for example: {ex}\n"
+             "• Or an auction name — for example: *Marhaba*, *Nojoom*\n"
+             "• Typos are fine (`camri`, `hunday`)\n"
+             "• No match? Set an alert with one button\n"
+             "• /help — all commands",
+    "help": "📋 *Commands:*\n\n"
+            "🚗 *Find a car:* {ex}\n"
+            "🏢 *Find an auction:* {exa}\n"
+            "🔎 Typos are fine: `camri`, `hunday`\n"
+            "🆔 *By code:* `0813-013`\n\n"
+            "🔔 *Alert:* if a car is not listed — press the button\n"
+            "📋 */myalerts* — my alerts\n"
+            "❌ */delalert Camry* — delete an alert\n"
+            "❌ */delalert all* — delete all\n\n"
+            "📊 */today* — what is on today\n"
+            "🌐 */dil* — change language\n"
+            "📅 */yyl* — year filter\n"
+            "🌍 */yurt* — country\n"
+            "📱 */contact* — contact us",
+    "not_ready": "⏳ *Today's auction data is not ready yet*\n\n"
+                 "It is usually updated every morning between **07:00 and 10:00** (Dubai time).\n"
+                 "Please try again a little later.\n\n"
+                 "📱 Urgent question? Write to us:",
+    "today_title": "📅 *Today's auctions:*\n\n",
+    "today_cars": "{n} {w}",
+    "today_total": "✅ Total: *{n} {w}*  ·  {a} {wa}",
+    "today_tap": "\n\n👇 Tap an auction to see its cars",
+    "today_empty_year": "📭 No cars match your year filter ({y}+) today.\n\n"
+                        "Change the filter: /yyl",
+    "cap_time_both": "🕐 Auction: {d}, {t} (Dubai time)",
+    "cap_time_date": "📅 Auction: {d}",
+    "cap_time_time": "🕐 Auction: {t} (Dubai time)",
+    "cap_price": "💰 Starting bid: *{usd:,} USD* ({aed} AED)",
+    "cap_home": "🏠 Delivered: ~*{usd:,} USD*",
+    "cap_code": "🆔 Code: `{code}`",
+    "wa_btn": "🚗 I am interested in this car",
+    "wa_hello": "Hello! I am interested in this car:",
+    "wa_code": "🆔 Code: {code}",
+    "wa_price": "💰 Starting bid: {usd:,} USD ({aed} AED)",
+    "batch_shown": "📋 Showing *{sent}/{total}*.  *{left}* more cars.\n\n"
+                   "_Be more specific to narrow it down — for example `Camry 2023`._",
+    "batch_more": "⬇️ Show {n} more",
+    "batch_wa": "📱 Write on WhatsApp",
+    "batch_all": "✅ All shown — *{n}* {w}.",
+    "found": "🚗 *'{q}'* — found {n} {w}:",
+    "found_fuzzy": "🔎 I read that as *{s}* — found {n} {w}:",
+    "not_found": "📭 *'{q}'* is not listed today.\n\nShall I tell you when it appears?",
+    "not_found_year": "📭 *'{q}'* is not listed today — or it is older than your filter ({y}+).\n\n"
+                      "Change the filter: /yyl",
+    "alert_btn": "🔔 Tell me when '{q}' appears",
+    "code_found": "🆔 *{code}* — found:",
+    "code_old": "🆔 *{code}* — found\n\n"
+                "⚠️ This car is from the *{d}* auction, which is already over.\n"
+                "Any questions? Write to us on WhatsApp 👇",
+    "code_none": "📭 No car found with code *{code}*.\n\n"
+                 "Please check the code — type it exactly as on the card.",
+    "auction_none": "📭 No cars at {a} today.",
+    "auction_found": "🏢 *{a}* — found {n} {w}:",
+    "search_prompt": "🚗 *Which car are you looking for?*\n\n"
+                     "Type its name or tap a button below.\n"
+                     "_Most listed today:_",
+    "auction_prompt": "🏢 *Which auction?*\n\nRunning today:\n",
+    "auction_prompt_end": "\nType the name — for example: `Marhaba`",
+    "more_lost": "🔄 That search expired. Please type the car name again.",
+    "contact_title": "📱 Contact *TEK AUTO MARKET*:",
+    "alert_set": "✅ Alert saved: *{q}*\n\n"
+                 "I will message you when this car appears.\nMy alerts: /myalerts",
+    "alert_exists": "ℹ️ You already have an alert for *{q}*.",
+    "alerts_empty": "🔔 You have no alerts.\n\nIf a car is not listed — set an alert with the button.",
+    "alerts_title": "🔔 *Your alerts:*\n\n",
+    "alerts_del": "\n❌ Delete: `/delalert <name>`",
+    "alert_hit": "🔔 *Alert!*\n\nThe car you were looking for — *{q}* — is at today's auction!\nTotal: *{n}*",
+    "daily_title": "🌅 *Today's auctions*",
+    "daily_cars": "🚗 *{n} {w}*  ·  {a} {wa}",
+    "daily_top": "🔥 Most listed: {s}",
+    "daily_tail": "_Type a make or model — I will find it._",
+    "daily_btn_today": "📅 Show auctions",
+    "daily_btn_search": "🔎 Find a car",
+    "found_partial": "📭 *'{q}'* was not found exactly.\n\n"
+                     "🔎 There are {n} {w} for *{s}* — showing those:",
+    "found_but_year": "🔎 *'{q}'* — there are *{n}* today.\n\n"
+                      "⚠️ But all of them are older than your year filter (*{y}+*):\n"
+                      "_{ys}_\n\n"
+                      "Tap below to remove the filter 👇",
+    "show_all_years_btn": "📅 Show all years",
+    "alert_hit_alias": "🔔 *Alert!*\n\nYou asked for *{q}* — "
+                       "in our database it is *{s}*.\n"
+                       "Today's auction has *{n}*!",
+    "alert_help": "🔔 `/alert Camry` — I'll notify you when a Camry shows up\n\n"
+                  "Or press the button when a search finds nothing.",
+    "delalert_help": "❌ `/delalert Camry` — removes it\n`/delalert all` — removes all",
+    "alerts_cleared": "✅ All alerts removed.",
+    "alert_deleted": "✅ Removed: *{q}*",
+    "alert_notfound": "❌ *{q}* not found.",
+    "err_generic": "⚠️ Something went wrong — it's logged and will be fixed.\n"
+                   "_Please try again._",
+    "daily_off": "🔕 Daily update turned off.\n\n"
+                 "The bot still works — type a brand any time to search.\n\n"
+                 "Turn back on: /habar\\_ac",
+    "daily_on": "🔔 Daily update turned back on.\n\n"
+                "Every morning I'll send a short note about that day's auctions.",
+    "staff_panel": "👔 *TEK team* — buttons are ready below.",
+}
+
+for _k, _v in TEXTS_EN.items():
+    TEXTS.setdefault(_k, {})["en"] = _v
+
+# türkmen/rus dillerine "ýurt" düwmesiniň ýazgysy
+TEXTS.setdefault("menu_country", {}).update({"tm": "🌍 Ýurt", "ru": "🌍 Страна"})
+TEXTS.setdefault("choose_country", {}).update({
+    "tm": "🌍 *Siz haýsy ýurtdan?*\n\n_Bu haýsy maşynlaryň görkezilýändigini kesgitleýär._",
+    "ru": "🌍 *Из какой вы страны?*\n\n_От этого зависит, какие машины я показываю._",
+})
+TEXTS.setdefault("country_saved_tm", {}).update({
+    "tm": "✅ Türkmenistan.\n\n*2021* we ondan täze maşynlar görkeziler — "
+          "ondan köne maşyn Türkmenistana girmeýär.\n"
+          "Isleseň 📅 düwmesinden üýtgedip bilersiň.",
+    "ru": "✅ Туркменистан.\n\nПоказываю машины *2021* года и новее — "
+          "более старые в Туркменистан не ввозятся.\n"
+          "Изменить можно кнопкой 📅.",
+})
+TEXTS.setdefault("country_saved", {}).update({
+    "tm": "✅ {c}\n\n*Ähli ýyllar* görkeziler. "
+          "Isleseň 📅 düwmesinden çäklendirip bilersiň.",
+    "ru": "✅ {c}\n\nПоказываю машины *всех годов*. "
+          "Сузить можно кнопкой 📅.",
+})
+
+
+
+# ============================================================
+# AUCTION KODLARY + USD
+# ============================================================
+AUCTION_CODES = {
+    "Al Qaryah Auctions": "AQ",
+    "Burj Khaibar Cars Auction": "BK",
+    "West Cars Auctions": "WEST",
+    "Marhaba Auctions": "MAR",
+    "Marhaba Auction": "MAR",
+    "Marhaba Auctions (Sajaa)": "MARS",
+    "Fadak Cars Auction": "FAD",
+    "Nojoom Cars Auction": "NCA",
+    "Al Nukhbah Cars Auction": "NUKH",
+    "Gulf Cars Auction": "GULF",
+    "Al Buraq Cars Auction": "BUR",
+    "Al Bashayera Auction": "BASH",
+    "KHAT AL JAZEERA CARS AUCTION": "KHAT",
+    "HAJI MOHD Cars Auctions": "HAJI",
+    "Emirates Auction": "EM",
+}
+
+
+def _code_sort_key(c):
+    """!! kod_ber.py-daky sort_key bilen DEŇ bolmaly !!
+    Birini üýtgetseň — beýlekisini hem üýtget, ýogsa kodlar deň bolmaz."""
+    return (
+        c.get("price") or 10 ** 9,
+        (c.get("brand") or "").upper(),
+        (c.get("model") or "").upper(),
+        (c.get("auction") or "").upper(),
+        c.get("page") or 0,
+        (c.get("image_path") or ""),
+    )
+
+
+def ensure_codes(cars):
+    """Bazada "code" ýok bolsa — şu ýerde hasaplaýar.
+
+    14.08 mesele: kod_ber işlemän galdy -> kartda 0814-055,
+    botda HAJI-0814-056 -> müşderi tapmady.
+    Indi bot kod ýok bolsa-da EDIL ŞOL kadadan hasaplaýar,
+    şoň üçin kart bilen hemişe deň bolýar.
+    """
+    if not cars or all(c.get("code") for c in cars):
+        return cars
+    days = {}
+    for c in cars:
+        days.setdefault(str(c.get("date", "")), []).append(c)
+    for day, group in days.items():
+        if len(day) != 8:
+            continue
+        mmdd = day[4:6] + day[6:8]
+        for i, c in enumerate(sorted(group, key=_code_sort_key), 1):
+            if not c.get("code"):
+                c["code"] = f"{mmdd}-{i:03d}"
+    return cars
+
+
+def get_car_code(car):
+    """Günüň umumy kody: MMDD-NNN (mysal 0814-055).
+
+    Auksion prefiksi ÝOK (Filipiň haýşy 14.08) — kart bilen deň bolmaly.
+    """
+    code = car.get("code")
+    if code:
+        return str(code)
+    # Bu ýere düşse — load_cars() ensure_codes çagyrmandyr.
+    date_str = str(car.get("date", ""))
+    ds = date_str[4:8] if len(date_str) == 8 else "0000"
+    try:
+        ps = f"{int(car.get('page', 0)):03d}"
+    except (ValueError, TypeError):
+        ps = "000"
+    return f"{ds}-{ps}"
+
+
+def aed_to_usd(aed):
+    try:
+        return int(round(int(aed) / USD_RATE))
+    except (ValueError, TypeError):
+        return 0
+
+
+# ============================================================
+# DÜWMELER
+# ============================================================
+def contact_keyboard():
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton("📱 WhatsApp", url=TEKWAY_WHATSAPP),
+        InlineKeyboardButton("✈️ Telegram", url=TEKWAY_TELEGRAM),
+    ]])
+
+
+def auction_keyboard_for_car(car, lang=DEFAULT_LANG):
+    year = car.get("year", "")
+    brand = car.get("brand", "")
+    model = car.get("model", "")
+    auction = car.get("auction", "")
+    price = car.get("price", 0)
+    code = get_car_code(car)
+
+    text = T(lang, "wa_hello") + "\n"
+    text += T(lang, "wa_code", code=code) + "\n"
+    text += f"🚗 {year} {brand} {model}\n"
+    text += f"🏢 {auksion_ady_yer(car)}\n"
+    _ws = _auksion_wagt_setiri(car, lang=lang)
+    if _ws:
+        text += _ws + "\n"
+    if price:
+        usd = aed_to_usd(price)
+        text += T(lang, "wa_price", usd=usd, aed=price) + "\n"
+    # ⚠️ 30.09.2026 — SURAT SALGYSY DIŇE REPODA BAR BOLSA
+    #   Surat Telegram-a göçürilse (telegram_file_id bar bolsa) ol
+    #   GitHub-a ÝÜKLENMEÝÄR — şonuň üçin salgy ölen bolardy.
+    #   Işgär maşyny kod boýunça botdan tapyp bilýär.
+    img = car.get("image_path", "")
+    if img and not (car.get("telegram_file_id") or "").strip():
+        text += f"📸 https://raw.githubusercontent.com/erkintagantuvakov-gif/tekway-bot/main/{img}"
+
+    wa_url = f"https://wa.me/971522371195?text={quote(text)}"
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton(T(lang, "wa_btn"), url=wa_url),
+    ]])
+
+
+# ============================================================
+# BAZA
+# ============================================================
+# 27.09.2026 REWIZ — BAZA KESHI.
+# On: her duwme basylanda 680 KB JSON faylyny okap, JSON-a owurýärdi.
+# Gunde 1769 masyn + onlarca ulanyjy -> Railway-de nahili yuk.
+# Indi: fayl UYTGEMESE keshden berilya (mtime+olcheg barlanya).
+# Watcher taze baza push edende mtime uytgeya -> kesh ozi tazelenya.
+_cars_cache = None
+_cars_stamp = None
+
+
+def load_cars():
+    global _cars_cache, _cars_stamp
+    if not CARS_DB_FILE.exists():
+        return []
+    try:
+        st = CARS_DB_FILE.stat()
+        stamp = (st.st_mtime_ns, st.st_size)
+        if _cars_cache is not None and _cars_stamp == stamp:
+            return _cars_cache
+        with open(CARS_DB_FILE, "r", encoding="utf-8") as f:
+            cars = ensure_codes(json.load(f))
+        _cars_cache, _cars_stamp = cars, stamp
+        return cars
+    except Exception as e:
+        logger.error(f"DB okalmady: {e}")
+        return _cars_cache or []
+
+
+def load_yatlatmas():
+    return _json_oka(ALERTS_FILE, {})
+
+
+def save_yatlatmas(y):
+    try:
+        _yedekle(ALERTS_FILE)
+        _json_yaz(ALERTS_FILE, y, indent=2)
+    except Exception as e:
+        logger.error(f"yatlatmas yazylmady: {e}")
+
+
+def load_sent():
+    if SENT_FILE.exists():
+        try:
+            with open(SENT_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+
+def save_sent(s):
+    try:
+        _json_yaz(SENT_FILE, s, indent=2)
+    except Exception as e:
+        logger.error(f"sent yazylmady: {e}")
+
+
+
+
+def load_users():
+    return _json_oka(USERS_FILE, {})
+
+
+def save_users(u):
+    _yedekle(USERS_FILE)
+    _json_yaz(USERS_FILE, u, indent=2)
+
+
+def track_user(update, query_text=""):
+    """Her habar gelende ulanyjyny hasaba al"""
+    try:
+        u = update.effective_user
+        if not u:
+            return
+        uid = str(u.id)
+        users = load_users()
+        now = datetime.now(DUBAI_TZ).strftime("%Y-%m-%d %H:%M")
+        today = get_today()
+
+        if uid not in users:
+            users[uid] = {
+                "name": (u.full_name or "")[:60],
+                "username": u.username or "",
+                "first_seen": now,
+                "last_seen": now,
+                "searches": 0,
+                "days": [],
+            }
+        users[uid]["last_seen"] = now
+        users[uid]["name"] = (u.full_name or "")[:60]
+        if u.username:
+            users[uid]["username"] = u.username
+        if query_text:
+            users[uid]["searches"] = users[uid].get("searches", 0) + 1
+        days = users[uid].get("days", [])
+        if today not in days:
+            days.append(today)
+            users[uid]["days"] = days[-60:]  # sonky 60 gun
+
+        # Gozleg sozleri
+        if query_text:
+            q = users[uid].get("queries", [])
+            q.append(query_text[:30])
+            users[uid]["queries"] = q[-50:]
+
+        save_users(users)
+    except Exception as e:
+        logger.error(f"track_user: {e}")
+
+# ============================================================
+# SURAT UGRATMAK
+# ============================================================
+def auksion_ady_yer(car):
+    """
+    Auksion ady + shahamchasy: "Marhaba Auctions - Souq Al Haraj"
+    Marhaba 4 shahamchada ishleya, hersi ayry yer we ayry sagat.
+    Mushderi nira gitmelidigini bilmeli.
+    """
+    ady = (car.get("auction") or "").strip()
+    yer = (car.get("auction_branch") or "").strip()
+    if yer and yer.upper() not in ady.upper():
+        return f"{ady} - {yer}"
+    return ady
+
+
+def auksion_sagady(car):
+    """Auksionyn bashlanyan sagady (Dubay wagty). Bolmasa bosh setir."""
+    w = (car.get("auction_time") or "").strip()
+    return w
+
+
+def auksion_senesi(car):
+    """Auksionyn senesi: '26.08.2026'. Bolmasa bosh setir.
+
+    ⚠️ 26.08 — Erkin: "Dubay wagty bar, emma SENE yok".
+    Mushderä WhatsApp-a gidyan tekstde dine sagat bardy. Adam ony
+    gije okasa "ertirmi, sho gunmi" bilenokdy — hakykatda ol masyn
+    ESHOL GUN oynalyp gutarypdy. Sene indi hokman gorkezilya.
+    """
+    d = str(car.get("date") or "").strip()
+    if len(d) == 8 and d.isdigit():
+        return f"{d[6:8]}.{d[4:6]}.{d[0:4]}"
+    return ""
+
+
+def _auksion_wagt_setiri(car, esc_fn=None, lang=DEFAULT_LANG):
+    """'26.08.2026, 17:45 (Dubaý wagty)' — sene we sagat birlikde."""
+    e = esc_fn or (lambda x: x)
+    sn, wg = auksion_senesi(car), auksion_sagady(car)
+    if sn and wg:
+        return T(lang, "cap_time_both", d=e(sn), t=e(wg))
+    if sn:
+        return T(lang, "cap_time_date", d=e(sn))
+    if wg:
+        return T(lang, "cap_time_time", t=e(wg))
+    return ""
+
+
+def build_caption(car, lang=DEFAULT_LANG):
+    name = esc(f"{car.get('year')} {car.get('brand')} {car.get('model')}")
+    cap = f"🚗 *{name}*\n"
+    cap += f"🏢 {esc(auksion_ady_yer(car))}\n"
+    _ws = _auksion_wagt_setiri(car, esc, lang=lang)
+    if _ws:
+        cap += _ws + "\n"
+    if car.get("price"):
+        usd = aed_to_usd(car.get("price"))
+        cap += T(lang, "cap_price", usd=usd, aed=car.get("price")) + "\n"
+        if SHOW_HOME_PRICE:
+            cap += T(lang, "cap_home", usd=usd + HOME_PRICE_EXTRA_USD) + "\n"
+    cap += T(lang, "cap_code", code=get_car_code(car))
+    return cap
+
+
+# ============================================================
+# TELEGRAM FILE_ID KESHI  (27.09.2026)
+# ------------------------------------------------------------
+# Mesele: bot her gezek surady DISKDEN Telegram-a ayratyn
+# yukleyardi. Bir masyn 50 gezek gorkezilse -> 50 gezek yukleme.
+# Netije: hayal jogap + Telegram "flood control" jerimesi.
+#
+# Cozgut: Telegram her surady 1-nji gezek alanda "file_id" berya.
+# Sol id-ni saklasak, 2-nji gezekden sonra surat YUKLENENOK -
+# Telegram ozi oz serwerinden bereya (takmynan 10 esse calt).
+#
+# Nira saklanya? /data/file_ids.json - Railway wolumy.
+#   cars_database.json her gije GitHub-dan calsyrylya, sonun ucin
+#   file_id-ni baza yazsak her gije yitardi. Wolum bolsa galya.
+#
+# Ac: image_path ("car_images/20260927/XXX.jpg").
+# 5 gunden kone gunler awtomat pozulya (baza bilen den).
+# ============================================================
+# ============================================================
+# 29.09.2026 — SARGYT HABARYNDA "MAŞYNLARY GÖRKEZ" DÜWMESI
+# ------------------------------------------------------------
+# Erkin: "Eýýup üçin 9 maşyn tapyldy diýip ýazýar, ol ýerde diňe
+#         kod bar. Men ol maşynlary görjek bolsam, ýeke-ýeke kod
+#         ýazyp gözlemeli bolýan."
+#
+# Indi habaryň aşagynda düwme — basýar, şol maşynlar surat bilen
+# gelýär. Kod ýazmak gerek däl.
+#
+# ⚠️ Näme üçin kodlar AÝRY FAÝLDA?
+#    callback_data 64 baýt. Bir kod 9 harp, 7 kod = 70 harp —
+#    sygmaýar. Şonuň üçin düwmä diňe SARGYT kody ýazylýar
+#    (mysal "sar:ST-9"), kod sanawy bolsa şu faýlda durýar.
+#    /data-da — bot täzeden açylsa hem düwme işlemegini dowam edýär.
+# ============================================================
+SARGYT_SONKY_FILE = _DATA_DIR / "sargyt_sonky.json"
+_sargyt_sonky = {}
+
+
+def _sargyt_sonky_yukle():
+    global _sargyt_sonky
+    try:
+        if SARGYT_SONKY_FILE.exists():
+            _sargyt_sonky = json.loads(SARGYT_SONKY_FILE.read_text(encoding="utf-8"))
+            if not isinstance(_sargyt_sonky, dict):
+                _sargyt_sonky = {}
+    except Exception as e:
+        logger.error("sargyt_sonky okalmady: %s", e)
+        _sargyt_sonky = {}
+
+
+def _sargyt_sonky_yaz():
+    try:
+        _json_yaz(SARGYT_SONKY_FILE, _sargyt_sonky)
+    except Exception as e:
+        logger.error("sargyt_sonky yazylmady: %s", e)
+
+
+_sargyt_sonky_yukle()
+
+
+FID_FILE = _DATA_DIR / "file_ids.json"
+FID_SAKLA_GUN = 5
+_fid_map = {}
+_fid_uytgedi = False
+_fid_yazgy_wagt = 0.0
+FID_YAZGY_ARA = 60      # sekunt: fayla yygy-yygydan yazmazlyk ucin
+
+
+def _fid_yukle():
+    global _fid_map
+    try:
+        if FID_FILE.exists():
+            _fid_map = json.loads(FID_FILE.read_text(encoding="utf-8"))
+            if not isinstance(_fid_map, dict):
+                _fid_map = {}
+    except Exception as e:
+        logger.error(f"file_ids.json okalmady: {e}")
+        _fid_map = {}
+
+
+def _fid_yatda_sakla(mejbury=False):
+    """Kesh fayla yazylya. Her suratda dal - in kop 60 sekuntda 1 gezek."""
+    global _fid_uytgedi, _fid_yazgy_wagt
+    if not _fid_uytgedi:
+        return
+    if not mejbury and (time.time() - _fid_yazgy_wagt) < FID_YAZGY_ARA:
+        return
+    _fid_yazgy_wagt = time.time()
+    try:
+        # kone gunleri ayyr: "car_images/YYYYMMDD/..."
+        cak = (datetime.now() - timedelta(days=FID_SAKLA_GUN)).strftime("%Y%m%d")
+        taze = {}
+        for k, v in _fid_map.items():
+            bol = k.split("/")
+            gun = bol[1] if len(bol) > 2 and len(bol[1]) == 8 and bol[1].isdigit() else None
+            if gun is None or gun >= cak:
+                taze[k] = v
+        _json_yaz(FID_FILE, taze)
+        _fid_map.clear()
+        _fid_map.update(taze)
+        _fid_uytgedi = False
+    except Exception as e:
+        logger.error(f"file_ids.json yazylmady: {e}")
+
+
+def _fid_al(car):
+    """Bazadaky ya keshdaki file_id. Tapylmasa bos setir."""
+    fid = (car.get("telegram_file_id") or "").strip()
+    if fid:
+        return fid
+    return _fid_map.get(car.get("image_path") or "", "")
+
+
+def _fid_belle(car, message):
+    """Telegram-dan gelen jogapdan file_id-ni cykar we kesha yaz."""
+    global _fid_uytgedi
+    try:
+        ip = car.get("image_path") or ""
+        if not ip or not message or not getattr(message, "photo", None):
+            return
+        fid = message.photo[-1].file_id
+        if fid and _fid_map.get(ip) != fid:
+            _fid_map[ip] = fid
+            _fid_uytgedi = True
+    except Exception:
+        pass
+
+
+_fid_yukle()
+
+
+async def send_car_with_photo(update_or_message, car, keyboard=None, lang=DEFAULT_LANG,
+                              gosmaca=""):
+    """gosmaca: kartyn ashagyna goshmaca setir (29.09 - baha gozegciligi
+    sebabi kartyn OZUNDE gorunsin, ayry habar bolup cat-y hapalamasyn)."""
+    msg = update_or_message if hasattr(update_or_message, "reply_text") else update_or_message.message
+    caption = build_caption(car, lang)
+    if gosmaca:
+        caption += "\n" + gosmaca
+    kb = keyboard or auction_keyboard_for_car(car, lang)
+
+    file_id = _fid_al(car)
+    if file_id:
+        try:
+            await msg.reply_photo(photo=file_id, caption=caption, parse_mode="Markdown", reply_markup=kb)
+            return
+        except Exception as e:
+            # file_id koneldi (Telegram ony pozupdyr) -> keshden ayyr
+            logger.error(f"file_id surat: {e}")
+            _fid_map.pop(car.get("image_path") or "", None)
+
+    image_path = car.get("image_path", "")
+    if image_path and Path(image_path).exists():
+        try:
+            with open(image_path, "rb") as photo:
+                _m = await msg.reply_photo(photo=photo, caption=caption,
+                                           parse_mode="Markdown", reply_markup=kb)
+            _fid_belle(car, _m)          # indiki gezek yuklenmez
+            _fid_yatda_sakla()
+            return
+        except Exception as e:
+            logger.error(f"Surat ugratmady: {e}")
+
+    await msg.reply_text(caption, parse_mode="Markdown", reply_markup=kb)
+
+
+async def send_batch(msg, uid, cars_list, title="", lang=None):
+    """Suratlary 10-lyk toparlar bilen iberýär.
+
+    Sebäp: "Al Qaryah" gözlense 136 maşyn -> 136 habar.
+    Telegram sekuntda 1 habar goýberýär -> bot 2+ minut doňýar,
+    hatda "flood control" jerimesi düşýär.
+    """
+    if lang is None:
+        lang = lang_of(uid)
+    st = _last_results.get(uid) or {}
+    if title:
+        st = {"title": title, "cars": cars_list, "sent": 0}
+    cars_list = st.get("cars", [])
+    start = st.get("sent", 0)
+    chunk = cars_list[start:start + MAX_PHOTO_BATCH]
+
+    for car in chunk:
+        try:
+            await send_car_with_photo(msg, car, lang=lang)
+            await asyncio.sleep(PHOTO_DELAY)
+        except Exception as e:
+            logger.error(f"send_batch: {e}")
+
+    st["sent"] = start + len(chunk)
+    _last_results[uid] = st
+
+    # 19.08: bu ýat (RAM) hiç haçan arassalanmaýardy. Her müşderiniň
+    # doly netije sanawy saklanýardy -> müşderi köpelse bot ýady dolýar.
+    # Indi diňe soňky 60 müşderi saklanýar (sahypalama üçin şol ýeterlik).
+    if len(_son_gozleg) > 60:
+        for _k in list(_son_gozleg.keys())[:-60]:
+            _son_gozleg.pop(_k, None)
+    if len(_last_results) > 60:
+        for _k in list(_last_results.keys())[:-60]:
+            _last_results.pop(_k, None)
+
+    galan = len(cars_list) - st["sent"]
+    if galan > 0:
+        kb = InlineKeyboardMarkup([[
+            InlineKeyboardButton(T(lang, "batch_more", n=min(galan, MAX_PHOTO_BATCH)),
+                                 callback_data="more")
+        ], [
+            InlineKeyboardButton(T(lang, "batch_wa"), url=TEKWAY_WHATSAPP)
+        ]])
+        await msg.reply_text(
+            T(lang, "batch_shown", sent=st["sent"], total=len(cars_list), left=galan),
+            parse_mode="Markdown", reply_markup=kb)
+    elif len(cars_list) > MAX_PHOTO_BATCH:
+        await msg.reply_text(
+            T(lang, "batch_all", n=len(cars_list), w=w_car(lang, len(cars_list))),
+            parse_mode="Markdown", reply_markup=contact_keyboard())
+
+
+async def send_car_to_chat(bot, chat_id, car, lang=None):
+    if lang is None:
+        lang = lang_of(chat_id)
+    caption = build_caption(car, lang)
+    kb = auction_keyboard_for_car(car, lang)
+    image_path = car.get("image_path", "")
+    _fid = _fid_al(car)
+    if _fid:
+        try:
+            await bot.send_photo(chat_id=chat_id, photo=_fid, caption=caption,
+                                 parse_mode="Markdown", reply_markup=kb)
+            return
+        except Exception as e:
+            logger.error(f"Alert file_id: {e}")
+            _fid_map.pop(image_path, None)
+    try:
+        if image_path and Path(image_path).exists():
+            with open(image_path, "rb") as photo:
+                _m = await bot.send_photo(chat_id=chat_id, photo=photo, caption=caption,
+                                          parse_mode="Markdown", reply_markup=kb)
+            _fid_belle(car, _m)
+            _fid_yatda_sakla()
+            return
+    except Exception as e:
+        logger.error(f"Alert surat: {e}")
+    await bot.send_message(chat_id=chat_id, text=caption, parse_mode="Markdown", reply_markup=kb)
+
+
+# ============================================================
+# KOMANDALAR
+# ============================================================
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    track_user(update)
+    # Ishgar bolsa — hemishelik duwme panelini gorkez (24.08)
+    try:
+        if _zk_rugsat(update.effective_user.id):
+            _l = lang_of(update.effective_user.id)
+            await update.message.reply_text(
+                T(_l, "staff_panel"), parse_mode="Markdown",
+                reply_markup=ishgar_klawiatura(_l))
+    except Exception:
+        pass
+    uid = update.effective_user.id
+
+    # 23.09: ilkinji gezek gelen adam ilki DIL, soň ÝURT saýlaýar.
+    if user_lang(uid) is None:
+        await update.message.reply_text(
+            T(DEFAULT_LANG, "choose_lang"), parse_mode="Markdown",
+            reply_markup=dil_duwmeler())
+        return
+    if user_country(uid) is None:
+        _l = lang_of(uid)
+        await update.message.reply_text(
+            T(_l, "choose_country"), parse_mode="Markdown",
+            reply_markup=yurt_duwmeler(_l))
+        return
+
+    await esasy_ekran(update.message, uid)
+
+
+async def esasy_ekran(msg, uid):
+    """Dil we ýyl saýlanandan soňky esasy ekran."""
+    lang = lang_of(uid)
+    cars0 = suzgucle(load_cars(), uid)
+    ex = suggest_text(cars0, 3)
+    await msg.reply_text(
+        T(lang, "start", ex=ex),
+        parse_mode="Markdown", reply_markup=esasy_menyu(lang),
+    )
+    if not db_is_fresh(load_cars()):
+        await msg.reply_text(T(lang, "not_ready"), parse_mode="Markdown",
+                             reply_markup=contact_keyboard())
+    # 27.09.2026 REWIZ: bu yerde "context" yokdy -> NameError.
+    # try/except ony yuvdyardy, shonun ucin gorunmeyardi, yone
+    # yatlatma barlagy esasy ekrandan HIC HACAN ishlanokdy.
+    try:
+        asyncio.create_task(check_alerts(msg.get_bot()))
+    except Exception:
+        pass
+
+
+async def dil_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/dil · /lang — dili üýtgetmek."""
+    await update.message.reply_text(T(DEFAULT_LANG, "choose_lang"),
+                                    parse_mode="Markdown", reply_markup=dil_duwmeler())
+
+
+async def yurt_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/yurt · /country — ýurdy üýtgetmek."""
+    lang = lang_of(update.effective_user.id)
+    await update.message.reply_text(T(lang, "choose_country"), parse_mode="Markdown",
+                                    reply_markup=yurt_duwmeler(lang))
+
+
+async def yyl_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/yyl · /year — ýyl süzgüjini üýtgetmek."""
+    lang = lang_of(update.effective_user.id)
+    await update.message.reply_text(T(lang, "choose_year"), parse_mode="Markdown",
+                                    reply_markup=yyl_duwmeler(lang))
+
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    lang = lang_of(update.effective_user.id)
+    cars = suzgucle(load_cars(), update.effective_user.id)
+    ex = ", ".join(f"`{x}`" for x in suggest_models(cars, 3))
+    auks = sorted({c.get("auction", "").split()[0] for c in cars if c.get("auction")})[:3]
+    exa = ", ".join(f"`{x}`" for x in auks) or "`Marhaba`"
+    await update.message.reply_text(
+        T(lang, "help", ex=ex, exa=exa), parse_mode="Markdown",
+    )
+    # işgärlere goşmaça — müşderi bu bölümi görmeýär
+    if _zk_rugsat(update.effective_user.id) and _zk_bar():
+        await update.message.reply_text(
+            "👔 *TEK topary üçin:*\n\n"
+            "📋 */sargyt* — açyk sargytlar\n"
+            "🔎 */sargyt ST-4* — şol sargydy aç\n"
+            "🔄 */sargyt tazele* — Notion-dan täzeden oka",
+            parse_mode="Markdown")
+
+
+async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    _u = getattr(update, "effective_user", None) or getattr(update, "from_user", None)
+    uid = _u.id if _u else 0
+    lang = lang_of(uid)
+    msg = update.message
+    cars = load_cars()
+    if not cars or not db_is_fresh(cars):
+        await msg.reply_text(T(lang, "not_ready"), parse_mode="Markdown", reply_markup=contact_keyboard())
+        return
+    cars = suzgucle(cars, uid)
+    if not cars:
+        await msg.reply_text(T(lang, "today_empty_year", y=user_min_year(uid)),
+                             parse_mode="Markdown")
+        return
+    # ⚠️ 24.08 — ŞAHAMÇALAR AÝRY SANALÝAR.
+    # Erkin: "şu gün 3 auksion bar, näme üçin ikisini görkezýär?"
+    # Sebäbi: Marhaba-nyň IKI şahamçasy (Souq Al Haraj we IND 12)
+    # ikisi hem "Marhaba Auctions" ady bilen gelýär — bir setire
+    # goşulýardy. Emma olar AÝRY auksion: aýry ýer, aýry sagat.
+    # Indi: at + şahamça boýunça toparlanýar, sagady hem görkezilýär.
+    counts = {}
+    for c in cars:
+        a = c.get("auction", "Näbelli")
+        sh = (c.get("auction_branch") or "").strip()
+        w = (c.get("auction_time") or "").strip()
+        acar = (a, sh, w)
+        counts[acar] = counts.get(acar, 0) + 1
+
+    # Sagat boýunça tertip — gün nähili gidýär, şeýle görünsin
+    def _tertip(x):
+        (a, sh, w), n = x
+        return (w or "99:99", -n)
+
+    # ============================================================
+    # 29.09.2026 (2-nji düzediş) — TEKST SANAWY AÝRYLDY
+    # Erkin: "ýokarky sanaw we aşaky düwmeler şol bir zady
+    #         gaýtalaýar, ekran gaty uzyn bolýar."
+    # Indi: ýokarda DIŇE jemi (näçe maşyn, näçe auksion),
+    #       galan ähli maglumat DÜWMÄNIŇ ÖZÜNDE —
+    #       at, şahamça, sagat, maşyn sany.
+    # ============================================================
+    text = T(lang, "today_title")
+    text += T(lang, "today_total", n=len(cars), a=len(counts),
+              w=w_car(lang, len(cars)), wa=w_auc(lang, len(counts)))
+    text += T(lang, "today_tap")
+    hatarlar = []
+    _duwme_acar = set()
+    for (a, sh, w), n in sorted(counts.items(), key=_tertip):
+        # Bir auksionyn iki sagady bolsa (seyrek) ikinji duwme
+        # gaytalanmasyn - acar birmenzes bolsa atlanya.
+        _k = auk_acar(a, sh)
+        if _k in _duwme_acar:
+            continue
+        _duwme_acar.add(_k)
+        _yaz = f"🏢 {auk_gysga(a, sh)}"
+        if w:
+            _yaz += f" · 🕐 {w}"
+        _yaz += f" · {n} 🚗"
+        hatarlar.append([InlineKeyboardButton(_yaz, callback_data=f"tda:{_k}")])
+    await msg.reply_text(text, parse_mode="Markdown",
+                         reply_markup=InlineKeyboardMarkup(hatarlar) if hatarlar else None)
+
+
+async def contact_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(T(lang_of(update.effective_user.id), "contact_title"),
+                                    parse_mode="Markdown", reply_markup=contact_keyboard())
+
+
+async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    /id — Telegram ID gorkezya.
+
+    Nam uchin gerek: zakaz sistemasy uchin Railway-a STAFF_IDS
+    (ishgarlerin ID-leri) we TOPAR_CHAT_ID (topar grupbasy) yazmaly.
+    Ol sanlary bashga yol bilen almak kyn - shonun uchin shu komanda.
+
+    Howpsuz: adam dine OZ ID-sini goryar, bashgalarynkyny dal.
+    """
+    ch = update.effective_chat
+    us = update.effective_user
+    t = "🆔 *Telegram ID*\n\n"
+    t += f"👤 Seniň ID-ň: `{us.id}`\n"
+    if us.username:
+        t += f"    @{esc(us.username)}\n"
+    if ch and ch.type in ("group", "supergroup", "channel"):
+        t += f"\n👥 Bu grupbanyň ID-si: `{ch.id}`\n"
+        t += f"    {esc(ch.title or '')}\n"
+        t += "\n_Grupba ID-si `TOPAR_CHAT_ID` üçin._"
+    else:
+        t += "\n_Grupbanyň ID-sini almak üçin — boty grupba goş, şol ýerde /id ýaz._"
+    await update.message.reply_text(t, parse_mode="Markdown")
+
+
+async def alert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text(
+            T(lang_of(update.effective_user.id), "alert_help"),
+            parse_mode="Markdown")
+        return
+    q = " ".join(context.args).upper()
+    uid = str(update.effective_user.id)
+    y = load_yatlatmas()
+    y.setdefault(uid, [])
+    lang = lang_of(uid)
+    if q not in y[uid]:
+        y[uid].append(q)
+        save_yatlatmas(y)
+        await update.message.reply_text(T(lang, "alert_set", q=esc(q)), parse_mode="Markdown")
+    else:
+        await update.message.reply_text(T(lang, "alert_exists", q=esc(q)), parse_mode="Markdown")
+
+
+async def myalerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    uid = str(update.effective_user.id)
+    lang = lang_of(uid)
+    my = load_yatlatmas().get(uid, [])
+    if not my:
+        await update.message.reply_text(T(lang, "alerts_empty"))
+        return
+    text = T(lang, "alerts_title")
+    for i, a in enumerate(my, 1):
+        text += f"{i}. {a}\n"
+    text += T(lang, "alerts_del")
+    await update.message.reply_text(text, parse_mode="Markdown")
+
+
+async def delalert_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    lang = lang_of(update.effective_user.id)
+    if not context.args:
+        await update.message.reply_text(
+            T(lang, "delalert_help"), parse_mode="Markdown")
+        return
+    uid = str(update.effective_user.id)
+    y = load_yatlatmas()
+    my = y.get(uid, [])
+    arg = " ".join(context.args).upper()
+    if arg == "ALL":
+        y[uid] = []
+        save_yatlatmas(y)
+        await update.message.reply_text(T(lang, "alerts_cleared"))
+        return
+    if arg in my:
+        my.remove(arg)
+        y[uid] = my
+        save_yatlatmas(y)
+        await update.message.reply_text(T(lang, "alert_deleted", q=esc(arg)),
+                                        parse_mode="Markdown")
+    else:
+        await update.message.reply_text(T(lang, "alert_notfound", q=esc(arg)),
+                                        parse_mode="Markdown")
+
+
+
+
+async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Bot statistikasy - dine ADMIN ucin"""
+    uid = update.effective_user.id
+    if uid != ADMIN_ID:
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+
+    users = load_users()
+    if not users:
+        await update.message.reply_text("📊 Entek ulanyjy ýok.")
+        return
+
+    today = get_today()
+    from datetime import timedelta as _td
+    now = datetime.now(DUBAI_TZ)
+    week_days = set((now - _td(days=i)).strftime("%Y%m%d") for i in range(7))
+    month_days = set((now - _td(days=i)).strftime("%Y%m%d") for i in range(30))
+
+    total = len(users)
+    today_active = sum(1 for u in users.values() if today in u.get("days", []))
+    week_active = sum(1 for u in users.values() if week_days & set(u.get("days", [])))
+    month_active = sum(1 for u in users.values() if month_days & set(u.get("days", [])))
+    total_searches = sum(u.get("searches", 0) for u in users.values())
+
+    # In kop gozlenen sozler
+    from collections import Counter
+    qc = Counter()
+    for u in users.values():
+        for q in u.get("queries", []):
+            qc[q.upper()] += 1
+
+    # Yatlatmalar
+    y = load_yatlatmas()
+    alert_users = sum(1 for v in y.values() if v)
+    alert_total = sum(len(v) for v in y.values())
+
+    # --- TAZE gelen ulanyjylar (first_seen boyunca) ---
+    def _first_day(u):
+        fs = str(u.get("first_seen", ""))
+        return fs[:10].replace("-", "")     # "2026-08-14 09:12" -> "20260814"
+
+    new_today = sum(1 for u in users.values() if _first_day(u) == today)
+    new_week = sum(1 for u in users.values() if _first_day(u) in week_days)
+    new_month = sum(1 for u in users.values() if _first_day(u) in month_days)
+
+    txt = "📊 *BOT STATISTIKASY*\n\n"
+    txt += f"👥 *Jemi ulanyjy:* {total}\n\n"
+    txt += "🆕 *Täze gelenler:*\n"
+    txt += f"   Bugün: *{new_today}*\n"
+    txt += f"   Şu hepde: *{new_week}*\n"
+    txt += f"   Şu aý: *{new_month}*\n\n"
+    txt += "🟢 *Aktiw (girip gören):*\n"
+    txt += f"   Bugün: {today_active}\n"
+    txt += f"   Şu hepde: {week_active}\n"
+    txt += f"   Şu aý: {month_active}\n\n"
+    txt += f"🔍 Jemi gözleg: {total_searches}\n"
+    txt += f"🔔 Ýatlatma goýan: {alert_users} ({alert_total} sany)\n"
+
+    if qc:
+        txt += "\n🔝 *Iň köp gözlenen:*\n"
+        for w, n in qc.most_common(10):
+            txt += f"   {w} — {n}\n"
+
+    txt += "\n📋 /users — ulanyjylaryň sanawy"
+    await update.message.reply_text(txt, parse_mode="Markdown")
+
+
+# ============================================================
+# 29.09.2026 — /users INTERFEÝSI  (Erkin, 3-nji düzediş)
+# ------------------------------------------------------------
+# Erkin: "users diýip ýazamda spisok görünmegini islämok.
+#         Diňe näçe users bardygyny göreýin, akkuratnyja bolsun.
+#         Spisogy bir knopka basamda çyksyn. Owadanja interfeýs."
+#
+# Netije — IKI GATLAK:
+#   1) /users  -> DIŇE san karty (sanaw ýok)
+#   2) düwme   -> sanaw, 10-dan, ◀ ▶ bilen, "⬅ Yza" bilen karta dolanýar
+#
+# ⚠️ San karty ``` blok içinde — Telegram ony MONOSPACE edip görkezýär,
+#    şonuň üçin sanlar bir hatarda dur (owadan görünýär).
+#    Blok içinde * we _ bellik däl, ýagny at gaçyrmak gerek däl.
+# ⚠️ Düwme basylanda TÄZE HABAR IBERILMEÝÄR — şol bir habar üýtgedilýär.
+# ============================================================
+USERS_SAHYPA = 10
+
+
+def _users_sanlar():
+    """Statistika sanlary - bir ýerde hasaplanýar."""
+    users = load_users()
+    today = get_today()
+    from datetime import timedelta as _td
+    now = datetime.now(DUBAI_TZ)
+    hepde = set((now - _td(days=i)).strftime("%Y%m%d") for i in range(7))
+    ay = set((now - _td(days=i)).strftime("%Y%m%d") for i in range(30))
+
+    def _ilkinji(u):
+        return str(u.get("first_seen", ""))[:10].replace("-", "")
+
+    v = users.values()
+    y = load_yatlatmas()
+    return {
+        "jemi": len(users),
+        "akt_gun": sum(1 for u in v if today in u.get("days", [])),
+        "akt_hep": sum(1 for u in v if hepde & set(u.get("days", []))),
+        "akt_ay": sum(1 for u in v if ay & set(u.get("days", []))),
+        "taze_gun": sum(1 for u in v if _ilkinji(u) == today),
+        "taze_hep": sum(1 for u in v if _ilkinji(u) in hepde),
+        "taze_ay": sum(1 for u in v if _ilkinji(u) in ay),
+        "gozleg": sum(u.get("searches", 0) for u in v),
+        "yatlat": sum(1 for k in y.values() if k),
+    }
+
+
+def _san(n):
+    """1951 -> '1 951' (okamak aňsat)."""
+    return f"{n:,}".replace(",", " ")
+
+
+def _users_stat():
+    """Esasy kart — /users şuny görkezýär."""
+    d = _users_sanlar()
+    if not d["jemi"]:
+        return "📊 Entek ulanyjy ýok.", None
+    # ⚠️ Blogyň içinde EMOJI ULANYLANOK — emoji monospace däl,
+    #    goýulsa sanlar bir hatardan süýşýär we kart bozulýar.
+    _c = "  ──────────────────────\n"
+    g = "```\n"
+    g += f"  JEMI ULANYJY  {_san(d['jemi']):>8}\n"
+    g += _c
+    g += f"  Aktiw  bugün  {_san(d['akt_gun']):>8}\n"
+    g += f"         hepde  {_san(d['akt_hep']):>8}\n"
+    g += f"         aý     {_san(d['akt_ay']):>8}\n"
+    g += _c
+    g += f"  Täze   bugün  {_san(d['taze_gun']):>8}\n"
+    g += f"         hepde  {_san(d['taze_hep']):>8}\n"
+    g += f"         aý     {_san(d['taze_ay']):>8}\n"
+    g += _c
+    g += f"  Jemi gözleg   {_san(d['gozleg']):>8}\n"
+    g += f"  Ýatlatma      {_san(d['yatlat']):>8}\n"
+    g += "```"
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📋 Ulanyjylaryň sanawy", callback_data="usr:l:last:0")],
+        [InlineKeyboardButton("🔝 Iň köp gözlenen", callback_data="usr:q"),
+         InlineKeyboardButton("🔄 Täzele", callback_data="usr:stat")],
+    ])
+    return "👥 *ULANYJYLAR*\n\n" + g, kb
+
+
+def _users_sahypa(sahypa=0, tertip="last"):
+    """Sanaw sahypasy — diňe düwme basylanda görkezilýär."""
+    users = load_users()
+    if not users:
+        return "📊 Entek ulanyjy ýok.", None
+
+    if tertip == "top":
+        items = sorted(users.items(), key=lambda x: -x[1].get("searches", 0))
+        tert_ady = "🔍 iň köp gözlän"
+    else:
+        items = sorted(users.items(), key=lambda x: x[1].get("last_seen", ""),
+                       reverse=True)
+        tert_ady = "🕐 soňky gelen"
+
+    sahypalar = max(1, (len(items) + USERS_SAHYPA - 1) // USERS_SAHYPA)
+    sahypa = max(0, min(sahypa, sahypalar - 1))
+    bas = sahypa * USERS_SAHYPA
+    bolek = items[bas:bas + USERS_SAHYPA]
+
+    t = f"👥 *Sanaw*  ·  _{tert_ady}_\n\n"
+    for i, (_uid, u) in enumerate(bolek, bas + 1):
+        ad = esc(u.get("name", "?"))[:18]
+        un = f" @{esc(u['username'])[:14]}" if u.get("username") else ""
+        _ls = str(u.get("last_seen", ""))[:10].split("-")
+        sg = f"{_ls[2]}.{_ls[1]}" if len(_ls) == 3 else ""
+        t += f"{i}. {ad}{un} — 🔍{u.get('searches', 0)} · {sg}\n"
+    t += f"\n_{bas+1}–{min(bas+USERS_SAHYPA, len(items))} / {len(items)}_"
+
+    nav = []
+    if sahypa > 0:
+        nav.append(InlineKeyboardButton("◀", callback_data=f"usr:l:{tertip}:{sahypa-1}"))
+    nav.append(InlineKeyboardButton(f"{sahypa+1}/{sahypalar}", callback_data="usr:noop"))
+    if sahypa < sahypalar - 1:
+        nav.append(InlineKeyboardButton("▶", callback_data=f"usr:l:{tertip}:{sahypa+1}"))
+
+    calys = (InlineKeyboardButton("🕐 Soňky gelen", callback_data="usr:l:last:0")
+             if tertip == "top" else
+             InlineKeyboardButton("🔍 Iň köp gözlän", callback_data="usr:l:top:0"))
+    return t, InlineKeyboardMarkup([
+        nav, [calys],
+        [InlineKeyboardButton("⬅ Yza", callback_data="usr:stat")],
+    ])
+
+
+def _users_gozlegler():
+    """Iň köp gözlenen sözler."""
+    from collections import Counter
+    qc = Counter()
+    for u in load_users().values():
+        for q in u.get("queries", []):
+            qc[q.upper()] += 1
+    if not qc:
+        t = "🔝 *Iň köp gözlenen*\n\n_Entek gözleg ýok._"
+    else:
+        t = "🔝 *Iň köp gözlenen*\n\n```\n"
+        for i, (w, n) in enumerate(qc.most_common(12), 1):
+            t += f"  {i:>2}. {w[:18]:<18} {_san(n):>5}\n"
+        t += "```"
+    return t, InlineKeyboardMarkup([
+        [InlineKeyboardButton("⬅ Yza", callback_data="usr:stat")]])
+
+
+async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Ulanyjylar - dine ADMIN. Diňe san karty, sanaw düwmede."""
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+    t, kb = _users_stat()
+    await _send_md_safe(update.message, t, reply_markup=kb)
+
+
+# ============================================================
+# ALERT BARLAG (background)
+# ============================================================
+# ⚠️ 30.09.2026 — IKI BARLAG BIR WAGTDA ISHLEMESIN (Erkin tapdy)
+#   handle_message HER habarda check_alerts-i arka planda
+#   isledyardi, alert_loop bolsa her 10 minutda. Netije: IKI-UC
+#   barlag BIR WAGTDA ishleyardi we habarlar BIRI-BIRINE GIRYARDI:
+#       "Senin gozlan EXPEDITION geldi"   <- 1-nji barlagdan
+#       [Toyota Camry karty]              <- 2-nji barlagdan
+#   Musderi "bot masynlary garysdyryar" diyip goryar.
+#   Sonun ustune "sent" faylyny ikisem ayry okayardy ->
+#   ayny alert IKI GEZEK gidip bilyardi.
+#   Indi: bir wagtda DINE BIR barlag. Beylekisi dymyp gecya.
+_alert_gulp = None
+
+
+def _alert_gulp_al():
+    global _alert_gulp
+    if _alert_gulp is None:
+        _alert_gulp = asyncio.Lock()
+    return _alert_gulp
+
+
+async def check_alerts(bot):
+    gulp = _alert_gulp_al()
+    if gulp.locked():
+        logger.info("check_alerts: onki barlag isleyar - gecirildi")
+        return
+    async with gulp:
+        await _check_alerts_ic(bot)
+
+
+async def _check_alerts_ic(bot):
+    try:
+        cars = load_cars()
+        if not cars:
+            logger.info("check_alerts: DB bos")
+            return
+        if not db_is_fresh(cars):
+            logger.info(f"check_alerts: DB kone (today={get_today()})")
+            return
+        if not habar_wagtymy():
+            logger.info("check_alerts: gije - 08:45-e cenli saklanyar")
+            return
+        y = load_yatlatmas()
+        if not y:
+            logger.info(f"check_alerts: yatlatma yok ({ALERTS_FILE})")
+            return
+        logger.info(f"check_alerts: {len(y)} ulanyjy, {len(cars)} masyn")
+        sent = load_sent()
+        today = get_today()
+
+        for uid, keywords in y.items():
+            ulang = lang_of(uid)
+            u_cars = suzgucle(cars, uid)
+            for kw in (keywords or []):
+                kwu = kw.upper()
+                matches = [c for c in u_cars
+                           if kwu in f"{c.get('brand','')} {c.get('model','')}".upper()]
+                # ⚠️ 29.09.2026 REWIZ — TAPYLAN UÝLY ÝALŇYŞLYK:
+                #   Ýatlatma DIŇE gönümel deňeşdirilýärdi. Rus müşderi
+                #   "Камри" gözläp düwmä bassa, ýatlatma "КАМРИ" bolup
+                #   ýazylýardy — baza bolsa latyn ("CAMRY").
+                #   Netije: şol ýatlatma HIÇ HAÇAN işlemeýärdi, müşderi
+                #   boş ýere garaşýardy. Indi gözlegdäki ýaly fuzzy
+                #   (kiril + ýalňyş ýazuw) barlagy hem edilýär.
+                _tapylan = None
+                if not matches:
+                    try:
+                        # dine_takyk: sinonim/kiril HAWA, menzeshlik YOK.
+                        # Sebabi fuzzy_find dokumentasiyasynda.
+                        _tapylan, matches = fuzzy_find(kw, u_cars, dine_takyk=True)
+                    except Exception as _fe:
+                        logger.warning("alert fuzzy (%s): %s", kw, _fe)
+                        matches = []
+                if not matches:
+                    continue
+                key = f"{uid}|{kwu}|{today}"
+                if sent.get(key):
+                    continue
+                try:
+                    # Tapylan soz sorag bilen den dal bolsa (mysal
+                    # "Камри" -> "camry") - HABARDA IKISEM yazylya.
+                    # Yogsam tekst bir zat, kart baska zat bolup gorunya.
+                    if _tapylan and _norm(_tapylan) != _norm(kw):
+                        _tekst = T(ulang, "alert_hit_alias", q=esc(kw),
+                                   s=esc(str(_tapylan).title()), n=len(matches))
+                    else:
+                        _tekst = T(ulang, "alert_hit", q=kw, n=len(matches))
+                    await bot.send_message(
+                        chat_id=int(uid), text=_tekst, parse_mode="Markdown")
+                    for car in matches[:5]:
+                        await send_car_to_chat(bot, int(uid), car, lang=ulang)
+                    sent[key] = True
+                    save_sent(sent)
+                    logger.info(f"Alert: {uid} / {kw} / {len(matches)}")
+                except Exception as e:
+                    logger.error(f"Alert iberilmedi {uid}/{kw}: {e}")
+    except Exception as e:
+        logger.error(f"check_alerts: {e}")
+
+
+async def alert_loop(app):
+    await asyncio.sleep(60)
+    while True:
+        try:
+            await check_alerts(app.bot)
+        except Exception as e:
+            logger.error(f"alert_loop: {e}")
+        await asyncio.sleep(600)
+
+
+# ============================================================
+# BAHA GÖZEGÇILIGI — AWTOMAT   (29.09.2026 — Erkin makullady)
+# ------------------------------------------------------------
+# Erkin: "Baha barlagyny awtomat edeýinmi?" -> "Howa."
+#
+# ⚠️ MESELE
+#   Bahalar surata seredip okalýar (OCR). Käwagt ýalňyş okaýar:
+#       "135,000" -> 35000   (bir sifr düşýär)
+#       "82,000"  -> 2000
+#       "65,000"  -> 6500
+#   Müşderi ýalňyş baha görse — biz ýalan maglumat berdik.
+#   1 296 maşyny elden barlamak mümkin däl.
+#
+# ⚠️ NÄME ÜÇIN BOTDA, KOMPÝUTERDE DÄL
+#   `baha_barla.py` her suraty gaýtadan OCR edýär — 5-10 minut.
+#   Ony watcher-e goşsak, gijeki push şonça haýallaýar we
+#   180 sekuntlyk çäge sygmaýar. Şonuň üçin BOTDA diňe SAN
+#   DÜZGÜNLERI işleýär — OCR gerek däl, 1 sekunt, howp ýok.
+#   OCR-li doly barlag `9_BAHALARY_BARLA.bat` bolup galýar.
+#
+# 29.09 hakyky synag: 1 296 maşyndan 33 sanysy güman edildi (2%).
+#
+# NÄHILI GÖRÜNÝÄR
+#   Erkine günde BIR habar gelýär (sanaw ýok, gysga):
+#       ⚠️ Baha gözegçiligi — 33 maşyn güman edilýär
+#       [🚗 Görkez]  <- basanda kartlar surat bilen gelýär
+#   Sanawy habaryň içine ýazmaýarys — Erkin uzyn sanawy halamaýar.
+# ============================================================
+BAHA_GOZEG_FILE = _DATA_DIR / "baha_gozeg.json"
+BAHA_IN_AZ = 1000            # sundan arzan = güman
+BAHA_IN_KOP = 400000         # sundan gymmat = güman
+BAHA_ESSE = 6.0              # topar ortaçasyndan näçe esse tapawut
+BAHA_TOPAR_IN_AZ = 8         # deňeşdirmek üçin toparda iň az näçe maşyn
+BAHA_MAX_KART = 40           # bir gezekde iň köp näçe kart iberilsin
+
+_baha_kesh = {}              # {sene: [(kod, sebap), ...]} — RAM
+
+
+def baha_subhe(cars, sene):
+    """Şol günüň güman edilýän bahalaryny gaýtarýar: [(car, [sebap])].
+
+    ⚠️ TOPAR = AUKSION + ÝYL (3-lük). Diňe auksion boýunça
+    deňeşdirmek ÝALŇYŞ: bir auksionda 2024 BMW X7 (179 000) hem,
+    2013 Kia (3 000) hem bar — ikisi-de HAKYKY.
+    """
+    gun = [c for c in cars if str(c.get("date")) == str(sene)]
+    if not gun:
+        return []
+
+    def _topar(c):
+        try:
+            y = int(c.get("year") or 0)
+        except Exception:
+            y = 0
+        return (c.get("auction") or "?", y // 3)
+
+    top = {}
+    for c in gun:
+        if c.get("price"):
+            top.setdefault(_topar(c), []).append(c["price"])
+    orta = {}
+    for k, v in top.items():
+        if len(v) >= BAHA_TOPAR_IN_AZ:
+            v = sorted(v)
+            n = len(v)
+            orta[k] = v[n // 2] if n % 2 else (v[n // 2 - 1] + v[n // 2]) / 2
+
+    # ⚠️ 01.10.2026 — "BAHA ÝOK" HEMIŞE ÝALŇYŞLYK DÄL (Erkin tapdy).
+    #   Marhaba 01.10-da 205 maşyny "Starting Bid: 0" bilen goýdy —
+    #   surady özüm açyp gördüm, hakykatdanam nol. Bu auksionyň
+    #   düzgüni (no reserve), OCR ýalňyşlygy däl.
+    #   Eger bir auksionyň ýarysyndan köpüsi nolly bolsa — bu
+    #   düzgün, duýduryş gerek däl. Ýekeje-ikije nol bolsa — ol
+    #   hakykatdan OCR ýalňyşlygy bolup biler, duýdurylýar.
+    _auk_jemi, _auk_nol = {}, {}
+    for c in gun:
+        a = c.get("auction") or "?"
+        _auk_jemi[a] = _auk_jemi.get(a, 0) + 1
+        if not c.get("price"):
+            _auk_nol[a] = _auk_nol.get(a, 0) + 1
+    _nolsuz_auk = {a for a, n in _auk_nol.items()
+                   if n * 2 > _auk_jemi.get(a, 1)}
+
+    netije = []
+    for c in gun:
+        try:
+            p = int(c.get("price") or 0)
+        except Exception:
+            p = 0
+        sebap = []
+        if p == 0:
+            if (c.get("auction") or "?") not in _nolsuz_auk:
+                sebap.append("baha ýok")
+        else:
+            if p < BAHA_IN_AZ:
+                sebap.append(f"gaty arzan (<{BAHA_IN_AZ})")
+            if p > BAHA_IN_KOP:
+                sebap.append(f"gaty gymmat (>{BAHA_IN_KOP})")
+            m = orta.get(_topar(c))
+            if m:
+                if p > m * BAHA_ESSE:
+                    sebap.append(f"ortaçadan ÝOKARY ({p / m:.0f} esse)")
+                elif p * BAHA_ESSE < m:
+                    sebap.append(f"ortaçadan PES ({m / p:.0f} esse)")
+            if p % 50 != 0:
+                sebap.append("togalak san däl")
+        if sebap:
+            netije.append((c, sebap))
+
+    # iň howplusy ýokarda: "baha ýok" > "ortaçadan" > galany
+    def _agram(s):
+        if "baha ýok" in s[1]:
+            return 0
+        if any("ortaça" in x for x in s[1]):
+            return 1
+        return 2
+
+    netije.sort(key=_agram)
+    return netije
+
+
+async def baha_gozeg_loop(app):
+    """Her gün BIR gezek Erkine güman edilýän bahalar barada habar."""
+    await asyncio.sleep(180)
+    while True:
+        try:
+            cars = load_cars()
+            today = get_today()
+            if cars and db_is_fresh(cars) and habar_wagtymy():
+                try:
+                    st = json.loads(BAHA_GOZEG_FILE.read_text(encoding="utf-8"))
+                except Exception:
+                    st = {}
+                if st.get("gun") != today:
+                    subhe = baha_subhe(cars, today)
+                    # ⚠️ ILKI BELLIK, SOŇ UGRAT — habar ugratmak birnäçe
+                    #    sekunt dowam edýär, loop ýene gelse IKI GEZEK gitmez.
+                    _json_yaz(BAHA_GOZEG_FILE, {"gun": today, "san": len(subhe)})
+                    _baha_kesh[today] = [(get_car_code(c), s) for c, s in subhe]
+                    if subhe:
+                        nm = {}
+                        for _c, ss in subhe:
+                            for x in ss:
+                                k = x.split(" (")[0]
+                                nm[k] = nm.get(k, 0) + 1
+                        setirler = "\n".join(
+                            f"   • {v} sany — {k}"
+                            for k, v in sorted(nm.items(), key=lambda a: -a[1]))
+                        kb = InlineKeyboardMarkup([[InlineKeyboardButton(
+                            f"🚗 Şu {min(len(subhe), BAHA_MAX_KART)} maşyny görkez",
+                            callback_data=f"bsh:{today}")]])
+                        await app.bot.send_message(
+                            ADMIN_ID,
+                            f"⚠️ *Baha gözegçiligi — {today[6:8]}.{today[4:6]}*\n\n"
+                            f"{len(subhe)} maşynyň bahasy güman edilýär "
+                            f"({len(subhe) * 100 // max(len([c for c in cars if str(c.get('date')) == today]), 1)}%)\n\n"
+                            f"{setirler}\n\n"
+                            f"_Doly OCR barlagy: 9\\_BAHALARY\\_BARLA.bat_",
+                            parse_mode="Markdown", reply_markup=kb)
+                        logger.info("Baha gozegciligi: %d subheli", len(subhe))
+        except Exception as e:
+            logger.error("baha_gozeg_loop: %s", e)
+        await asyncio.sleep(1800)
+
+
+# ============================================================
+# MAGLUMAT GOZEGÇILIGI — Erkine duýduryş
+# Sagat 10:00 bolup şu günki maşyn gelmedik bolsa — admin-e habar.
+# (board 12.08, 3-nji priýoritet)
+# ============================================================
+DATA_WARN_HOUR = 7           # sagat näçede duýdursyn (Dubaý wagty)
+# 22.08: on 10:00-dy. Maglumat adatça 01:00-da taýýar bolýar,
+# şonuň üçin 10:00 gaty giç — Erkin meseläni bizden öň tapýardy.
+# Indi 07:00-da duýdurýar.
+WARN_FILE = _DATA_DIR / "data_warn.json"
+
+
+def _load_warn():
+    try:
+        return json.loads(WARN_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _save_warn(d):
+    try:
+        _json_yaz(WARN_FILE, d)
+    except Exception as e:
+        logger.error(f"warn save: {e}")
+
+
+def load_report(day):
+    """Günlik hasabat: haýsy PDF işlendi, näçe maşyn çykdy."""
+    p = Path(f"gun_hasabat_{day}.json")
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+
+def report_lines(day, cars):
+    """Auksion boýunça setirler. Hasabat ýok bolsa bazadan hasaplaýar."""
+    # 20.09: öň her PDF bölegi aýry setir bolýardy ("31 auksion").
+    # Indi auksion boýunça jemlenýär, maşyn sany BAZADAN alynýar
+    # (Pawel-yň düzedişlerinden soňky hakyky san).
+    rep = load_report(day)
+    cnt, pages = {}, {}
+    for c in cars:
+        if str(c.get("date")) == day:
+            a = c.get("auction", "?")
+            cnt[a] = cnt.get(a, 0) + 1
+    for r in rep:
+        a = str(r.get("auction", "?"))
+        if a.upper().startswith("PUSH"):
+            continue
+        pages[a] = pages.get(a, 0) + (r.get("pages") or 0)
+        cnt.setdefault(a, 0)
+    out = []
+    for a, n in sorted(cnt.items(), key=lambda x: -x[1]):
+        mark = "⚠️" if n == 0 else "🏢"
+        sah = f"  _({pages[a]} sah.)_" if pages.get(a) else ""
+        out.append(f"{mark} {esc(str(a)[:26])} — *{n}* maşyn{sah}")
+    return out
+
+
+ADMIN_ALERTS_FILE = Path("admin_alerts.json")      # repo-dan gelya
+SENT_ADMIN_FILE = _DATA_DIR / "sent_admin_alerts.json"
+
+
+async def check_parser_alerts(bot):
+    """PDF işlenip 0 maşyn çykan bolsa — Erkine habar ber.
+
+    14.08 KHAT sapagy: auksion şablonyny üýtgetdi, 243 sahypadan 0 maşyn
+    çykdy we HIÇ KIM BILMEDI. Indi şeýle ýagdaýda derrew habar gelýär.
+    """
+    try:
+        if not ADMIN_ALERTS_FILE.exists():
+            return
+        alerts = json.loads(ADMIN_ALERTS_FILE.read_text(encoding="utf-8"))
+        try:
+            sent = set(json.loads(SENT_ADMIN_FILE.read_text(encoding="utf-8")))
+        except Exception:
+            sent = set()
+
+        # 18.08 DUZEDIS — ÝALAN DUÝDURYŞ
+        # Mesele: auksion 0 maşyn berýär -> duýduryş ýazylýar. Soň Pawel
+        # düzedip gaýtadan işleýär, 92 maşyn goşulýar. Emma köne duýduryş
+        # faýlda galýar we bot restart bolanda ÝENE iberilýär.
+        # Erkin "auksion işlenmedi" diýen habary alýar, aslynda maşynlar bar.
+        # Indi: iberilmezden öň BAZA barlanýar — şol gün şol auksionda
+        # maşyn bar bolsa, duýduryş ugradylmaýar (çözülen hasaplanýar).
+        def _cozulenmi(a):
+            try:
+                pdf = str(a.get("pdf", ""))
+                dat = str(a.get("date", ""))
+                if not dat:
+                    return False
+                stem = re.sub(r'[^\w]', '_', pdf.rsplit(".", 1)[0])
+                for c in load_cars():
+                    if c.get("date") != dat:
+                        continue
+                    # a) şol PDF-den surat bar
+                    if stem and stem in str(c.get("image_path", "")):
+                        return True
+                    # b) ýa-da şol auksion ady indi bazada bar
+                    if c.get("auction") and c["auction"] == a.get("auction"):
+                        return True
+            except Exception:
+                pass
+            return False
+
+        yeni = []
+        for a in alerts:
+            if not a.get("id") or a["id"] in sent:
+                continue
+            if _cozulenmi(a):
+                sent.add(a["id"])          # dymyp ýap - eýýäm düzeldilipdir
+                logger.info(f"alert cozulen - ugradylmady: {a['id']}")
+                continue
+            yeni.append(a)
+        if not yeni and sent:
+            _json_yaz(SENT_ADMIN_FILE, sorted(sent))
+
+        for a in yeni:
+            d = str(a.get("date", ""))
+            ds = f"{d[6:8]}.{d[4:6]}" if len(d) == 8 else d
+            txt = (
+                f"🔴 *AUKSION IŞLENMEDI*\n\n"
+                f"🏢 {esc(a.get('auction', '?'))}\n"
+                f"📅 {ds}\n"
+                f"📄 {esc(a.get('pdf', ''))}\n\n"
+                f"⚠️ {esc(a.get('msg', ''))}\n\n"
+                f"Sebäbi köplenç: *auksion PDF şablonyny üýtgedipdir* — "
+                f"tekst okalmaýar.\n"
+                f"Şu auksionyň maşynlary botda ÝOK. Pawel-a aýt."
+            )
+            r = a.get("reasons") or {}
+            if r:
+                txt += "\n\n_Aýrylan sebäpler:_\n"
+                for k, v in list(r.items())[:4]:
+                    txt += f"• {esc(k)} — {v}\n"
+            try:
+                await bot.send_message(ADMIN_ID, txt, parse_mode="Markdown")
+                sent.add(a["id"])
+            except Exception as e:
+                logger.error(f"parser alert ugradylmady: {e}")
+
+        if yeni:
+            _json_yaz(SENT_ADMIN_FILE, sorted(sent))
+    except Exception as e:
+        logger.error(f"check_parser_alerts: {e}")
+
+
+async def data_watch_loop(app):
+    """Her 15 minutda barlaýar. Bir günde bir gezek habar iberýär."""
+    await asyncio.sleep(90)
+    while True:
+        try:
+            now = datetime.now(DUBAI_TZ)
+            today = get_today()
+            st = _load_warn()
+
+            if st.get("day") != today:
+                st = {"day": today, "warned": False, "ok": False}
+
+            cars = load_cars()
+            fresh = db_is_fresh(cars)
+
+            # Parser duyduryşlary (0 masyn cykan auksionlar)
+            # 20.09: gije ugradylmaýar - 08:45-den soň.
+            if habar_wagtymy():
+                await check_parser_alerts(app.bot)
+
+            # 1) Maglumat geldi -> bir gezek "taýýar" habary
+            #    20.09: diňe 08:45-den soň (gije ýatýarlar).
+            if fresh and not st.get("ok") and habar_wagtymy():
+                st["ok"] = True
+                _save_warn(st)
+                try:
+                    await app.bot.send_message(
+                        ADMIN_ID,
+                        f"✅ *Maglumat taýýar*\n\n"
+                        f"📅 {today[6:8]}.{today[4:6]}  ·  "
+                        f"🕐 {now.strftime('%H:%M')} (Dubaý)\n"
+                        f"🚗 *{len(cars)} maşyn*  ·  "
+                        f"{len(report_lines(today, cars))} auksion\n\n"
+                        + "\n".join(report_lines(today, cars))
+                        + "\n\n_Jikme-jik: /hasabat_",
+                        parse_mode="Markdown")
+                except Exception as e:
+                    logger.error(f"data ok msg: {e}")
+
+            # 2) Sagat 10:00 boldy, maglumat ýok -> duýduryş
+            elif (not fresh and not st.get("warned")
+                  and now.hour >= DATA_WARN_HOUR):
+                st["warned"] = True
+                _save_warn(st)
+                try:
+                    await app.bot.send_message(
+                        ADMIN_ID,
+                        f"🔴 *DUÝDURYŞ — bugün maglumat ýok*\n\n"
+                        f"Sagat *{now.strftime('%H:%M')}* (Dubaý), "
+                        f"şu günki auksion maşynlary heniz gelmedi.\n\n"
+                        f"Müşderiler häzir *«entek taýýar däl»* ýazgysyny görýär.\n\n"
+                        f"Barla:\n"
+                        f"• PDF-ler `In` papka atyldymy?\n"
+                        f"• Watcher işleýärmi?\n"
+                        f"• GitHub-a iberildimi?\n\n"
+                        f"Bazadaky soňky sene: `{max((str(c.get('date','')) for c in cars), default='ýok')}`",
+                        parse_mode="Markdown")
+                except Exception as e:
+                    logger.error(f"data warn msg: {e}")
+            else:
+                _save_warn(st)
+
+        except Exception as e:
+            logger.error(f"data_watch_loop: {e}")
+        await asyncio.sleep(900)   # 15 minut
+
+
+async def post_init(app):
+    asyncio.create_task(alert_loop(app))
+    asyncio.create_task(data_watch_loop(app))
+    asyncio.create_task(gundelik_habar_loop(app))
+    asyncio.create_task(baha_gozeg_loop(app))
+    if ZK is not None and ZK.isleyarmi():
+        ZK._hb_oka()          # 26.08: onki habarlar diskden okalya
+        asyncio.create_task(zakaz_gozegcilik(app))
+        _alyj = (ZK.TOPAR_CHAT_ID or ", ".join(sorted(ZK.STAFF_IDS)) or "—")
+        logger.info("ZAKAZ moduly isjen (Notion baglandy)")
+        logger.info("SARGYT awtomat habary -> %s (her 30 min)", _alyj)
+    else:
+        logger.info("ZAKAZ moduly ochuk (NOTION_TOKEN yok)")
+    logger.info("Alert loop isledildi (her 10 min)")
+    logger.info(f"Maglumat gozegciligi isledildi (duyduryş sagat {DATA_WARN_HOUR}:00)")
+    logger.info(f"Gundelik habar isledildi (her gun sagat {HABAR_SAGAT}:00)")
+
+    # ⚠️ 24.08 — TELEGRAMYN "MENU" DUWMESI.
+    # Erkin: "panel gitdi, her sapar /start yazmalymy?"
+    # Ashakdaky duwme paneli Telegram kate yygnaya (yazyp bashlanda).
+    # Emma yazgy meydanynyn CHEP tarapyndaky gok "Menu" duwmesi
+    # HIC HACAN yitmeya. Ishgarlere shol menyuda "Sargytlar" chykar.
+    try:
+        from telegram import BotCommand, BotCommandScopeChat, BotCommandScopeDefault
+
+        # Mushderiler uchin — sada.
+        # 29.09.2026 REWIZ: on menyu DINE TURKMENCHEDI. Rus musderi
+        # Telegramyn gok "Menu" duwmesine basanda "Başla / Kömek"
+        # gorýardi we dushunenokdy. Indi Telegram ulanyjynyn OZ
+        # dil sazlamasyna gora gorkezya (language_code).
+        _MENYU = {
+            None: [("start", "Başla"), ("today", "Şu günki auksionlar"),
+                   ("lang", "Dil / Язык / Language"),
+                   ("help", "Kömek"), ("contact", "Habarlaşmak")],
+            "ru": [("start", "Старт"), ("today", "Аукционы сегодня"),
+                   ("lang", "Dil / Язык / Language"),
+                   ("help", "Помощь"), ("contact", "Связаться")],
+            "en": [("start", "Start"), ("today", "Today's auctions"),
+                   ("lang", "Dil / Язык / Language"),
+                   ("help", "Help"), ("contact", "Contact us")],
+        }
+        for _lc, _cmds in _MENYU.items():
+            try:
+                await app.bot.set_my_commands(
+                    [BotCommand(c, t) for c, t in _cmds],
+                    scope=BotCommandScopeDefault(),
+                    language_code=_lc)
+            except Exception as e:
+                logger.warning("Menyu (%s) goyulmady: %s", _lc, e)
+
+        # Ishgarler uchin — sargyt komandalary hem bar
+        _ishgarler = set(ZK.STAFF_IDS) if ZK else set()
+        _ishgarler.add(str(ADMIN_ID))
+        for _uid in _ishgarler:
+            try:
+                await app.bot.set_my_commands([
+                    BotCommand("sargyt", "📋 Açyk sargytlar"),
+                    BotCommand("today", "📅 Şu günki auksionlar"),
+                    BotCommand("start", "Düwmeleri yzyna getir"),
+                    BotCommand("help", "Kömek"),
+                ], scope=BotCommandScopeChat(chat_id=int(_uid)))
+            except Exception as e:
+                logger.warning("Menyu goyulmady (%s): %s", _uid, e)
+        logger.info("Menyu duwmesi goyuldy (%d isgar)", len(_ishgarler))
+    except Exception as e:
+        logger.warning("set_my_commands basartmady: %s", e)
+
+
+
+
+async def hasabat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Şu günki PDF-ler doly işlendimi — jikme-jik (diňe admin)."""
+    if str(update.effective_user.id) != str(ADMIN_ID):
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+
+    cars = load_cars()
+    day = max((str(c.get("date", "")) for c in cars), default=get_today())
+    rep = load_report(day)
+
+    t = f"📋 *GÜNLIK HASABAT — {day[6:8]}.{day[4:6]}*\n\n"
+    if not rep:
+        t += ("_Hasabat faýly ýok._\n"
+              "Bu köne maglumat bolmagy mümkin — hasabat 15.08-den başlap ýazylýar.\n\n")
+        for ln in report_lines(day, cars):
+            t += ln + "\n"
+        await update.message.reply_text(t, parse_mode="Markdown")
+        return
+
+    tot_pages = sum(r.get("pages", 0) for r in rep)
+    tot_kept = sum(r.get("kept", 0) for r in rep)
+    tot_rej = sum(r.get("rejected", 0) for r in rep)
+
+    t += f"📄 *{len(rep)} PDF* işlendi  ·  {tot_pages} sahypa\n"
+    t += f"✅ Alnan: *{tot_kept}*  ·  🚫 Süzülen: {tot_rej}\n\n"
+
+    for r in sorted(rep, key=lambda x: -(x.get("kept") or 0)):
+        kept = r.get("kept", 0)
+        pages = r.get("pages", 0)
+        rej = r.get("rejected", 0)
+        mark = "⚠️" if kept == 0 else "✅"
+        t += f"{mark} *{esc(str(r.get('auction', '?')))}*\n"
+        t += f"    {kept} maşyn  ·  {pages} sahypa  ·  {rej} süzüldi\n"
+        # 20.08 DUZEDIS — /hasabat JOGAP BERMEYARDI
+        # Onki setir: _{esc(pdf)}_  ->  _20-AUG-2026\_260819\_202619.pdf_
+        # Telegram-yn KONE Markdown-y entity ICINDE "\_" kabul edenok.
+        # Netije: "Can't parse entities" -> habar ASLA iberilmeya, bot dymya.
+        # (West Cars faylynyn adynda "_" kop - sonun ucin sho gun doly dymdy.)
+        # Indi: kursiw ayryldy, at `code` gornushinde berilýar - howpsuz.
+        _pdf = str(r.get('pdf', ''))[:44].replace('`', "'")
+        t += f"    `{_pdf}`  {r.get('time', '')}\n\n"
+
+    bos = [r for r in rep if not r.get("kept")]
+    if bos:
+        t += "🔴 *Maşyn çykmadyk PDF bar — barla!*\n"
+    else:
+        t += "_Ähli PDF üstünlikli işlendi._\n"
+
+    t += f"\n🚗 Bazada jemi: *{len([c for c in cars if str(c.get('date')) == day])}* maşyn"
+
+    await _send_md_safe(update.message, t)
+
+
+async def gozleg_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Müşderiler näme gözleýär, näme tapylmaýar (diňe admin)."""
+    if str(update.effective_user.id) != str(ADMIN_ID):
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+
+    d = _load_searches()
+    found, fuzzy, none = d["found"], d["fuzzy"], d["none"]
+    total = sum(found.values()) + sum(fuzzy.values()) + sum(none.values())
+
+    if not total:
+        await update.message.reply_text(
+            "📊 *Gözleg statistikasy*\n\n"
+            "Entek gözleg ýok. Müşderiler ýazyp başlanda şu ýerde görüner:\n"
+            "• iň köp gözlenen maşynlar\n"
+            "• tapylmadyk gözlegler\n"
+            "• ýalňyş ýazylyp düzedilen sözler",
+            parse_mode="Markdown")
+        return
+
+    t = "📊 *GÖZLEG STATISTIKASY*\n\n"
+    t += f"🔢 Jemi gözleg: *{total}*\n"
+    t += f"✅ Tapyldy: {sum(found.values())}  ·  "
+    t += f"🔎 Düzedildi: {sum(fuzzy.values())}  ·  "
+    t += f"📭 Tapylmady: {sum(none.values())}\n\n"
+
+    if none:
+        t += "🔴 *TAPYLMADY* (iň möhüm — bazada ýok ýa bot düşünmedi)\n"
+        for q, n in sorted(none.items(), key=lambda x: -x[1])[:15]:
+            t += f"   `{code_ok(q)}` — {n}×\n"
+        t += "\n"
+
+    if fuzzy:
+        t += "🔎 *ÝALŇYŞ ÝAZYLYP DÜZEDILEN*\n"
+        for k, n in sorted(fuzzy.items(), key=lambda x: -x[1])[:15]:
+            a, _, b = k.partition(">")
+            t += f"   `{code_ok(a)}` → *{esc(b)}* — {n}×\n"
+        t += "\n"
+
+    if found:
+        t += "✅ *IŇ KÖP GÖZLENEN*\n"
+        for q, n in sorted(found.items(), key=lambda x: -x[1])[:15]:
+            t += f"   `{code_ok(q)}` — {n}×\n"
+
+    t += "\n_Tapylmadyk sözleri maňa aýt — sinonim sanawyna goşaryn._"
+
+    await _send_md_safe(update.message, t)
+
+
+async def sonky_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Soňky 30 gözleg — janly görnüş (diňe admin)."""
+    if str(update.effective_user.id) != str(ADMIN_ID):
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+    d = _load_searches()
+    last = d.get("last", [])[-30:]
+    if not last:
+        await update.message.reply_text("📭 Entek gözleg ýok.")
+        return
+    icon = {"found": "✅", "fuzzy": "🔎", "none": "📭"}
+    t = "🕐 *SOŇKY 30 GÖZLEG*\n\n"
+    for r in reversed(last):
+        t += f"{icon.get(r.get('k'), '•')} `{code_ok(r.get('q'))}` — {r.get('n', 0)} maşyn  `{code_ok(r.get('t'))}`\n"
+    await _send_md_safe(update.message, t)
+
+
+# ============================================================
+# ZAKAZ — diňe işgärler üçin (Notion-dan okaýar)
+# ============================================================
+def _zk_bar():
+    return ZK is not None and ZK.isleyarmi()
+
+
+def _zk_rugsat(uid):
+    """Admin hemişe, galanlary STAFF_IDS sanawynda bolmaly."""
+    return str(uid) == str(ADMIN_ID) or (ZK and ZK.staffmy(uid))
+
+
+def _zk_tap(zakazlar, kod):
+    for z in zakazlar:
+        if z["kod"] == kod:
+            return z
+    return None
+
+
+def _zk_duwmeler(z, tapylan=0):
+    """
+    ⚠️ 24.08 — DUWMELER BULASHYARDY.
+    Erkin sorady: "3 sany name zat?"
+    Sebabi: "Auksionlardan gozle" (HEREKET) we "Gozlenyar" (STATUS)
+    ikisinde hem 🔍 emoji bardy — birmenzesh gorunyardi.
+    Indi: hereket duwmesi bashga emoji + uly harp, status duwmeleri
+    "→" bilen bashlaya (status BELLEMEK diyip dushnukli bolsun).
+    """
+    setirler = []
+    # 1) HEREKET — auksionlardan gozleyar, sargyda degmeya
+    if tapylan:
+        setirler.append([InlineKeyboardButton(
+            f"🔎 {tapylan} MAŞYNY GÖRKEZ", callback_data=f"zkg:{z['kod']}")])
+    else:
+        setirler.append([InlineKeyboardButton(
+            "🔎 AUKSIONLARDAN GÖZLE", callback_data=f"zkg:{z['kod']}")])
+    # 2) STATUS bellemek — Notion-da yagdayy uytgedya
+    setirler.append([
+        InlineKeyboardButton("→ Gözlenýär", callback_data=f"zks:{z['kod']}:Gözlenýär"),
+        InlineKeyboardButton("→ Tapyldy", callback_data=f"zks:{z['kod']}:Tapyldy"),
+    ])
+    setirler.append([
+        InlineKeyboardButton("→ Auksionda", callback_data=f"zks:{z['kod']}:Auksionda"),
+        InlineKeyboardButton("→ Alyndy", callback_data=f"zks:{z['kod']}:Alyndy"),
+    ])
+    if z.get("url"):
+        setirler.append([InlineKeyboardButton("🔗 Notion-da aç", url=z["url"])])
+    return InlineKeyboardMarkup(setirler)
+
+
+async def zakazlar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Işlenmeli zakazlaryň sanawy (diňe işgärler)."""
+    uid = update.effective_user.id
+    if not _zk_rugsat(uid):
+        await update.message.reply_text("⛔ Bu komanda diňe TEK topary üçin.")
+        return
+    if not _zk_bar():
+        await update.message.reply_text(
+            "⚙️ Zakaz sistemasy entek birikdirilmedik.\n\n"
+            "_Railway → Variables → `NOTION_TOKEN` goşulmaly._",
+            parse_mode="Markdown")
+        return
+
+    await update.message.chat.send_action("typing")
+    mejbury = bool(context.args and context.args[0].lower() in ("tazele", "yenile"))
+    zakazlar = await ZK.zakazlary_al(mejbury=mejbury)
+    if not zakazlar:
+        await update.message.reply_text(
+            "📭 Notion-da açyk sargyt ýok.",
+            reply_markup=ishgar_klawiatura())
+        return
+
+    # ⚠️ 24.08: Erkin "panel gitdi" diydi — ol ýazgy meýdanyna
+    # bir zat ýazanda Telegram paneli ýygnaýar (adaty özüni alyp baryş).
+    # Çözgüt: goşmaça habar ibermän, paneli SANAW habaryna dakýas.
+    # Şeýdip her gezek sargyt görende panel özi yzyna gelýär.
+    await _send_md_safe(update.message, ZK.sanaw_teksti(zakazlar),
+                        reply_markup=ishgar_klawiatura())
+
+    acyk = [z for z in zakazlar if z["status"] in ZK.ACIK_STATUS]
+    if acyk:
+        knopka, hatar = [], []
+        for z in acyk[:12]:
+            hatar.append(InlineKeyboardButton(z["kod"], callback_data=f"zk:{z['kod']}"))
+            if len(hatar) == 3:
+                knopka.append(hatar)
+                hatar = []
+        if hatar:
+            knopka.append(hatar)
+        await update.message.reply_text(
+            "👇  Açmak üçin bas:",
+            reply_markup=InlineKeyboardMarkup(knopka))
+
+
+async def zakaz_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/zakaz ZAK-3 — bir zakazyň jikme-jigi."""
+    uid = update.effective_user.id
+    if not _zk_rugsat(uid):
+        await update.message.reply_text("⛔ Bu komanda diňe TEK topary üçin.")
+        return
+    if not _zk_bar():
+        await update.message.reply_text("⚙️ Zakaz sistemasy birikdirilmedik.")
+        return
+    if not context.args:
+        await update.message.reply_text(
+            "Ulanyş: `/zakaz S-3`\n\nÄhli zakazlar: /zakazlar",
+            parse_mode="Markdown")
+        return
+
+    kod = context.args[0].upper()
+    zakazlar = await ZK.zakazlary_al()
+    # Prefiks kodda gataldylmayar - bazadaky hakyky kodlardan alynya.
+    # Erkin ony Notion-dan uytgedip bilya (ZAK -> S), bot ozi tutya.
+    _pre = ZK.prefiks_tap(zakazlar)
+    if _pre and not kod.upper().startswith(_pre.upper()):
+        kod = f"{_pre}-" + kod.lstrip("-")
+    z = _zk_tap(zakazlar, kod)
+    if not z:
+        await update.message.reply_text(f"📭 `{code_ok(kod)}` tapylmady.",
+                                        parse_mode="Markdown")
+        return
+
+    cars = load_cars()
+    # ⚠️ 26.08 — min_bal=3 (TAKYK gabatlama).
+    # On bu yerde adaty gabatla() chagyrylyardy: model tapylmasa
+    # MARKA boyuncha gin sanaw beryardi we sany "gabat gelyan masyn"
+    # diyip gorkezyardi. Netije: "Lexus ES 350" sargydynda
+    # "1 gabat gelyan masyn bar" yazyldy — ol Lexus UX-di.
+    # Indi bu san dine hakyky model gabatlamasyny sanaya.
+    tapylan = ZK.gabatla(z, cars, _norm, min_bal=3) if db_is_fresh(cars) else []
+    await update.message.reply_text(
+        ZK.jikme_jik_teksti(z, len(tapylan)),
+        parse_mode="Markdown", reply_markup=_zk_duwmeler(z, len(tapylan)))
+
+
+# ============================================================
+# ISHGAR DUWMELERI — hemishelik panel
+# ============================================================
+# ⚠️ 24.08: Erkin "/sargyt yazmak halamok" diydi. Dogry — her gezek
+# "/" basyp soz yazmak howlukmac ishde bogyar.
+# Chozgut: ekranyn ashagynda HEMISHE duran duwmeler. Bir basyş.
+# Diňe ISHGARLERE gorkezilya, mushderiler gormeya.
+# 23.09: panel hem ulanyjynyň dilinde. Erkin rusça saýlanda ekranda
+# türkmençe düwmeler galýardy — garyşyk görünýärdi.
+# Iki diliň hem ýazgylary sanawda dur, şonuň üçin dil çalşanda
+# öňki düwmä basylsa-da bot düşünýär.
+ISHGAR_DUWME = {
+    "📋 Sargytlar": "sanaw",
+    "🔄 Täzele": "tazele",
+    "📅 Şu gün": "bugun",
+    "📋 Заказы": "sanaw",
+    "🔄 Обновить": "tazele",
+    "📅 Сегодня": "bugun",
+    "📋 Orders": "sanaw",
+    "🔄 Refresh": "tazele",
+    "📅 Today": "bugun",
+}
+
+_ISHGAR_PANEL = {
+    "tm": ("📋 Sargytlar", "🔄 Täzele", "📅 Şu gün", "Maşyn gözlemek üçin ýaz…"),
+    "ru": ("📋 Заказы", "🔄 Обновить", "📅 Сегодня", "Напишите марку машины…"),
+    "en": ("📋 Orders", "🔄 Refresh", "📅 Today", "Type a car make…"),
+}
+
+
+def ishgar_klawiatura(lang=DEFAULT_LANG):
+    a, b, c, ph = _ISHGAR_PANEL.get(lang) or _ISHGAR_PANEL["tm"]
+    return ReplyKeyboardMarkup(
+        [[KeyboardButton(a)], [KeyboardButton(b), KeyboardButton(c)]],
+        resize_keyboard=True,
+        is_persistent=True,
+        input_field_placeholder=ph,
+    )
+
+
+async def sargyt_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    ESASY KOMANDA — bary bir sozde.
+
+    /sargyt           -> acyk sargytlaryn sanawy
+    /sargyt ST-4      -> shol sargydy acya
+    /sargyt 4         -> deň (prefiks ozi goshulya)
+    /sargyt tazele    -> Notion-dan tazeden okaya
+
+    ⚠️ 24.08: on iki komanda bardy — /zakazlar we /zakaz.
+    Erkin: "iki sozi yatda saklamak artykmac".
+    Indi birew. Konelerinem ishlap dur (yatda galanlar ucin).
+    """
+    a = context.args or []
+    _tazele = {"tazele", "yenile", "täzele", "ýenile"}
+    if a and a[0].lower() not in _tazele:
+        return await zakaz_command(update, context)      # bir sargyt
+    return await zakazlar_command(update, context)       # sanaw
+
+
+async def _zk_callback(q, context, d):
+    """Zakaz düwmeleri. d — callback_data."""
+    uid = q.from_user.id
+    if not _zk_rugsat(uid):
+        await q.message.reply_text("⛔ Bu diňe TEK topary üçin.")
+        return
+    if not _zk_bar():
+        await q.message.reply_text("⚙️ Zakaz sistemasy birikdirilmedik.")
+        return
+
+    zakazlar = await ZK.zakazlary_al()
+
+    # --- jikme-jik ---
+    if d.startswith("zk:"):
+        z = _zk_tap(zakazlar, d[3:])
+        if not z:
+            await q.message.reply_text("📭 Zakaz tapylmady.")
+            return
+        cars = load_cars()
+        tapylan = ZK.gabatla(z, cars, _norm, min_bal=3) if db_is_fresh(cars) else []
+        await q.message.reply_text(
+            ZK.jikme_jik_teksti(z, len(tapylan)),
+            parse_mode="Markdown", reply_markup=_zk_duwmeler(z, len(tapylan)))
+        return
+
+    # --- auksionlardan gözle ---
+    if d.startswith("zkg:"):
+        z = _zk_tap(zakazlar, d[4:])
+        if not z:
+            await q.message.reply_text("📭 Zakaz tapylmady.")
+            return
+        cars = load_cars()
+        if not cars or not db_is_fresh(cars):
+            await q.message.reply_text(NOT_READY_MSG, parse_mode="Markdown")
+            return
+        tapylan, takyk = ZK.gabatla_doly(z, cars, _norm)
+
+        # 24.08 GOSHMACA — "model bar, yone yyly basga"
+        # Onki nusga: takyk model tapylmasa gonuden-goni MARKA boyuncha
+        # gin sanaw beryardi. Netije: "Camry 2021-2023" zakazyna
+        # Hilux/Mirai/Highlander gelyardi - ishgar uchin peydasyz.
+        # Emma shol gun 6 sany Camry bardy (2024-2025) we hemmesi
+        # byujetden ARZANdy. Ine sholar gorkezilmeli.
+        yyl_bellik = ""
+        if not takyk:
+            baska_yyl = ZK.model_bar_yyl_baska(z, cars, _norm)
+            if baska_yyl:
+                tapylan = baska_yyl
+                takyk = True
+                _yy = sorted({int(str(c.get("year"))[:4])
+                              for c in baska_yyl if c.get("year")})
+                _bahalar = [aed_to_usd(c.get("price")) for c in baska_yyl
+                            if c.get("price")]
+                _arzan = min(_bahalar) if _bahalar else 0
+                _aralyk = (f"{_yy[0]}" if len(_yy) == 1
+                           else f"{_yy[0]}-{_yy[-1]}")
+                yyl_bellik = (
+                    f"\n⚠️ _Zakazdaky ýylda ýok — ýöne şol model_ *{_aralyk}* "
+                    f"_ýylda bar_")
+                if _arzan:
+                    yyl_bellik += f", _iň arzany_ *{_arzan:,} USD*"
+                yyl_bellik += "."
+
+        # 24.08 — MARKA BOYUNCHA NETIJE INDI AWTOMAT CHYKMAYA.
+        # Sargyt "Mitsubishi L200" (pikap) boldy, bot "Mitsubishi Mirage"
+        # (kici sedan) gorkezdi — peydasyz. Emma sargyt dine "Toyota"
+        # bolsa marka boyuncha gorkezmek DOGRY. Tapawut: model aydylanmy.
+        if not takyk and ZK.model_aydylanmy(z, cars, _norm):
+            _n = len(tapylan)
+            _dwm = None
+            if _n:
+                _dwm = InlineKeyboardMarkup([[InlineKeyboardButton(
+                    f"Şonda-da görkez — {_n} sany",
+                    callback_data=f"zkm:{z['kod']}")]])
+            await q.message.reply_text(
+                f"📭 `{code_ok(z['kod'])}` — *{esc(z['isleg'])}* "
+                f"şu günki auksionlarda ýok.",
+                parse_mode="Markdown", reply_markup=_dwm)
+            return
+
+        if not tapylan:
+            await q.message.reply_text(
+                f"📭 `{code_ok(z['kod'])}` — *{esc(z['isleg'])}* üçin "
+                f"şu günki auksionlarda gabat gelýän maşyn ýok.",
+                parse_mode="Markdown")
+            return
+
+        if yyl_bellik:
+            bellik = yyl_bellik
+        elif takyk:
+            bellik = ""
+        else:
+            bellik = "\n⚠️ _Takyk model tapylmady — diňe marka boýunça._"
+        await q.message.reply_text(
+            f"🔍 `{code_ok(z['kod'])}` — *{len(tapylan)}* maşyn tapyldy "
+            f"(býujet: {ZK._byujet_yaz(z)}){bellik}",
+            parse_mode="Markdown")
+        await send_batch(q.message, str(uid), tapylan,
+                         title=f"zakaz {z['kod']}")
+
+        # kody Notion-a ýazmak üçin düwmeler
+        hatar = []
+        for c in tapylan[:6]:
+            k = get_car_code(c)
+            if k:
+                hatar.append([InlineKeyboardButton(
+                    f"📌 {k} → Notion-a ýaz",
+                    callback_data=f"zkk:{z['kod']}:{k}")])
+        if hatar:
+            await q.message.reply_text(
+                "👇 Müşderä hödürlejek maşynyňy saýla — kody Notion-a ýazaryn:",
+                reply_markup=InlineKeyboardMarkup(hatar))
+        return
+
+    # --- "şonda-da görkez": diňe marka boýunça giň sanaw ---
+    if d.startswith("zkm:"):
+        z = _zk_tap(zakazlar, d[4:])
+        if not z:
+            await q.message.reply_text("📭 Sargyt tapylmady.")
+            return
+        cars = load_cars()
+        if not cars or not db_is_fresh(cars):
+            await q.message.reply_text(NOT_READY_MSG, parse_mode="Markdown")
+            return
+        gin = ZK.gabatla(z, cars, _norm, min_bal=2)
+        if not gin:
+            await q.message.reply_text("📭 Ol marka boýunça-da maşyn ýok.")
+            return
+        await q.message.reply_text(
+            f"🔎 `{code_ok(z['kod'])}` — diňe *marka* boýunça "
+            f"*{len(gin)}* maşyn\n"
+            f"⚠️ _Model gabat gelenok — müşderä görkezmezden öň seret._",
+            parse_mode="Markdown")
+        await send_batch(q.message, str(uid), gin, title=f"sargyt {z['kod']}")
+        return
+
+    # --- maşyn kodyny Notion-a ýaz ---
+    if d.startswith("zkk:"):
+        bolek = d[4:].split(":", 1)
+        if len(bolek) != 2:
+            return
+        kod, masyn_kod = bolek
+        z = _zk_tap(zakazlar, kod)
+        if not z:
+            await q.message.reply_text("📭 Zakaz tapylmady.")
+            return
+        bar = [x.strip() for x in (z.get("masyn_kody") or "").split(",") if x.strip()]
+        if masyn_kod not in bar:
+            bar.append(masyn_kod)
+        ok = await ZK.notion_yaz(z["id"], "Maşyn kody", ", ".join(bar))
+        if ok:
+            await ZK.notion_yaz(z["id"], "Status", "Tapyldy")
+            await q.message.reply_text(
+                f"✅ `{code_ok(masyn_kod)}` Notion-a ýazyldy → `{code_ok(kod)}`\n"
+                f"Status: *Tapyldy*",
+                parse_mode="Markdown")
+        elif ok == "meydan_yok":
+            # Erkin tablisany sadalashdyranda 'Masyn kody' sutunini pozan
+            # bolmagy mumkin. Yalnyshlyk dal - dushnukli aydyas.
+            await q.message.reply_text(
+                f"ℹ️ Maşyn kody Notion-a ýazylmady — *Maşyn kody* diýen "
+                f"sütün tablisada ýok.\n\n"
+                f"Saýlanan kod: `{esc(', '.join(bar))}`\n"
+                f"_Gerek bolsa Notion-da şol atda tekst sütünini goş._",
+                parse_mode="Markdown")
+        else:
+            await q.message.reply_text("❌ Notion-a ýazyp bolmady. Loga seret.")
+        return
+
+    # --- status üýtget ---
+    if d.startswith("zks:"):
+        bolek = d[4:].split(":", 1)
+        if len(bolek) != 2:
+            return
+        kod, taze = bolek
+        z = _zk_tap(zakazlar, kod)
+        if not z:
+            await q.message.reply_text("📭 Zakaz tapylmady.")
+            return
+        ok = await ZK.notion_yaz(z["id"], "Status", taze)
+        if ok:
+            await q.message.reply_text(
+                f"✅ `{code_ok(kod)}` → *{esc(taze)}*", parse_mode="Markdown")
+        else:
+            await q.message.reply_text("❌ Notion-a ýazyp bolmady.")
+        return
+
+
+async def _sargyt_habar_isle(app, hasabat=None):
+    """Bir gezek barlap, tapylan masynlar hakda habar iberya.
+
+    ⚠️ 26.08 — AYRY FUNKSIYA EDILDI.
+    On bu logika dine 30 minutlyk dowrun ichindedi. Ishlemese
+    NAM UCHIN ishlemeyanini gormek MUMKIN DALDI — log Railway-da,
+    Erkin bolsa dine "habar gelmedi" goryardi.
+    Indi /sargytbarla komandasy shu ayny funksiyany chagyryp,
+    her adimin netijesini yazyp beryar.
+
+    hasabat — sanaw berilse, her adim shoňa yazylya.
+    """
+    def _y(t):
+        if hasabat is not None:
+            hasabat.append(t)
+
+    if not _zk_bar():
+        _y("❌ Sargyt moduly ÖÇÜK (NOTION_TOKEN ýok)")
+        return 0
+    _y("✅ Sargyt moduly açyk")
+
+    alyjylar = ([ZK.TOPAR_CHAT_ID] if ZK.TOPAR_CHAT_ID
+                else sorted(set(ZK.STAFF_IDS) | {str(ADMIN_ID)}))
+    _y(f"📬 Alyjylar: {', '.join(alyjylar) if alyjylar else '—'}"
+       + ("  _(topar grupbasy)_" if ZK.TOPAR_CHAT_ID else "  _(işgärler)_"))
+    if not alyjylar:
+        return 0
+
+    cars = load_cars()
+    _y(f"📦 Baza: {len(cars)} maşyn  ·  täze: {'hawa' if db_is_fresh(cars) else 'ÝOK'}")
+    if not cars or not db_is_fresh(cars):
+        _y("❌ Baza şu günki däl — habar iberilmeýär")
+        return 0
+
+    try:
+        zakazlar = await ZK.zakazlary_al(mejbury=True)
+    except Exception as e:
+        _y(f"❌ Notion okalmady: {esc(str(e)[:80])}")
+        return 0
+    _y(f"📋 Notion-da {len(zakazlar)} sargyt")
+
+    ugradyldy = 0
+    for z in zakazlar:
+        if z["status"] not in ("Täze", "Gözlenýär"):
+            _y(f"   ⏭ `{z['kod']}` {esc(z['isleg'][:22])} — status «{esc(z['status'])}»")
+            continue
+        # AWTOMAT habar diňe TAKYK gabatlamada — ýogsa
+        # "Nissan" zakazy her gün 40 maşyn spam eder
+        tapylan = ZK.gabatla(z, cars, _norm, min_bal=3)
+        gorlen = ZK._habar_berlen.setdefault(z["kod"], set())
+        taze = [c for c in tapylan
+                if get_car_code(c) and get_car_code(c) not in gorlen]
+        _y(f"   • `{z['kod']}` {esc(z['isleg'][:22])} — "
+           f"tapylan {len(tapylan)}, täze {len(taze)}")
+        if not taze:
+            continue
+        for c in taze:
+            gorlen.add(get_car_code(c))
+
+        # 29.09: kod sanawy aýryldy — ýerine DÜWME.
+        # Kodlar faýlda saklanýar, düwmä diňe sargyt kody ýazylýar.
+        _sargyt_sonky[z["kod"]] = [get_car_code(c) for c in taze]
+        _sargyt_sonky_yaz()
+        _tekst = (f"🔔 *SARGYT ÜÇIN MAŞYN TAPYLDY*\n\n"
+                  f"`{z['kod']}` — {esc(z['at'])}\n"
+                  f"🚗 {esc(z['isleg'])}\n"
+                  f"💰 {ZK._byujet_yaz(z)}\n\n"
+                  f"✅ *{len(taze)}* täze maşyn tapyldy")
+        _kb = InlineKeyboardMarkup([
+            [InlineKeyboardButton(f"🚗 Şu {len(taze)} maşyny görkez",
+                                  callback_data=f"sar:{z['kod']}")],
+            [InlineKeyboardButton("🔎 Ähli gabat gelýänler",
+                                  callback_data=f"zkg:{z['kod']}")],
+        ])
+        for _al in alyjylar:
+            try:
+                await app.bot.send_message(chat_id=int(_al), text=_tekst,
+                                           parse_mode="Markdown",
+                                           reply_markup=_kb)
+                ugradyldy += 1
+            except Exception as e:
+                logger.error("sargyt habar (%s): %s", _al, e)
+                _y(f"      ❌ {_al}: {esc(str(e)[:60])}")
+        ZK._hb_yaz()
+        await asyncio.sleep(1)
+    _y(f"📨 Jemi {ugradyldy} habar iberildi")
+    return ugradyldy
+
+
+async def zakaz_gozegcilik(app):
+    """AWTOMAT: her 30 minutda açyk sargytlara gabat gelýän täze
+    maşyn bar bolsa habar berýär. Işgär hiç zat barlamaly däl."""
+    await asyncio.sleep(120)
+    while True:
+        try:
+            # 20.09: gije sargyt habary ugradylmaýar - 08:45-den soň.
+            # (/sargytbarla el bilen islendik wagt işleýär.)
+            if habar_wagtymy():
+                await _sargyt_habar_isle(app)
+        except Exception as e:
+            logger.error("zakaz_gozegcilik: %s", e)
+        await asyncio.sleep(1800)   # 30 minutda bir
+
+
+async def sargytbarla_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/sargytbarla — awtomat habar ulgamyny HÄZIR işledýär we
+    her ädimiň netijesini görkezýär. Diňe admin."""
+    if update.effective_user.id != ADMIN_ID:
+        return
+    hasabat = []
+    try:
+        await _sargyt_habar_isle(context.application, hasabat)
+    except Exception as e:
+        hasabat.append(f"❌ ÝALŇYŞLYK: {esc(str(e)[:120])}")
+        logger.exception("sargytbarla")
+    await update.message.reply_text(
+        "🔍 *SARGYT HABAR BARLAGY*\n\n" + "\n".join(hasabat),
+        parse_mode="Markdown")
+
+
+async def checkalerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Manual alert barlag + debug maglumat"""
+    uid = str(update.effective_user.id)
+    cars = load_cars()
+    y = load_yatlatmas()
+    my = y.get(uid, [])
+    sent = load_sent()
+    today = get_today()
+
+    txt = "🔍 *Alert debug:*\n\n"
+    txt += f"📅 Bugün: `{today}`\n"
+    txt += f"📦 DB: {len(cars)} maşyn\n"
+    txt += f"✅ DB täze: {db_is_fresh(cars)}\n"
+    txt += f"💾 Alert fayly: `{ALERTS_FILE}`\n"
+    txt += f"🔔 Meniň ýatlatmalarym: {len(my)}\n"
+    if my:
+        for a in my:
+            matches = [c for c in cars if a.upper() in f"{c.get('brand','')} {c.get('model','')}".upper()]
+            key = f"{uid}|{a.upper()}|{today}"
+            was_sent = "iberildi" if sent.get(key) else "iberilmedi"
+            txt += f"   • {a}: {len(matches)} maşyn ({was_sent})\n"
+    await update.message.reply_text(txt, parse_mode="Markdown")
+
+    # Hakyky barlag isle
+    await check_alerts(context.bot)
+
+
+# ============================================================
+# HABAR
+# ============================================================
+AUCTIONS = {
+    "fadak": "Fadak Cars Auction",
+    "marhaba": "Marhaba Auctions",
+    "nojoom": "Nojoom Cars Auction",
+    "nca": "Nojoom Cars Auction",
+    "qaryah": "Al Qaryah Auctions",
+    "west": "West Cars Auctions",
+    "gulf": "Gulf Cars Auction",
+    "burj": "Burj Khaibar Cars Auction",
+    "khaibar": "Burj Khaibar Cars Auction",
+    "nukhbah": "Al Nukhbah Cars Auction",
+    "bashayera": "Al Bashayera Auction",
+    "khat": "KHAT AL JAZEERA CARS AUCTION",
+    "haji": "HAJI MOHD Cars Auctions",
+    "buraq": "Al Buraq Cars Auction",
+}
+
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.strip()
+
+    # --- ISHGAR DUWMELERI (24.08) ---
+    # Panel duwmesine basylanda Telegram adaty TEKST iberya.
+    # Shol tekstleri masyn gozlegine gecirmeli DAL — ilki shu barlag.
+    if text in ISHGAR_DUWME and _zk_rugsat(update.effective_user.id):
+        isi = ISHGAR_DUWME[text]
+        if isi == "bugun":
+            return await today_command(update, context)
+        context.args = ["tazele"] if isi == "tazele" else []
+        return await sargyt_command(update, context)
+
+    tl = text.lower()
+    tu = text.upper()
+    track_user(update, text)
+    uid_i = update.effective_user.id
+    lang = lang_of(uid_i)
+    cars = load_cars()
+
+    # 23.09: dil/ýurt saýlanmadyk bolsa ilki şolar soralýar
+    if user_lang(uid_i) is None:
+        await update.message.reply_text(T(DEFAULT_LANG, "choose_lang"),
+                                        parse_mode="Markdown", reply_markup=dil_duwmeler())
+        return
+    if user_country(uid_i) is None:
+        await update.message.reply_text(T(lang, "choose_country"),
+                                        parse_mode="Markdown", reply_markup=yurt_duwmeler(lang))
+        return
+
+    # Arka planda alertleri barla (blokirlemeya)
+    try:
+        asyncio.create_task(check_alerts(context.bot))
+    except Exception as e:
+        logger.error(f"alert task: {e}")
+
+    fresh = db_is_fresh(cars)
+
+    # ============================================================
+    # KOD boýunça gözleg — SENE BARLAGYNDAN ÖŇ
+    # ------------------------------------------------------------
+    # Sebäp (Erkin, 15.08): TikTok-a goýlan kart bir günlük däl.
+    # Müşderi ertesi gün kody ýazsa "maglumat taýýar däl" görse —
+    # reklama puly ýanýar. Kod HEMIŞE jogap bermeli.
+    # ============================================================
+    mcode = re.search(r'\b(\d{4})\s*[-–—/]\s*(\d{1,3})\b', tu)
+    if mcode:
+        want = f"{mcode.group(1)}-{int(mcode.group(2)):03d}"
+        # ⚠️ KOD gözlegi ÝYL SÜZGÜJINE BAGLY DÄL — TikTok-dan gelen adam
+        #    kody ýazsa hemişe jogap almaly.
+        hit = [c for c in cars if str(c.get("code", "")).upper() == want]
+        if hit:
+            if fresh:
+                await update.message.reply_text(
+                    T(lang, "code_found", code=esc(want)), parse_mode="Markdown")
+            else:
+                d = str(hit[0].get("date", ""))
+                ds = f"{d[6:8]}.{d[4:6]}" if len(d) == 8 else d
+                await update.message.reply_text(
+                    T(lang, "code_old", code=esc(want), d=ds), parse_mode="Markdown")
+            for car in hit:
+                await send_car_with_photo(update, car, lang=lang)
+            log_search(want, "found", None, len(hit))
+            return
+        log_search(want, "none")
+        await update.message.reply_text(
+            T(lang, "code_none", code=esc(want)),
+            parse_mode="Markdown", reply_markup=contact_keyboard())
+        return
+
+    if not fresh:
+        await update.message.reply_text(T(lang, "not_ready"), parse_mode="Markdown", reply_markup=contact_keyboard())
+        return
+
+    # 23.09: ulanyjynyň ýyl saýlawy
+    cars = suzgucle(cars, uid_i)
+
+    for key, aname in AUCTIONS.items():
+        if key in tl:
+            ac = [c for c in cars if aname.upper() in c.get("auction", "").upper()]
+            if not ac:
+                await update.message.reply_text(T(lang, "auction_none", a=esc(aname)))
+                return
+            await update.message.reply_text(
+                T(lang, "auction_found", a=esc(aname), n=len(ac), w=w_car(lang, len(ac))),
+                parse_mode="Markdown")
+            log_search(text, "found", None, len(ac))
+            await send_batch(update.message, str(update.effective_user.id),
+                             ac, title=aname, lang=lang)
+            return
+
+    found = [c for c in cars if tu in f"{c.get('brand','')} {c.get('model','')}".upper()]
+
+    # ============================================================
+    # 30.09.2026 — "ÝYL SÜZGÜJI ÝUWDUP GOÝBERDIMI?"  (Erkin tapdy)
+    # ------------------------------------------------------------
+    # Erkin: "Lexus es 350 diýip ýazamda başga-başga maşynlar çykýar."
+    #
+    # Hakyky sebäbi: bazada 4 sany Lexus Es 350 BAR —
+    #   2018, 2013, 2009, 2007.
+    # Erkiniň ýurdy Türkmenistan -> süzgüç 2021+ -> DÖRDÜSI-DE
+    # aýrylýar -> gönümel gözleg boş -> fuzzy işe girip diňe
+    # "lexus" sözüni tapýar -> ÄHLI Lexus gelýär (LX 700H, RX...).
+    #
+    # Müşderi üçin bu iň erbet ýagdaý: ol "ýok" diýen jogap hem
+    # alanok, ýalňyş maşyn alýar we bot bozuk diýip pikir edýär.
+    #
+    # Indi: süzgüçsiz hem barlaýarys. Maşyn BAR bolsa — aýdýarys
+    # näçe sanydygyny we haýsy ýyllardygyny, düwme bilen süzgüji
+    # aýryp bolýar. Fuzzy-a asla ýetmeýär.
+    # ============================================================
+    if not found and user_min_year(uid_i):
+        _son_gozleg[str(uid_i)] = text
+        _suzgucsiz = [c for c in load_cars()
+                      if str(c.get("date")) == get_today()
+                      and tu in f"{c.get('brand','')} {c.get('model','')}".upper()]
+        if _suzgucsiz:
+            _yyllar = sorted({int(c.get("year") or 0) for c in _suzgucsiz}, reverse=True)
+            _ys = ", ".join(str(y) for y in _yyllar[:6])
+            log_search(text, "none")
+            await update.message.reply_text(
+                T(lang, "found_but_year", q=esc(text), n=len(_suzgucsiz),
+                  y=user_min_year(uid_i), ys=esc(_ys)),
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(
+                    T(lang, "show_all_years_btn"), callback_data="yylq:0")]]))
+            return
+
+    # --- Göni tapylmasa: ýalňyş/türkmençe/rusça ýazgy bolmagy mümkin ---
+    fuzzy_word = None
+    if not found:
+        fuzzy_word, found = fuzzy_find(text, cars)
+
+    if not found:
+        log_search(text, "none")
+        kb = InlineKeyboardMarkup([[
+            InlineKeyboardButton(T(lang, "alert_btn", q=text[:30]),
+                                 callback_data=cb_data("alert:", text))
+        ]])
+        _my = user_min_year(uid_i)
+        _t = (T(lang, "not_found_year", q=esc(text), y=_my) if _my
+              else T(lang, "not_found", q=esc(text)))
+        await update.message.reply_text(_t, parse_mode="Markdown", reply_markup=kb)
+        return
+
+    log_search(text, "fuzzy" if fuzzy_word else "found", fuzzy_word, len(found))
+
+    if fuzzy_word:
+        # ⚠️ 30.09.2026 — DOLY DAL GABAT GELME ACYK AYDYLYA.
+        #   "Lexus es 350" -> fuzzy dine "lexus" tapya -> 35 Lexus
+        #   gelyardi we bot "Lexus diyip dusundim" diyyardi. Musderi
+        #   bolsa ES 350 sorapdy. Indi: "ES 350 tapylmady, Lexus
+        #   boyunca sular bar" diyip DOGRUSY aydylya.
+        _sorag_bolek = set(_norm(text).split())
+        _tapylan_bolek = set(_norm(fuzzy_word).split())
+        if _sorag_bolek - _tapylan_bolek:
+            _habar = T(lang, "found_partial", q=esc(text),
+                       s=esc(fuzzy_word.title()), n=len(found),
+                       w=w_car(lang, len(found)))
+        else:
+            _habar = T(lang, "found_fuzzy", s=esc(fuzzy_word.title()),
+                       n=len(found), w=w_car(lang, len(found)))
+        await update.message.reply_text(_habar, parse_mode="Markdown")
+    else:
+        await update.message.reply_text(
+            T(lang, "found", q=esc(text), n=len(found), w=w_car(lang, len(found))),
+            parse_mode="Markdown")
+
+    await send_batch(update.message, str(update.effective_user.id),
+                     found, title=text, lang=lang)
+
+
+# ============================================================
+# YALNYSHLYK TUTUJY
+# ============================================================
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    """
+    ⚠️ 24.08 SAPAGY — NAM UCHIN BU GEREK:
+    Erkin "Auksionlardan gozle" duwmesine basdy — HIC HILI REAKSIYA
+    BOLMADY. Sebabi kodda kici yalnyshlyk bardy (KeyError: 'byujet'),
+    yone botda yalnyshlyk tutujy YOKDY. Telegram logda
+    "No error handlers are registered" diyip yazdy we bot DYMDY.
+
+    Ishgar uchin bu in erbet yagday: duwma basyan, hic zat bolonok,
+    name uchindigi belli dal. Sebabini tapmak uchin Railway logyna
+    girmeli bolyar.
+
+    Indi: islendik yalnyshlykda ulanyja gysga habar iberilya,
+    admine bolsa doly sebabi. Bot yene ishlap dur.
+    """
+    import traceback
+    e = context.error
+
+    # 03.09.2026: "Query is too old" — musderi kone duwma basdy, zyyansyz.
+    # Admin topara traceback iberilmez, ulanyja-da yalnyshlyk yazylmaz.
+    if "query is too old" in str(e).lower():
+        logger.info("Kone callback (zyyansyz): %s", e)
+        return
+
+    # 20.09.2026: "NetworkError: Bad Gateway" gije 05:12-de Erkine geldi.
+    # Bu Telegram serweriniň wagtlaýyn näsazlygy - bot özi gaýtadan
+    # birikýär, hiç zat etmeli däl. Admine traceback ugradylmaýar.
+    from telegram.error import NetworkError, TimedOut
+    if isinstance(e, (NetworkError, TimedOut)) and not isinstance(update, Update):
+        logger.warning("Wagtlayyn tor yalnyshlygy (zyyansyz): %s", e)
+        return
+
+    logger.error("Tutulmadyk yalnyshlyk: %s", e, exc_info=e)
+
+    # 1) Ulanyja — gysga we dushnukli
+    try:
+        ch = None
+        if isinstance(update, Update):
+            if update.callback_query:
+                ch = update.callback_query.message
+            elif update.message:
+                ch = update.message
+        if ch:
+            try:
+                _el = lang_of(ch.chat_id)
+            except Exception:
+                _el = DEFAULT_LANG
+            await ch.reply_text(T(_el, "err_generic"), parse_mode="Markdown")
+    except Exception:
+        pass
+
+    # 2) Admine — doly sebabi (sebabini gozlap yormeli bolmasyn)
+    try:
+        nire = ""
+        if isinstance(update, Update):
+            if update.callback_query:
+                nire = f"düwme: `{update.callback_query.data}`"
+            elif update.message and update.message.text:
+                nire = f"habar: `{update.message.text[:60]}`"
+        tb = "".join(traceback.format_exception(
+            type(e), e, e.__traceback__))[-1200:]
+        await context.bot.send_message(
+            ADMIN_ID,
+            f"🐞 *Botda ýalňyşlyk*\n{nire}\n\n```\n{tb}\n```",
+            parse_mode="Markdown")
+    except Exception:
+        pass
+
+
+# ============================================================
+# CALLBACK
+# ============================================================
+async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    q = update.callback_query
+    # 03.09.2026 duzedis: musderi KONE habaryn duwmesine bassa (mes. duyunki
+    # sanawyn "more" duwmesi), Telegram "Query is too old" diyyar — bu hakyky
+    # yalnyshlyk dal. On bu yalnyshlyk error_handler-e dushup, admin topara
+    # doly traceback iberyardi. Indi: yuwash gecirilyar, dowme isi dowam edyar.
+    try:
+        await q.answer()
+    except Exception as _e:
+        if "query is too old" not in str(_e).lower():
+            logger.warning("q.answer(): %s", _e)
+    d = q.data or ""
+
+    # zakaz düwmeleri (diňe işgärler)
+    if d.startswith(("zk:", "zkg:", "zkk:", "zks:", "zkm:")):
+        await _zk_callback(q, context, d)
+        return
+
+    # Baha gozegciligi duwmesi (29.09) - dine admin
+    if d.startswith("bsh:"):
+        if q.from_user.id != ADMIN_ID:
+            return
+        _sn = d[4:]
+        _cars = load_cars()
+        _kodlar = [k for k, _s in _baha_kesh.get(_sn, [])]
+        if not _kodlar:
+            # bot tazeden achylypdyr - RAM bosaldy, gaytadan hasapla
+            _kodlar = [get_car_code(c) for c, _s in baha_subhe(_cars, _sn)]
+        _sebap = dict(_baha_kesh.get(_sn, []))
+        _sel = [c for c in _cars if get_car_code(c) in _kodlar][:BAHA_MAX_KART]
+        if not _sel:
+            await q.message.reply_text("📭 Ol maşynlar indi bazada ýok (baza täzelendi).")
+            return
+        await q.message.reply_text(
+            f"⚠️ *{len(_sel)} güman edilýän baha* — {_sn[6:8]}.{_sn[4:6]}\n\n"
+            f"_Ýalňyşyny tapsaň maňa kody bilen ýaz, düzederin._",
+            parse_mode="Markdown")
+        for _c in _sel:
+            try:
+                _ss = _sebap.get(get_car_code(_c)) or []
+                await send_car_with_photo(
+                    q, _c, lang=DEFAULT_LANG,
+                    gosmaca=("⚠️ _" + esc(", ".join(_ss)) + "_") if _ss else "")
+                await asyncio.sleep(PHOTO_DELAY)
+            except Exception as _e:
+                logger.error("bsh kart: %s", _e)
+        return
+
+    # Gundelik habaryn duwmeleri (25.08)
+    if d.startswith("hbr:"):
+        nam = d[4:]
+        uid = str(q.from_user.id)
+        _habar_basyldy(nam, uid)
+        if nam == "today":
+            await today_command(q, context)
+        elif nam == "gozle":
+            _l = lang_of(uid)
+            await q.message.reply_text(
+                T(_l, "search_prompt"), parse_mode="Markdown",
+                reply_markup=suggest_keyboard(suzgucle(load_cars(), uid), 6))
+        elif nam == "off":
+            users = load_users()
+            if uid in users:
+                users[uid]["habar_ochuk"] = True
+                save_users(users)
+            await q.message.reply_text(T(lang_of(uid), "daily_off"))
+        return
+
+    # --- 23.09: DIL we ÝYL saýlamak ---
+    if d.startswith("lang:"):
+        lang = d[5:]
+        # 29.09 DUZEDIS: duwmede "English" bardy, yone bu yerde "en"
+        # kabul edilenokdy -> musderi Inlis dilini saylasa DYMYP
+        # turkmence galyardy. Indi uc dilem ishleya.
+        if lang not in ("tm", "ru", "en"):
+            lang = DEFAULT_LANG
+        set_user_pref(q.from_user.id, lang=lang)
+        await q.message.reply_text(T(lang, "lang_saved"), parse_mode="Markdown")
+        # işgär bolsa aşakdaky panel hem täze dilde bolsun
+        try:
+            if _zk_rugsat(q.from_user.id):
+                await q.message.reply_text(T(lang, "staff_panel"), parse_mode="Markdown",
+                                           reply_markup=ishgar_klawiatura(lang))
+        except Exception:
+            pass
+
+        # Dilden soň ÝURT soralýar. Ýurt ýyl çägini özi kesgitleýär:
+        #   Türkmenistan -> 2021+ (ondan köne maşyn girmeýär)
+        #   beýleki ýurtlar -> ähli ýyllar
+        # Ýurt eýýäm bar bolsa gaýtadan soralmaýar.
+        if user_country(q.from_user.id) is None:
+            await q.message.reply_text(T(lang, "choose_country"), parse_mode="Markdown",
+                                       reply_markup=yurt_duwmeler(lang))
+        else:
+            await esasy_ekran(q.message, q.from_user.id)
+        return
+
+    if d.startswith("yurt:"):
+        kod = d[5:]
+        if kod not in YURT_ATLARY:
+            kod = "XX"
+        lang = lang_of(q.from_user.id)
+        _y = YURT_MIN_YEAR.get(kod, 0)
+        set_user_pref(q.from_user.id, country=kod, min_year=_y)
+        if kod == "TM":
+            await q.message.reply_text(T(lang, "country_saved_tm"), parse_mode="Markdown")
+        else:
+            _at = YURT_ATLARY[kod].get(lang) or YURT_ATLARY[kod]["tm"]
+            await q.message.reply_text(T(lang, "country_saved", c=_at), parse_mode="Markdown")
+        await esasy_ekran(q.message, q.from_user.id)
+        return
+
+    if d == "setcountry":
+        lang = lang_of(q.from_user.id)
+        await q.message.reply_text(T(lang, "choose_country"), parse_mode="Markdown",
+                                   reply_markup=yurt_duwmeler(lang))
+        return
+
+    # 30.09: suzguci ayyr WE sonky soragy gaytadan gozle
+    if d.startswith("yylq:"):
+        set_user_pref(q.from_user.id, min_year=0)
+        _uid = str(q.from_user.id)
+        _l = lang_of(_uid)
+        _sorag = _son_gozleg.pop(_uid, "")
+        await q.message.reply_text(T(_l, "year_saved_all"), parse_mode="Markdown")
+        if not _sorag:
+            await esasy_ekran(q.message, q.from_user.id)
+            return
+        _tu = _sorag.upper()
+        _cars = suzgucle(load_cars(), _uid)
+        _f = [c for c in _cars
+              if _tu in f"{c.get('brand','')} {c.get('model','')}".upper()]
+        if not _f:
+            await esasy_ekran(q.message, q.from_user.id)
+            return
+        await q.message.reply_text(
+            T(_l, "found", q=esc(_sorag), n=len(_f), w=w_car(_l, len(_f))),
+            parse_mode="Markdown")
+        log_search(_sorag, "found", None, len(_f))
+        await send_batch(q.message, _uid, _f, title=_sorag, lang=_l)
+        return
+
+    if d.startswith("yyl:"):
+        try:
+            y = int(d[4:])
+        except ValueError:
+            y = 0
+        set_user_pref(q.from_user.id, min_year=y)
+        lang = lang_of(q.from_user.id)
+        await q.message.reply_text(
+            T(lang, "year_saved_all") if not y else T(lang, "year_saved", y=y),
+            parse_mode="Markdown")
+        await esasy_ekran(q.message, q.from_user.id)
+        return
+
+    if d == "setlang":
+        await q.message.reply_text(T(DEFAULT_LANG, "choose_lang"),
+                                   parse_mode="Markdown", reply_markup=dil_duwmeler())
+        return
+
+    if d == "setyear":
+        lang = lang_of(q.from_user.id)
+        await q.message.reply_text(T(lang, "choose_year"), parse_mode="Markdown",
+                                   reply_markup=yyl_duwmeler(lang))
+        return
+
+    if d.startswith("alert:"):
+        st = d[6:].strip()
+        uid = str(q.from_user.id)
+        y = load_yatlatmas()
+        y.setdefault(uid, [])
+        k = st.upper()
+        _lang = lang_of(uid)
+        if k not in y[uid]:
+            y[uid].append(k)
+            save_yatlatmas(y)
+            await q.message.reply_text(T(_lang, "alert_set", q=esc(st)), parse_mode="Markdown")
+        else:
+            await q.message.reply_text(T(_lang, "alert_exists", q=esc(st)), parse_mode="Markdown")
+
+    elif d == "contact":
+        await q.message.reply_text(T(lang_of(q.from_user.id), "contact_title"),
+                                   parse_mode="Markdown", reply_markup=contact_keyboard())
+    elif d == "search":
+        cars = suzgucle(load_cars(), q.from_user.id)
+        await q.message.reply_text(
+            T(lang_of(q.from_user.id), "search_prompt"),
+            parse_mode="Markdown", reply_markup=suggest_keyboard(cars, 6))
+
+    elif d.startswith("find:"):
+        want = d[5:].strip()
+        lang = lang_of(q.from_user.id)
+        cars = load_cars()
+        if not db_is_fresh(cars):
+            await q.message.reply_text(T(lang, "not_ready"), parse_mode="Markdown",
+                                       reply_markup=contact_keyboard())
+            return
+        cars = suzgucle(cars, q.from_user.id)
+        wu = want.upper()
+        found = [c for c in cars
+                 if wu in f"{c.get('brand','')} {c.get('model','')}".upper()]
+        if not found:
+            _, found = fuzzy_find(want, cars)
+        if not found:
+            await q.message.reply_text(T(lang, "not_found", q=esc(want)), parse_mode="Markdown")
+            return
+        log_search(want, "found", None, len(found))
+        await q.message.reply_text(
+            T(lang, "found", q=esc(want), n=len(found), w=w_car(lang, len(found))),
+            parse_mode="Markdown")
+        await send_batch(q.message, str(q.from_user.id), found, title=want, lang=lang)
+
+    elif d.startswith("sar:"):
+        # 29.09: sargyt habaryndaky "maşynlary görkez" düwmesi
+        _zk = d[4:]
+        uid = str(q.from_user.id)
+        lang = lang_of(uid)
+        _kodlar = set(_sargyt_sonky.get(_zk) or [])
+        cars = load_cars()
+        if not cars or not db_is_fresh(cars):
+            await q.message.reply_text(T(lang, "not_ready"), parse_mode="Markdown",
+                                       reply_markup=contact_keyboard())
+            return
+        sel = [c for c in cars if get_car_code(c) in _kodlar]
+        if not sel:
+            # baza gije täzelendi — köne kodlar indi ýok
+            await q.message.reply_text(
+                f"📭 Ol maşynlar indi bazada ýok (baza täzelendi).\n\n"
+                f"Häzirki gabat gelýänleri görmek üçin: `/sargyt {esc(_zk)}`",
+                parse_mode="Markdown")
+            return
+        await q.message.reply_text(
+            f"🚗 *{esc(_zk)}* — {len(sel)} maşyn", parse_mode="Markdown")
+        await send_batch(q.message, uid, sel, title=f"Sargyt {_zk}", lang=lang)
+
+    elif d.startswith("usr:"):
+        # 29.09: /users interfeysi. Taze habar iberilmeya - sol bir
+        # habar uytgedilya (edit_message_text), cat hapalanmasyn.
+        if q.from_user.id != ADMIN_ID:
+            return
+        _p = d.split(":")
+        _rej = _p[1] if len(_p) > 1 else ""
+        if _rej == "noop":
+            return
+        try:
+            if _rej == "stat":
+                _t, _kb = _users_stat()
+            elif _rej == "q":
+                _t, _kb = _users_gozlegler()
+            elif _rej == "l":
+                _t, _kb = _users_sahypa(int(_p[3]), _p[2])
+            else:
+                return
+        except Exception as _e:
+            logger.error("users interfeys: %s", _e)
+            return
+        try:
+            await q.message.edit_text(_t, parse_mode="Markdown", reply_markup=_kb)
+        except Exception as _e:
+            if "not modified" not in str(_e).lower():
+                logger.error("users edit: %s", _e)
+                await q.message.reply_text(re.sub(r'[*_`]', '', _t), reply_markup=_kb)
+
+    elif d.startswith("tda:"):
+        # 29.09: "Şu günki auksionlar" sanawyndaky düwme basyldy
+        uid = str(q.from_user.id)
+        lang = lang_of(uid)
+        acar = d[4:]
+        cars = load_cars()
+        if not cars or not db_is_fresh(cars):
+            await q.message.reply_text(T(lang, "not_ready"), parse_mode="Markdown",
+                                       reply_markup=contact_keyboard())
+            return
+        cars = suzgucle(cars, uid)
+        sel = [c for c in cars
+               if auk_acar(c.get("auction"), c.get("auction_branch")) == acar]
+        if not sel:
+            # baza gije täzelendi — şol auksion indi ýok
+            await q.message.reply_text(T(lang, "more_lost"))
+            return
+        _a = (sel[0].get("auction") or "").strip()
+        _sh = (sel[0].get("auction_branch") or "").strip()
+        _ady = f"{_a} — {_sh}" if _sh else _a
+        log_search(_ady, "found", None, len(sel))
+        await q.message.reply_text(
+            T(lang, "auction_found", a=esc(_ady), n=len(sel), w=w_car(lang, len(sel))),
+            parse_mode="Markdown")
+        await send_batch(q.message, uid, sel, title=_ady, lang=lang)
+
+    elif d == "more":
+        uid = str(q.from_user.id)
+        st = _last_results.get(uid)
+        if not st or not st.get("cars"):
+            await q.message.reply_text(T(lang_of(uid), "more_lost"))
+            return
+        await send_batch(q.message, uid, st["cars"])
+
+    elif d == "auction":
+        lang = lang_of(q.from_user.id)
+        cars = suzgucle(load_cars(), q.from_user.id)
+        names = sorted({c.get("auction", "") for c in cars if c.get("auction")})
+        t = T(lang, "auction_prompt")
+        for a in names:
+            n = sum(1 for c in cars if c.get("auction") == a)
+            t += f"• *{a}* — " + T(lang, "today_cars", n=n, w=w_car(lang, n)) + "\n"
+        t += T(lang, "auction_prompt_end")
+        await q.message.reply_text(t, parse_mode="Markdown")
+    elif d == "myalerts":
+        uid = str(q.from_user.id)
+        lang = lang_of(uid)
+        my = load_yatlatmas().get(uid, [])
+        if not my:
+            await q.message.reply_text(T(lang, "alerts_empty"))
+        else:
+            t = T(lang, "alerts_title")
+            for i, a in enumerate(my, 1):
+                t += f"{i}. {esc(a)}\n"
+            t += T(lang, "alerts_del")
+            await q.message.reply_text(t, parse_mode="Markdown")
+
+
+
+# ============================================================
+# GUNDELIK HABAR — mushderileri bota yzyna getirmek  (25.08)
+#
+# Erkin: "Maksat mushderilerimize telegram bota girer yaly etmek,
+#         ya-da botun barlygyny yatlatmak."
+#
+# ⚠️ SHONUN UCHIN BU HABAR STATISTIKA HASABATY DAL.
+#    Adam sany okap dal, DUWMÄ BASSYN diyip yazylan:
+#      - gysga (bir ekran)
+#      - bir sany uly san (gyzyklandyryjy)
+#      - ashagynda 2 duwme: "Shu gunki auksionlar" / "Masyn gozle"
+#
+# ⚠️ ÖCHÜRMEK DUWMESI HÖKMAN.
+#    Hemme ulanyja gidyar. Halamadyk adam bota BLOK etse — ony
+#    hemishelik yitirdik. "Habary ochur" duwmesi bolsa, ol dine
+#    habary ochurya, bot ozi yerinde galya.
+# ============================================================
+HABAR_FILE = _DATA_DIR / "gundelik_habar.json"
+HABAR_SAGAT = 9              # Dubay wagty. Ahli PDF 02:30-a chenli tayyar.
+
+
+def _habar_yagdayi():
+    try:
+        return json.loads(HABAR_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _habar_yaz(d):
+    try:
+        _json_yaz(HABAR_FILE, d, indent=2)
+    except Exception as e:
+        logger.error("habar yagdayi yazylmady: %s", e)
+
+
+_AYLAR = ["ýanwar", "fewral", "mart", "aprel", "maý", "iýun",
+          "iýul", "awgust", "sentýabr", "oktýabr", "noýabr", "dekabr"]
+# ⚠️ 25.08 — Erkin: "sişenbe, duşenbe diyip yazmada, 3-nji gun diyip yazay".
+# Tertip AUKSION EKSELI bilen deň: 1 GUN = duşenbe ... 7 GUN = ýekşenbe.
+# (Python-yn weekday() hem şeýle: duşenbe=0, şonuň üçin +1 edilýär.)
+_GUN_ATLARY = ["1-nji gün", "2-nji gün", "3-nji gün", "4-nji gün",
+               "5-nji gün", "6-njy gün", "7-nji gün"]
+
+
+def _habar_basyldy(nam, uid):
+    """Duwma basylanda hasaba alya — habar ishleyarmi, sho bilinsin."""
+    try:
+        st = _habar_yagdayi()
+        if st.get("gun") != get_today():
+            return
+        b = st.setdefault("basyldy", {})
+        b[nam] = b.get(nam, 0) + 1
+        adamlar = st.setdefault("basan_adamlar", [])
+        if uid not in adamlar:
+            adamlar.append(uid)
+        _habar_yaz(st)
+    except Exception as e:
+        logger.warning("habar basyldy: %s", e)
+
+
+def gundelik_habar_tekst(cars, today, lang=DEFAULT_LANG):
+    """Gysga, gyzyklandyryjy habar. Uzyn sanaw YOK — ol /today-da."""
+    bu_gun = [c for c in cars if str(c.get("date")) == today]
+    if not bu_gun:
+        return None
+
+    # auksion = at + shahamcha + sagat (Marhaba 4 yerde ishleya)
+    auk = {}
+    for c in bu_gun:
+        acar = (c.get("auction", "?"), (c.get("auction_branch") or "").strip(),
+                (c.get("auction_time") or "").strip())
+        auk[acar] = auk.get(acar, 0) + 1
+
+    sagatlar = sorted(w for (_a, _s, w) in auk if w)
+    yerler = sorted({s for (_a, s, _w) in auk if s})
+    markalar = {}
+    for c in bu_gun:
+        b = str(c.get("brand") or "").strip()
+        if b:
+            markalar[b] = markalar.get(b, 0) + 1
+    top = [m for m, _ in sorted(markalar.items(), key=lambda x: -x[1])[:4]]
+
+    d = datetime.strptime(today, "%Y%m%d")
+    if lang == "ru":
+        sene = f"{d.day} {_RU_AYLAR[d.month - 1]}, {_RU_GUNLER[d.weekday()]}"
+    elif lang == "en":
+        sene = d.strftime("%d %B, %A")
+    else:
+        sene = f"{d.day} {_AYLAR[d.month - 1]}, {_GUN_ATLARY[d.weekday()]}"
+
+    # ⚠️ 25.08 — Erkin sada gornushi saylady.
+    # "tayyar", "baslayar" yaly sozler her gun gaytalansa gury sese
+    # owrulya. Chenňek SAN — "584 masyn". Sozlem dine tanatma.
+    t = T(lang, "daily_title") + "\n\n"
+    t += f"📅 {sene}\n"
+    t += T(lang, "daily_cars", n=len(bu_gun), a=len(auk),
+           w=w_car(lang, len(bu_gun)), wa=w_auc(lang, len(auk))) + "\n"
+    if sagatlar:
+        t += f"🕐 {esc(sagatlar[0])} — {esc(sagatlar[-1])}\n"
+    if yerler:
+        t += f"📍 {esc(' · '.join(yerler))}\n"
+    if top:
+        t += "\n" + T(lang, "daily_top", s=esc(" · ".join(top))) + "\n"
+    t += "\n" + T(lang, "daily_tail")
+    return t
+
+
+def _habar_duwmeler(lang=DEFAULT_LANG):
+    # ⚠️ 25.08 — "Bu habary ochur" DUWMESI AYRYLDY (Erkin).
+    #   "her gun yekeje bildiris olaryn yuregine dushmez.
+    #    son statistika seredip karar bereris."
+    # Kod ozi YERINDE galya: /habar_ochur komandasy we habar_ochuk
+    # belligi ishleya. Yagny biri sikayat etse, ishgar shol adam uchin
+    # ochurip bilya — bot bloklanmaz. Duwmani yzyna getirmek bir setir.
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton(T(lang, "daily_btn_today"), callback_data="hbr:today")],
+        [InlineKeyboardButton(T(lang, "daily_btn_search"), callback_data="hbr:gozle")],
+    ])
+
+
+async def gundelik_habar_ugrat(app, diňe_uid=None):
+    """Habary ugradýar. diňe_uid berilse — synag, dine sho adama."""
+    cars = load_cars()
+    today = get_today()
+    if not gundelik_habar_tekst(cars, today):
+        return 0, 0, "maglumat yok"
+
+    if diňe_uid:
+        _l = lang_of(diňe_uid)
+        _t = gundelik_habar_tekst(suzgucle(cars, diňe_uid), today, _l)
+        await app.bot.send_message(int(diňe_uid), _t or "", parse_mode="Markdown",
+                                   reply_markup=_habar_duwmeler(_l))
+        return 1, 0, "synag"
+
+    users = load_users()
+    gitdi = bolmady = 0
+    for uid, u in list(users.items()):
+        if u.get("habar_ochuk") or u.get("bloklady"):
+            continue
+        # her ulanyja OZ dilinde we OZ yyl suzgujine gora
+        ulang = u.get("lang") if u.get("lang") in ("tm", "ru", "en") else DEFAULT_LANG
+        t = gundelik_habar_tekst(suzgucle(cars, uid), today, ulang)
+        if not t:
+            continue
+        kb = _habar_duwmeler(ulang)
+        try:
+            await app.bot.send_message(int(uid), t, parse_mode="Markdown",
+                                       reply_markup=kb)
+            gitdi += 1
+        except Forbidden:
+            # Adam boty blok edipdir — indi synanyshmaly dal
+            u["bloklady"] = True
+            bolmady += 1
+        except Exception as e:
+            logger.warning("gundelik habar (%s): %s", uid, e)
+            bolmady += 1
+        # ⚠️ Telegram sekuntda ~30 habar gechirya. 25-e chenli sakla.
+        await asyncio.sleep(0.05)
+    save_users(users)
+    return gitdi, bolmady, "ok"
+
+
+async def gundelik_habar_loop(app):
+    """Her 10 minutda barlaýar. Bir günde BIR gezek ugradýar."""
+    await asyncio.sleep(120)
+    while True:
+        try:
+            now = datetime.now(DUBAI_TZ)
+            today = get_today()
+            st = _habar_yagdayi()
+            if (st.get("gun") != today
+                    and now.hour >= HABAR_SAGAT
+                    and db_is_fresh(load_cars())):
+                # ⚠️ ILKI BELLIK, SONRA UGRAT. Ugratmak birnache minut
+                # dowam edip biler; shol wagt loop yene gelse IKI GEZEK
+                # gitmezi yaly gun derrew belgilenya.
+                _habar_yaz({"gun": today, "wagt": now.strftime("%H:%M")})
+                g, b, _ = await gundelik_habar_ugrat(app)
+                _habar_yaz({"gun": today, "wagt": now.strftime("%H:%M"),
+                            "gitdi": g, "bolmady": b})
+                logger.info("Gundelik habar: %d gitdi, %d bolmady", g, b)
+                try:
+                    await app.bot.send_message(
+                        ADMIN_ID,
+                        f"📣 *Gündelik habar ugradyldy*\n\n"
+                        f"✅ {g} adama gitdi\n"
+                        f"⚠️ {b} bolmady (blok eden ýa öçüren)",
+                        parse_mode="Markdown")
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.error("gundelik_habar_loop: %s", e)
+        await asyncio.sleep(600)
+
+
+def _basyldy_setir(st):
+    b = st.get("basyldy", {})
+    if not b:
+        return "entek ýok"
+    at = {"today": "auksionlar", "gozle": "gözleg"}
+    return " · ".join(f"{at.get(k, k)} {v}" for k, v in b.items())
+
+
+async def habar_ochur_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/habar_ochur — gundelik habary ochurya.
+
+    ⚠️ Duwme hokmunde GORKEZILMEYA (Erkin, 25.08). Emma komanda
+    yerinde — biri "maňa habar gelmesin" diyse, bot ony blok
+    etmeginin deregine shu komandany ulanyp biler.
+    """
+    uid = str(update.effective_user.id)
+    users = load_users()
+    if uid in users:
+        users[uid]["habar_ochuk"] = True
+        save_users(users)
+    await update.message.reply_text(T(lang_of(uid), "daily_off"))
+
+
+async def habar_ac_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/habar_ac — ochurilen gundelik habary yzyna achya."""
+    uid = str(update.effective_user.id)
+    users = load_users()
+    if uid in users:
+        users[uid]["habar_ochuk"] = False
+        save_users(users)
+    await update.message.reply_text(T(lang_of(uid), "daily_on"))
+
+
+async def habar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/habar — diňe admin. Habary görkezýär (hiç kime gitmeýär)."""
+    if update.effective_user.id != ADMIN_ID:
+        return
+    arg = (context.args[0].lower() if context.args else "")
+    if arg == "ugrat":
+        g, b, ýagdaý = await gundelik_habar_ugrat(context.application)
+        await update.message.reply_text(
+            f"📣 Ugradyldy: {g} adam · {b} bolmady ({ýagdaý})")
+        return
+    cars = load_cars()
+    t = gundelik_habar_tekst(cars, get_today())
+    if not t:
+        await update.message.reply_text("⚠️ Şu günki maglumat entek ýok.")
+        return
+    st = _habar_yagdayi()
+    users = load_users()
+    ochuk = sum(1 for u in users.values() if u.get("habar_ochuk"))
+    blok = sum(1 for u in users.values() if u.get("bloklady"))
+    await update.message.reply_text(t, parse_mode="Markdown",
+                                    reply_markup=_habar_duwmeler())
+    await update.message.reply_text(
+        f"👆 _Şu görnüşde gider._\n\n"
+        f"👥 Aljak: *{len(users) - ochuk - blok}* adam\n"
+        f"🔕 Öçüren: {ochuk}  ·  🚫 Blok eden: {blok}\n"
+        f"🕘 Her gün sagat {HABAR_SAGAT}:00 (Dubaý)\n\n"
+        f"📆 *Iň soňky ugradylan:* {st.get('gun', '—')} {st.get('wagt', '')}\n"
+        f"   ✅ {st.get('gitdi', 0)} gitdi  ·  ⚠️ {st.get('bolmady', 0)} bolmady\n"
+        f"   👆 {len(st.get('basan_adamlar', []))} adam düwmä basdy"
+        f"  ({_basyldy_setir(st)})\n\n"
+        f"_Häzir ugratmak: /habar ugrat_",
+        parse_mode="Markdown")
+
+
+# ============================================================
+# IŞLET
+# ============================================================
+def main():
+    if not TOKEN:
+        print("❌ BOT_TOKEN tapylmady!")
+        return
+    app = Application.builder().token(TOKEN).post_init(post_init).job_queue(None).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("today", today_command))
+    app.add_handler(CommandHandler("contact", contact_command))
+    app.add_handler(CommandHandler("dil", dil_command))
+    app.add_handler(CommandHandler("lang", dil_command))
+    app.add_handler(CommandHandler("yyl", yyl_command))
+    app.add_handler(CommandHandler("year", yyl_command))
+    app.add_handler(CommandHandler("yurt", yurt_command))
+    app.add_handler(CommandHandler("country", yurt_command))
+    app.add_handler(CommandHandler("id", id_command))
+    app.add_handler(CommandHandler("alert", alert_command))
+    app.add_handler(CommandHandler("myalerts", myalerts_command))
+    app.add_handler(CommandHandler("delalert", delalert_command))
+    app.add_handler(CommandHandler("stats", stats_command))
+    app.add_handler(CommandHandler("users", users_command))
+    app.add_handler(CommandHandler("checkalerts", checkalerts_command))
+    app.add_handler(CommandHandler("hasabat", hasabat_command))
+    app.add_handler(CommandHandler("habar", habar_command))
+    app.add_handler(CommandHandler("habar_ac", habar_ac_command))
+    app.add_handler(CommandHandler("habar_ochur", habar_ochur_command))
+    app.add_handler(CommandHandler("sargytbarla", sargytbarla_command))
+    app.add_handler(CommandHandler("gozleg", gozleg_command))
+    app.add_handler(CommandHandler("sonky", sonky_command))
+    # Yalnyshlyk tutujy — bot indi dymmaya (24.08)
+    app.add_error_handler(error_handler)
+
+    # ESASY: /sargyt — sanaw hem, bir sargyt hem, tazelemek hem
+    app.add_handler(CommandHandler("sargyt", sargyt_command))
+    app.add_handler(CommandHandler("sargytlar", sargyt_command))
+    # Koneler — yatda galanlar ucin ishlap dur
+    app.add_handler(CommandHandler("zakazlar", zakazlar_command))
+    app.add_handler(CommandHandler("zakaz", zakaz_command))
+    app.add_handler(CallbackQueryHandler(handle_callback))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    print("✅ Dubai Auksion | TEK AUTO MARKET boty işläp başlady!")
+    app.run_polling()
+
+
+if __name__ == "__main__":
+    main()

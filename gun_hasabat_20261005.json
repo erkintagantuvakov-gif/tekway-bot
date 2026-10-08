@@ -1,0 +1,31 @@
+[
+  {
+    "pdf": "AL QARYAH MONDAY AUCTION IND AREA 2 05-OCT-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 202,
+    "kept": 198,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: 05-OCTOBER-2026 MONDAY AUCTION Cars in Auction +",
+      "p2: 5 2026"
+    ],
+    "ocr_halas": 4,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "09:58"
+  },
+  {
+    "pdf": "Monday Auction 5-October-2026 Marhaba Cars Auction Presentation Souq Branch.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 158,
+    "kept": 141,
+    "rejected": 17,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 17
+    },
+    "time": "09:59"
+  }
+]
