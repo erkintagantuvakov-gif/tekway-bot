@@ -1458,7 +1458,34 @@ def contact_keyboard():
     ]])
 
 
-def auction_keyboard_for_car(car, lang=DEFAULT_LANG):
+def _wa_nireden(uid, lang=DEFAULT_LANG):
+    """WhatsApp tekstine "nireden geldi" setiri.
+
+    12.10.2026 — Erkin: "WhatsApp-a habar gelende haýsy ýurtdan
+    ýazylandygyny bilemok."  Telefon belgisi doly jogap bermeýär:
+    +7 Russiýa-da, Gazagystan-da bolup bilýär; türkmen müşderi
+    Dubaýdan +971 bilen ýazyp biler.  Bot bolsa müşderiniň ÖZI
+    saýlan ýurduny bilýär — şony tekste goşýas.
+
+    Netije (müşderiniň öz dilinde):
+        🇹🇲 Türkmenistan · tm · #4431
+    """
+    if not uid:
+        return ""
+    try:
+        kod = user_country(uid)
+        dil = user_lang(uid) or "-"
+        if kod:
+            at = (YURT_ATLARY.get(kod) or {}).get(lang) \
+                 or (YURT_ATLARY.get(kod) or {}).get("tm") or kod
+        else:
+            at = "🌍"
+        return f"{at} · {dil} · #{uid}"
+    except Exception:
+        return ""
+
+
+def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
     year = car.get("year", "")
     brand = car.get("brand", "")
     model = car.get("model", "")
@@ -1468,6 +1495,9 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG):
 
     text = T(lang, "wa_hello") + "\n"
     text += T(lang, "wa_code", code=code) + "\n"
+    _nir = _wa_nireden(uid, lang)
+    if _nir:
+        text += _nir + "\n"
     text += f"🚗 {year} {brand} {model}\n"
     text += f"🏢 {auksion_ady_yer(car)}\n"
     _ws = _auksion_wagt_setiri(car, lang=lang)
@@ -1805,7 +1835,11 @@ async def send_car_with_photo(update_or_message, car, keyboard=None, lang=DEFAUL
     caption = build_caption(car, lang)
     if gosmaca:
         caption += "\n" + gosmaca
-    kb = keyboard or auction_keyboard_for_car(car, lang)
+    try:
+        _uid = msg.chat_id
+    except Exception:
+        _uid = None
+    kb = keyboard or auction_keyboard_for_car(car, lang, uid=_uid)
 
     file_id = _fid_al(car)
     if file_id:
@@ -1889,7 +1923,7 @@ async def send_car_to_chat(bot, chat_id, car, lang=None):
     if lang is None:
         lang = lang_of(chat_id)
     caption = build_caption(car, lang)
-    kb = auction_keyboard_for_car(car, lang)
+    kb = auction_keyboard_for_car(car, lang, uid=chat_id)
     image_path = car.get("image_path", "")
     _fid = _fid_al(car)
     if _fid:
@@ -2204,6 +2238,20 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     new_week = sum(1 for u in users.values() if _first_day(u) in week_days)
     new_month = sum(1 for u in users.values() if _first_day(u) in month_days)
 
+    # 12.10.2026 — Erkin: "haýsy ýurtdan gelýändigini bilmek peýdaly".
+    # Ýurt eýýäm users.json-da bar (müşderi /start-da özi saýlaýar),
+    # diňe hiç ýerde görkezilmeýärdi. TikTok reklamasy haýsy ýurtdan
+    # adam getirýändigini görmek üçin gerek.
+    yurt_jemi, yurt_bugun, yurt_hepde = Counter(), Counter(), Counter()
+    for u in users.values():
+        k = u.get("country") or "—"
+        yurt_jemi[k] += 1
+        _d = set(u.get("days", []))
+        if today in _d:
+            yurt_bugun[k] += 1
+        if week_days & _d:
+            yurt_hepde[k] += 1
+
     txt = "📊 *BOT STATISTIKASY*\n\n"
     txt += f"👥 *Jemi ulanyjy:* {total}\n\n"
     txt += "🆕 *Täze gelenler:*\n"
@@ -2216,6 +2264,15 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     txt += f"   Şu aý: {month_active}\n\n"
     txt += f"🔍 Jemi gözleg: {total_searches}\n"
     txt += f"🔔 Ýatlatma goýan: {alert_users} ({alert_total} sany)\n"
+
+    if yurt_jemi:
+        txt += "\n🌍 *Ýurtlar* — jemi · hepde · bugün\n"
+        for k, n in yurt_jemi.most_common():
+            if k == "—":
+                at = "❓ Saýlanmadyk"
+            else:
+                at = (YURT_ATLARY.get(k) or {}).get("tm", k)
+            txt += f"   {at} — *{n}* · {yurt_hepde.get(k, 0)} · {yurt_bugun.get(k, 0)}\n"
 
     if qc:
         txt += "\n🔝 *Iň köp gözlenen:*\n"
