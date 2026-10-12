@@ -1,0 +1,33 @@
+[
+  {
+    "pdf": "MONDAY AUCTION - IND. AREA 2 - 12-OCT-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 181,
+    "kept": 177,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: MONDAY AUCTION 12-OCT-2026 JOIN OUR",
+      "p2: ﻣﺰاد ﻳﻮم اﻻﺛﻨﻴﻦ 12 2026 اﻧﻀﻤﻮا إﻟﻰ ﺑﺜﻨﺎ اﻟﻤﺒﺎﺷﺮ"
+    ],
+    "ocr_halas": 7,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "07:55"
+  },
+  {
+    "pdf": "Monday Auction 12--October  2026 Marhaba Cars Auction Presentation Souq Branch (2).pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 154,
+    "kept": 134,
+    "rejected": 20,
+    "tanalmadyk": [
+      "p32: 2018 INFINTY QX60 19,500"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 20
+    },
+    "time": "07:56"
+  }
+]
