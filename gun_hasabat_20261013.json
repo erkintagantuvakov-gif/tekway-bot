@@ -121,5 +121,18 @@
       "marka bos (reklama sahypasy)": 1
     },
     "time": "08:01"
+  },
+  {
+    "pdf": "PUSH_GAYTALA_1013_034054.pdf",
+    "auction": "PUSH_GAYTALA_1013_034054",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 1,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 1
+    },
+    "time": "08:41"
   }
 ]
