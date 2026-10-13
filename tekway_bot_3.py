@@ -1495,9 +1495,11 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
 
     text = T(lang, "wa_hello") + "\n"
     text += T(lang, "wa_code", code=code) + "\n"
-    _nir = _wa_nireden(uid, lang)
-    if _nir:
-        text += _nir + "\n"
+    # 13.10.2026 (Erkin): yurt setiri WhatsApp habaryndan AYRYLDY.
+    # 12.10-da "ýurt · dil · #uid" setiri kodyn asagyna goshulypdy.
+    # Erkin: "taze url seydip gelyar, muny halamadym - onki yaly et."
+    # Yurt maglumaty /stats-da galya (yurt boyuncha bolunish).
+    # _wa_nireden() funksiyasy yerinde dur - gerek bolsa yzyna goshmak ansat.
     text += f"🚗 {year} {brand} {model}\n"
     text += f"🏢 {auksion_ady_yer(car)}\n"
     _ws = _auksion_wagt_setiri(car, lang=lang)
