@@ -302,5 +302,16 @@
     "rejected": 0,
     "reasons": {},
     "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: fatal: unable to access 'https://github.com/erkintagantuvakov-gif/tekway-bot.git/': schannel: failed to receive handshake, SSL/TLS connection failed\n"
+  },
+  {
+    "id": "20261013|PUSH|Push bolmady: error: RPC failed; curl 55",
+    "date": "20261013",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: error: RPC failed; curl 55 Send failure: Connection was reset\nsend-pack: unexpected disconnect while reading sideband packet\nfatal: the remote end hung up unexp"
   }
 ]

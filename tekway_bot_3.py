@@ -1467,20 +1467,24 @@ def _wa_nireden(uid, lang=DEFAULT_LANG):
     Dubaýdan +971 bilen ýazyp biler.  Bot bolsa müşderiniň ÖZI
     saýlan ýurduny bilýär — şony tekste goşýas.
 
+    13.10.2026 — Erkin: setir kodyn asagynda durany yaramady
+    ("muny halamadym - onki yaly et"). Indi:
+      - setir habaryn IN SONUNA goyulya (habar onki yaly basdalya)
+      - dine yurt ady galya, dil we #uid ayryldy (olar /stats-da bar)
+
     Netije (müşderiniň öz dilinde):
-        🇹🇲 Türkmenistan · tm · #4431
+        🇹🇲 Türkmenistan
     """
     if not uid:
         return ""
     try:
         kod = user_country(uid)
-        dil = user_lang(uid) or "-"
         if kod:
             at = (YURT_ATLARY.get(kod) or {}).get(lang) \
                  or (YURT_ATLARY.get(kod) or {}).get("tm") or kod
         else:
             at = "🌍"
-        return f"{at} · {dil} · #{uid}"
+        return at
     except Exception:
         return ""
 
@@ -1495,11 +1499,6 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
 
     text = T(lang, "wa_hello") + "\n"
     text += T(lang, "wa_code", code=code) + "\n"
-    # 13.10.2026 (Erkin): yurt setiri WhatsApp habaryndan AYRYLDY.
-    # 12.10-da "ýurt · dil · #uid" setiri kodyn asagyna goshulypdy.
-    # Erkin: "taze url seydip gelyar, muny halamadym - onki yaly et."
-    # Yurt maglumaty /stats-da galya (yurt boyuncha bolunish).
-    # _wa_nireden() funksiyasy yerinde dur - gerek bolsa yzyna goshmak ansat.
     text += f"🚗 {year} {brand} {model}\n"
     text += f"🏢 {auksion_ady_yer(car)}\n"
     _ws = _auksion_wagt_setiri(car, lang=lang)
@@ -1515,6 +1514,15 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
     img = car.get("image_path", "")
     if img and not (car.get("telegram_file_id") or "").strip():
         text += f"📸 https://raw.githubusercontent.com/erkintagantuvakov-gif/tekway-bot/main/{img}"
+
+    # 13.10.2026 (Erkin): yurt setiri habaryn IN SONUNDA, ayratyn setir.
+    # 12.10-da ol kodyn asagyndady - Erkin halamady. Indi habar onki
+    # gornushi yaly basdalya, yurt bolsa in sonunda dur.
+    _yurt = _wa_nireden(uid, lang)
+    if _yurt:
+        if not text.endswith("\n"):
+            text += "\n"
+        text += _yurt
 
     wa_url = f"https://wa.me/971522371195?text={quote(text)}"
     return InlineKeyboardMarkup([[
