@@ -134,5 +134,31 @@
       "tanalmady (marka/yyl tapylmady)": 1
     },
     "time": "08:41"
+  },
+  {
+    "pdf": "13-OCT 2026 KHAT AL JAZEERA CARS AUCTION GAYTADAN.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 159,
+    "kept": 151,
+    "rejected": 8,
+    "tanalmadyk": [],
+    "ocr_halas": 4,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 8
+    },
+    "time": "09:02"
+  },
+  {
+    "pdf": "PUSH_GAYTALA_1013_041353.pdf",
+    "auction": "PUSH_GAYTALA_1013_041353",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 1,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 1
+    },
+    "time": "09:14"
   }
 ]
