@@ -44,5 +44,18 @@
       "tanalmady (marka/yyl tapylmady)": 4
     },
     "time": "08:58"
+  },
+  {
+    "pdf": "PUSH_GAYTALA_1015_092518.pdf",
+    "auction": "PUSH_GAYTALA_1015_092518",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 1,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 1
+    },
+    "time": "14:25"
   }
 ]
