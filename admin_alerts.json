@@ -357,5 +357,16 @@
     "rejected": 0,
     "reasons": {},
     "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: ror: RPC failed; HTTP 408 curl 22 The requested URL returned error: 408\nsend-pack: unexpected disconnect while reading sideband packet\nfatal: the remote end hun"
+  },
+  {
+    "id": "20261016|PUSH|Push bolmady: fatal: unable to access 'h",
+    "date": "20261016",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: fatal: unable to access 'https://github.com/erkintagantuvakov-gif/tekway-bot.git/': Failed to connect to github.com:443 over proxy 127.0.0.1 after 2109 ms: Coul"
   }
 ]
