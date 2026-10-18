@@ -129,5 +129,18 @@
       "tanalmady (marka/yyl tapylmady)": 5
     },
     "time": "11:45"
+  },
+  {
+    "pdf": "Marhaba Auctions Sajaa Branch 18-OCT-2026 GAYTADAN.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 194,
+    "kept": 182,
+    "rejected": 12,
+    "tanalmadyk": [],
+    "ocr_halas": 8,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 12
+    },
+    "time": "12:23"
   }
 ]
