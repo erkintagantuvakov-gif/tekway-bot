@@ -40,5 +40,16 @@
       "tanalmady (marka/yyl tapylmady)": 4
     },
     "time": "09:23"
+  },
+  {
+    "pdf": "PUSH_BAHA_DUZEDIS_1019.pdf",
+    "auction": "PUSH_BAHA_DUZEDIS_1019",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {},
+    "time": "10:30"
   }
 ]
