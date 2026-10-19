@@ -1,0 +1,44 @@
+[
+  {
+    "pdf": "Marhaba Monday 19-OCT-2026 Ind Area 12.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 95,
+    "kept": 93,
+    "rejected": 2,
+    "tanalmadyk": [],
+    "ocr_halas": 3,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 2
+    },
+    "time": "09:21"
+  },
+  {
+    "pdf": "Marhaba Monday 19-OCT-2026 Souq Branch.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 143,
+    "kept": 125,
+    "rejected": 18,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 18
+    },
+    "time": "09:21"
+  },
+  {
+    "pdf": "MONDAY AUCTION - IND. AREA 2 - 19-OCT-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 154,
+    "kept": 150,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: MONDAY AUCTION 19-OCT-2026 JOIN OUR",
+      "p2: ﻣﺰاد ﻳﻮم اﻻﺛﻨﻴﻦ 19 2026 اﻧﻀﻤﻮا إﻟﻰ ﺑﺜﻨﺎ اﻟﻤﺒﺎﺷﺮ"
+    ],
+    "ocr_halas": 7,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "09:23"
+  }
+]
