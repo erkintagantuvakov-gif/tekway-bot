@@ -133,5 +133,27 @@
       "tanalmady (marka/yyl tapylmady)": 10
     },
     "time": "13:01"
+  },
+  {
+    "pdf": "PUSH_BAHA_1020.pdf",
+    "auction": "PUSH_BAHA_1020",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {},
+    "time": "13:14"
+  },
+  {
+    "pdf": "PUSH_BAHA_1020b.pdf",
+    "auction": "PUSH_BAHA_1020b",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {},
+    "time": "13:15"
   }
 ]
