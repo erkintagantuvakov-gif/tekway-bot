@@ -390,5 +390,38 @@
     "rejected": 0,
     "reasons": {},
     "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: ror: RPC failed; HTTP 408 curl 22 The requested URL returned error: 408\nsend-pack: unexpected disconnect while reading sideband packet\nfatal: the remote end hun"
+  },
+  {
+    "id": "20261020|PUSH|Push bolmady: error: RPC failed; curl 55",
+    "date": "20261020",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: error: RPC failed; curl 55 Send failure: Connection was reset\nsend-pack: unexpected disconnect while reading sideband packet\nfatal: the remote end hung up unexp"
+  },
+  {
+    "id": "20261021|PUSH|Push bolmady: Command '['git', 'push', '",
+    "date": "20261021",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: Command '['git', 'push', 'origin', '496d79ace23169b4e75910138c3846268df238bd:main']' timed out after 600 seconds"
+  },
+  {
+    "id": "20261020|PUSH|Push bolmady: Command '['git', 'push', '",
+    "date": "20261020",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: Command '['git', 'push', 'origin', 'ab6c2b21a9098f208e777223088b6146cb07bad5:main']' timed out after 600 seconds"
   }
 ]
