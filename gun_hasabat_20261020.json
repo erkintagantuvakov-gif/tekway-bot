@@ -103,5 +103,35 @@
       "tanalmady (marka/yyl tapylmady)": 6
     },
     "time": "10:37"
+  },
+  {
+    "pdf": "TUESDAY SAJAA AUCTION 20-OCT-2026 GAYTADAN.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 215,
+    "kept": 211,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: 20 Oct 2026 TUESDAY SAJAA AUCTION JOIN OUR",
+      "p2: أﻛﺘﻮﺑﺮ20 2026 اﻧﻀﻤﻮا إﻟﻰ ﻣﺰاد اﻟﺼﺠﻌﺔ ﻳﻮم اﻟﺜﻼﺛﺎء ﺑﺜﻨﺎ اﻟﻤﺒﺎﺷﺮ",
+      "p3: EMIRATES INDUSTRIAL CITY SAJAA"
+    ],
+    "ocr_halas": 24,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "12:55"
+  },
+  {
+    "pdf": "20-OCT-2026 KHAT AL JAZEERA CARS AUCTION GAYTADAN.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 156,
+    "kept": 146,
+    "rejected": 10,
+    "tanalmadyk": [],
+    "ocr_halas": 4,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 10
+    },
+    "time": "13:01"
   }
 ]
