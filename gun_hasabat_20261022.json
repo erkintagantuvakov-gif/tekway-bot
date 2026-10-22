@@ -1,12 +1,12 @@
 [
   {
-    "pdf": "15-OCT-2026.pdf",
+    "pdf": "22-OCT-2026.pdf",
     "auction": "West Cars Auctions",
     "pages": 149,
     "kept": 146,
     "rejected": 3,
     "tanalmadyk": [
-      "p1: 15 OCT 26 06:00 PM THURSDAY AUCTION 146 CARS MORE THEN LIVE STREAMING 06-5267750 INDUSTRIAL AREA 2, SHARJAH-UAE WWW.WESTCARSAUCTIONS.COM GREEN LIGHT MAJORITY OF",
+      "p1: 22 OCT 26 06:00 PM THURSDAY AUCTION 146 CARS MORE THEN LIVE STREAMING 06-5267750 INDUSTRIAL AREA 2, SHARJAH-UAE WWW.WESTCARSAUCTIONS.COM GREEN LIGHT MAJORITY OF",
       "p2: AUCTION DAYS & TIME THREE DAYS AUCTION IN A WEEK SATURDAYﻳﻮم اﻟﺴﺒﺖ TUESDAYﻳﻮم اﻟﺜﻼﺛﺎء THURSDAY 06:00 PM ﻳﻮم اﻟﺨﻤﻴﺲ",
       "p3: CONTACT US 06-5267750 WHATSAPP 052-8231236 | 055-8558496 @WESTCARSAUCTIONS WESTCARSAUCTIONS@YAHOO.COM WWW.WESTCARSAUCTIONS.COM"
     ],
@@ -14,48 +14,35 @@
     "sebapler": {
       "tanalmady (marka/yyl tapylmady)": 3
     },
-    "time": "08:52"
+    "time": "09:46"
   },
   {
-    "pdf": "Marhaba Auction Thursday  15th October 2026 - Main Branch Industrial Area 2 - Auction List_compressed.pdf",
+    "pdf": "Marhaba Auction Thursday 22th October 2026 - Main Branch Industrial Area 2 - Auction List_compressed.pdf",
     "auction": "Marhaba Auctions",
-    "pages": 251,
-    "kept": 249,
+    "pages": 217,
+    "kept": 215,
     "rejected": 2,
     "tanalmadyk": [
-      "p201: 2017 1850 MAXIMA",
-      "p216: 2015 10 JETTA"
+      "p17: 2017 1850 MAXIMA",
+      "p194: 2015 10 JETTA"
     ],
     "ocr_halas": 0,
     "sebapler": {
       "tanalmady (marka/yyl tapylmady)": 2
     },
-    "time": "08:53"
+    "time": "09:48"
   },
   {
-    "pdf": "NCA 15TH OCTOBER VEHICELS .pdf",
+    "pdf": "NCA 22ND OCTOBER VEHICELS .pdf",
     "auction": "Nojoom Cars Auction",
-    "pages": 102,
-    "kept": 98,
+    "pages": 96,
+    "kept": 92,
     "rejected": 4,
     "tanalmadyk": [],
     "ocr_halas": 0,
     "sebapler": {
       "tanalmady (marka/yyl tapylmady)": 4
     },
-    "time": "08:58"
-  },
-  {
-    "pdf": "PUSH_GAYTALA_1015_092518.pdf",
-    "auction": "PUSH_GAYTALA_1015_092518",
-    "pages": 1,
-    "kept": 0,
-    "rejected": 1,
-    "tanalmadyk": [],
-    "ocr_halas": 0,
-    "sebapler": {
-      "tanalmady (marka/yyl tapylmady)": 1
-    },
-    "time": "14:25"
+    "time": "09:54"
   }
 ]
