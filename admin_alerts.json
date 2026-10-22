@@ -423,5 +423,16 @@
     "rejected": 0,
     "reasons": {},
     "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: Command '['git', 'push', 'origin', 'ab6c2b21a9098f208e777223088b6146cb07bad5:main']' timed out after 600 seconds"
+  },
+  {
+    "id": "20261022|PUSH|Push bolmady: fatal: unable to access 'h",
+    "date": "20261022",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: fatal: unable to access 'https://github.com/erkintagantuvakov-gif/tekway-bot.git/': schannel: failed to receive handshake, SSL/TLS connection failed\n"
   }
 ]
