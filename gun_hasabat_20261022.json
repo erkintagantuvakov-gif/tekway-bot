@@ -44,5 +44,16 @@
       "tanalmady (marka/yyl tapylmady)": 4
     },
     "time": "09:54"
+  },
+  {
+    "pdf": "PUSH_1022.pdf",
+    "auction": "PUSH_1022",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {},
+    "time": "12:24"
   }
 ]
