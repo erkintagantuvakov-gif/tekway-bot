@@ -15,3 +15,17 @@ GIT_ARASSALA_BIR_GEZEK.bat
 # BULAR HIC HACAN GitHub-a GITMELI DAL.
 .bot_token.txt
 .surat_kanaly.txt
+
+# 22.10 - bot yerli ishlande doreyan maglumat fayllary.
+# Hakyky nusgalary Railway /data diskinde. Repoda gerek dal.
+users.json
+yatlatmas.json
+sent_alerts.json
+searches.json
+file_ids.json
+gundelik_habar.json
+sargyt_sonky.json
+baha_gozeg.json
+data_warn.json
+sent_admin_alerts.json
+yedek/
