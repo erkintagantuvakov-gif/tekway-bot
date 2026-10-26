@@ -1,0 +1,44 @@
+[
+  {
+    "pdf": "MONDAY AUCTION - IND. AREA 2 - 26-OCT-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 135,
+    "kept": 131,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: MONDAY AUCTION 26-OCT-2026 JOIN OUR",
+      "p2: ﻣﺰاد ﻳﻮم اﻻﺛﻨﻴﻦ 26 2026 اﻧﻀﻤﻮا إﻟﻰ ﺑﺜﻨﺎ اﻟﻤﺒﺎﺷﺮ"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "08:55"
+  },
+  {
+    "pdf": "Marhaba Auctions Monday 26th October 2026 Ind.Area 12 Auction LIst.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 105,
+    "kept": 103,
+    "rejected": 2,
+    "tanalmadyk": [],
+    "ocr_halas": 4,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 2
+    },
+    "time": "08:56"
+  },
+  {
+    "pdf": "Monday Auction 26--October  2026 Marhaba Cars Auction Presentation Souq Branch.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 130,
+    "kept": 113,
+    "rejected": 17,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 17
+    },
+    "time": "08:57"
+  }
+]
