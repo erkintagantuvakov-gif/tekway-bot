@@ -11,5 +11,77 @@
       "tanalmady (marka/yyl tapylmady)": 17
     },
     "time": "08:53"
+  },
+  {
+    "pdf": "Fadak Cars Auction 28-10-2026 INDUSTRIAL AREA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 83,
+    "kept": 79,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: FIND US NOW YOU ARE ONE STEP AWAY FROM YOUR DREAM CAR AUCTION ON EVERY SATURDAY, SUNDAY, WEDNESDAY & FRIDAY.",
+      "p2: 4 Auction Days / اﻟﻤﺰاد أﻳﺎم Industrial Area 2 Branch ٢ اﻟﺼﻨﺎﻋﻴﺔ اﻟﻤﻨﻄﻘﺔ ﻓﺮع SATURDAY / اﻟﺴﺒﺖ WEDNESDAY / اﻷرﺑﻌﺎءSUNDAY / اﻷﺣﺪ Sajja Branch اﻟﺼﺠﻌﺔ ﻓﺮع https://m",
+      "p3: @FadakCarsAuction @FadakCarsAuction @FadakCarsAuction www.FadakAuctions.com NOW NOW FOLLOW US",
+      "p4: 28/OCTOBER/2026 WEDNESDAY AUCTION 06:15 PM Industrial Area 2 Branch"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "08:58"
+  },
+  {
+    "pdf": "WEDNESDAY AUCTION 28-OCTOBER-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 135,
+    "kept": 131,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: WEDNESDAY AUCTION 28-OCT-2026 JOIN OUR",
+      "p2: ﻣﺰاد ﻳﻮم ا\u001aرﺑﻌﺎء 28 2026 اﻧﻀﻤﻮا إﻟﻰ ﺑﺜﻨﺎ اﻟﻤﺒﺎﺷﺮ"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "08:59"
+  },
+  {
+    "pdf": "Marhaba Auctions Wednesday 28th October 2026 Ind.Area 12 Auction LIst.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 87,
+    "kept": 84,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p20: 19,500",
+      "p25: 28,500",
+      "p37: 18,500"
+    ],
+    "ocr_halas": 3,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "09:00"
+  },
+  {
+    "pdf": "WEDNESDAY 28 OCT 2026.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 208,
+    "kept": 175,
+    "rejected": 33,
+    "tanalmadyk": [
+      "p1: 23 / NOVEMBER / 2024 السبت",
+      "p2: 23 / NOVEMBER / 2024 السبت",
+      "p3: 23 / NOVEMBER / 2024 السبت",
+      "p4: 23 / NOVEMBER / 2024 السبت",
+      "p5: 23 / NOVEMBER / 2024 السبت",
+      "p6: 23 / NOVEMBER / 2024 السبت"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "marka bos (reklama sahypasy)": 27,
+      "tanalmady (marka/yyl tapylmady)": 6
+    },
+    "time": "09:02"
   }
 ]
