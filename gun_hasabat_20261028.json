@@ -83,5 +83,18 @@
       "tanalmady (marka/yyl tapylmady)": 6
     },
     "time": "09:02"
+  },
+  {
+    "pdf": "PUSH_TRIGGER_20261028.pdf",
+    "auction": "PUSH_TRIGGER_20261028",
+    "pages": 1,
+    "kept": 0,
+    "rejected": 1,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 1
+    },
+    "time": "10:24"
   }
 ]

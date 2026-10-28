@@ -2758,27 +2758,51 @@ def load_report(day):
 
 
 def report_lines(day, cars):
-    """Auksion boýunça setirler. Hasabat ýok bolsa bazadan hasaplaýar."""
-    # 20.09: öň her PDF bölegi aýry setir bolýardy ("31 auksion").
-    # Indi auksion boýunça jemlenýär, maşyn sany BAZADAN alynýar
-    # (Pawel-yň düzedişlerinden soňky hakyky san).
+    """Auksion + ŞAHA boýunça setirler. Hasabat ýok bolsa bazadan hasaplaýar.
+
+    20.09: öň her PDF bölegi aýry setir bolýardy ("31 auksion").
+    28.10 (Erkin): Marhaba bir günde 2 şahadan gelende ikisi bir setire
+    birleşýärdi — müşderi 17:00 diýip pikir edip 18:30-daky şaha giç galyp
+    bilerdi. Indi her şaha aýry setir, sagady bilen, başlaýan wagty boýunça
+    tertiplenen.
+    """
     rep = load_report(day)
-    cnt, pages = {}, {}
+    cnt, times = {}, {}
     for c in cars:
         if str(c.get("date")) == day:
-            a = c.get("auction", "?")
-            cnt[a] = cnt.get(a, 0) + 1
+            a = (c.get("auction") or "?").strip()
+            sh = (c.get("auction_branch") or "").strip()
+            k = (a, sh)
+            cnt[k] = cnt.get(k, 0) + 1
+            w = (c.get("auction_time") or "").strip()
+            if w and k not in times:
+                times[k] = w
+
+    pages = {}
     for r in rep:
-        a = str(r.get("auction", "?"))
+        a = str(r.get("auction", "?")).strip()
         if a.upper().startswith("PUSH"):
             continue
         pages[a] = pages.get(a, 0) + (r.get("pages") or 0)
-        cnt.setdefault(a, 0)
+        if not any(k[0] == a for k in cnt):
+            cnt[(a, "")] = 0
+
+    # bir auksion näçe şahada - sahypa sanyny diňe bir şahaly bolsa görkez
+    saha_sany = {}
+    for a, sh in cnt:
+        saha_sany[a] = saha_sany.get(a, 0) + 1
+
     out = []
-    for a, n in sorted(cnt.items(), key=lambda x: -x[1]):
+    for (a, sh), n in sorted(cnt.items(),
+                             key=lambda it: (times.get(it[0], "99:99"), -it[1])):
         mark = "⚠️" if n == 0 else "🏢"
-        sah = f"  _({pages[a]} sah.)_" if pages.get(a) else ""
-        out.append(f"{mark} {esc(str(a)[:26])} — *{n}* maşyn{sah}")
+        ad = auk_gysga(a, sh)[:40]
+        w = times.get((a, sh), "")
+        wagt = f" · {w}" if w else ""
+        sah = ""
+        if saha_sany.get(a, 1) == 1 and pages.get(a):
+            sah = f"  _({pages[a]} sah.)_"
+        out.append(f"{mark} {esc(ad + wagt)} — *{n}* maşyn{sah}")
     return out
 
 
