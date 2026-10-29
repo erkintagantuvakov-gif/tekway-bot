@@ -1,0 +1,49 @@
+[
+  {
+    "pdf": "29-OCT-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 146,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p1: 29 OCT 26 06:00 PM THURSDAY AUCTION 146 CARS MORE THEN LIVE STREAMING 06-5267750 INDUSTRIAL AREA 2, SHARJAH-UAE WWW.WESTCARSAUCTIONS.COM GREEN LIGHT MAJORITY OF",
+      "p2: AUCTION DAYS & TIME THREE DAYS AUCTION IN A WEEK SATURDAYﻳﻮم اﻟﺴﺒﺖ TUESDAYﻳﻮم اﻟﺜﻼﺛﺎء THURSDAY 06:00 PM ﻳﻮم اﻟﺨﻤﻴﺲ",
+      "p3: CONTACT US 06-5267750 WHATSAPP 052-8231236 | 055-8558496 @WESTCARSAUCTIONS WESTCARSAUCTIONS@YAHOO.COM WWW.WESTCARSAUCTIONS.COM"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "08:02"
+  },
+  {
+    "pdf": "Marhaba Auction Thursday 29th October 2026 - Main Branch Industrial Area 2 - Auction List_compressed.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 282,
+    "kept": 279,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p58: 2019 CAN-AM MAVERICK R",
+      "p117: 20006 TOYOTA COROLLA",
+      "p164: 2015 10 JETTA"
+    ],
+    "ocr_halas": 1,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "08:02"
+  },
+  {
+    "pdf": "NCA 29TH OCTOBER VEHICELS .pdf",
+    "auction": "Nojoom Cars Auction",
+    "pages": 97,
+    "kept": 92,
+    "rejected": 5,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 5
+    },
+    "time": "08:07"
+  }
+]
