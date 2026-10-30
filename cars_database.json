@@ -391,7 +391,7 @@
  },
  {
   "brand": "Bmw",
-  "model": "Xi Xdrive28I",
+  "model": "X1 Xdrive28i",
   "year": 2024,
   "color": "",
   "price": 35000,
@@ -690,11 +690,11 @@
   "code": "1030-146"
  },
  {
-  "brand": "Land Rover",
-  "model": "Un Wea",
+  "brand": "Toyota",
+  "model": "Grand Highlander Awd",
   "year": 2024,
   "color": "",
-  "price": 35000,
+  "price": 85000,
   "auction": "KHAT AL JAZEERA CARS AUCTION",
   "auction_branch": "Sajaa",
   "auction_time": "18:30",
@@ -1935,8 +1935,8 @@
   "code": "1030-153"
  },
  {
-  "brand": "Mini",
-  "model": "Ime Me",
+  "brand": "Hyundai",
+  "model": "Tucson Limited",
   "year": 2025,
   "color": "",
   "price": 37000,
@@ -3405,8 +3405,8 @@
   "code": "1030-086"
  },
  {
-  "brand": "Seat",
-  "model": "Ep Was Ve Pee",
+  "brand": "Toyota",
+  "model": "Avalon",
   "year": 2022,
   "color": "",
   "price": 45000,
@@ -6226,7 +6226,7 @@
  },
  {
   "brand": "Bmw",
-  "model": "X5 Mgoi 4.4 Awd",
+  "model": "X5 M60i 4.4 Awd",
   "year": 2026,
   "color": "",
   "price": 148500,
@@ -14761,7 +14761,7 @@
  },
  {
   "brand": "Bmw",
-  "model": "7401",
+  "model": "740i",
   "year": 2019,
   "color": "",
   "price": 28000,
@@ -15391,7 +15391,7 @@
  },
  {
   "brand": "Dodge",
-  "model": "Charger 3X7",
+  "model": "Charger Sxt",
   "year": 2023,
   "color": "",
   "price": 24000,
@@ -16036,7 +16036,7 @@
  },
  {
   "brand": "Bmw",
-  "model": "X5 X Drive 401",
+  "model": "X5 Xdrive40i 3.0 Awd",
   "year": 2023,
   "color": "",
   "price": 95000,
@@ -20686,7 +20686,7 @@
  },
  {
   "brand": "Bmw",
-  "model": "X5 M501 L",
+  "model": "X5 M50i",
   "year": 2023,
   "color": "",
   "price": 119500,
