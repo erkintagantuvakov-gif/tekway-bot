@@ -166,7 +166,7 @@
  },
  {
   "brand": "Bmw",
-  "model": "M3 Ompe Tition",
+  "model": "M3 Competition",
   "year": 2024,
   "color": "",
   "price": 130000,
@@ -211,7 +211,7 @@
  },
  {
   "brand": "Ram",
-  "model": "",
+  "model": "1500 Big Horn",
   "year": 2025,
   "color": "",
   "price": 49000,
@@ -541,7 +541,7 @@
  },
  {
   "brand": "Gmc",
-  "model": "Yuk On Denali 6.2L",
+  "model": "Yukon Denali 6.2L",
   "year": 2025,
   "color": "",
   "price": 130000,
@@ -751,7 +751,7 @@
  },
  {
   "brand": "Ram",
-  "model": "",
+  "model": "1500 Lone Star",
   "year": 2023,
   "color": "",
   "price": 29000,
@@ -766,7 +766,7 @@
  },
  {
   "brand": "Ram",
-  "model": "",
+  "model": "1500 Tradesman",
   "year": 2025,
   "color": "",
   "price": 55000,
@@ -826,7 +826,7 @@
  },
  {
   "brand": "Tesla",
-  "model": "2025Teslamodel3. Ts",
+  "model": "Model 3",
   "year": 2025,
   "color": "",
   "price": 45000,
@@ -961,7 +961,7 @@
  },
  {
   "brand": "Bmw",
-  "model": "4Series",
+  "model": "4 Series",
   "year": 2016,
   "color": "",
   "price": 14000,
@@ -991,7 +991,7 @@
  },
  {
   "brand": "Cadillac",
-  "model": "",
+  "model": "Escalade",
   "year": 2018,
   "color": "",
   "price": 19000,
@@ -1051,7 +1051,7 @@
  },
  {
   "brand": "Chevrolet",
-  "model": "",
+  "model": "Malibu",
   "year": 2021,
   "color": "",
   "price": 8000,
@@ -1186,7 +1186,7 @@
  },
  {
   "brand": "Ford",
-  "model": "Bronc Big Bend",
+  "model": "Bronco Big Bend",
   "year": 2024,
   "color": "",
   "price": 19000,
@@ -1231,7 +1231,7 @@
  },
  {
   "brand": "Ford",
-  "model": "Fi50 Xlt 5. Ol",
+  "model": "F-150 Xlt 5.0L",
   "year": 2024,
   "color": "",
   "price": 35000,
@@ -1366,7 +1366,7 @@
  },
  {
   "brand": "Ford",
-  "model": "Musta Ng Premium",
+  "model": "Mustang Premium",
   "year": 2023,
   "color": "",
   "price": 23000,
@@ -1606,7 +1606,7 @@
  },
  {
   "brand": "Honda",
-  "model": "Ac Ord Hybrid",
+  "model": "Accord Hybrid",
   "year": 2024,
   "color": "",
   "price": 27000,
@@ -1636,7 +1636,7 @@
  },
  {
   "brand": "Hyundai",
-  "model": "Elan Tra N-Line",
+  "model": "Elantra N-Line",
   "year": 2025,
   "color": "",
   "price": 29000,
@@ -1651,7 +1651,7 @@
  },
  {
   "brand": "Hyundai",
-  "model": "Elantr Preferred",
+  "model": "Elantra Preferred",
   "year": 2025,
   "color": "",
   "price": 22000,
@@ -1666,7 +1666,7 @@
  },
  {
   "brand": "Hyundai",
-  "model": "Elan Tra Ybrid",
+  "model": "Elantra Hybrid",
   "year": 2023,
   "color": "",
   "price": 15000,
@@ -1726,7 +1726,7 @@
  },
  {
   "brand": "Hyundai",
-  "model": "Sonara Sel",
+  "model": "Sonata Sel",
   "year": 2020,
   "color": "",
   "price": 19000,
@@ -1801,7 +1801,7 @@
  },
  {
   "brand": "Hyundai",
-  "model": "Elantra N-Line Elantra",
+  "model": "Elantra N-Line",
   "year": 2025,
   "color": "",
   "price": 29000,
@@ -1846,7 +1846,7 @@
  },
  {
   "brand": "Hyundai",
-  "model": "",
+  "model": "Santa Fe",
   "year": 2020,
   "color": "",
   "price": 13000,
@@ -2070,8 +2070,8 @@
   "code": "1030-162"
  },
  {
-  "brand": "Hero",
-  "model": "",
+  "brand": "Jeep",
+  "model": "Grand Cherokee V6",
   "year": 2025,
   "color": "",
   "price": 49000,
@@ -2085,8 +2085,8 @@
   "code": "1030-191"
  },
  {
-  "brand": "Hero",
-  "model": "",
+  "brand": "Jeep",
+  "model": "Grand Cherokee Laredo V6",
   "year": 2023,
   "color": "",
   "price": 27000,
@@ -2131,7 +2131,7 @@
  },
  {
   "brand": "Kia",
-  "model": "Ev9Windawd",
+  "model": "Ev9 Wind Awd",
   "year": 2025,
   "color": "",
   "price": 58000,
@@ -2296,7 +2296,7 @@
  },
  {
   "brand": "Kia",
-  "model": "Sedonaititit",
+  "model": "Sedona",
   "year": 2020,
   "color": "",
   "price": 16000,
@@ -2386,7 +2386,7 @@
  },
  {
   "brand": "Kia",
-  "model": "Oren To",
+  "model": "Sorento",
   "year": 2023,
   "color": "",
   "price": 25000,
@@ -2506,7 +2506,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Es350",
+  "model": "Es 350",
   "year": 2016,
   "color": "",
   "price": 23000,
@@ -2611,7 +2611,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "",
+  "model": "Rx 350 V6 Awd",
   "year": 2021,
   "color": "",
   "price": 45000,
@@ -2641,7 +2641,7 @@
  },
  {
   "brand": "Lincoln",
-  "model": "",
+  "model": "Corsair",
   "year": 2024,
   "color": "",
   "price": 25000,
@@ -2896,7 +2896,7 @@
  },
  {
   "brand": "Nissan",
-  "model": "Altimasr",
+  "model": "Altima Sr",
   "year": 2021,
   "color": "",
   "price": 14000,
@@ -4261,7 +4261,7 @@
  },
  {
   "brand": "Mazda",
-  "model": "Cx90 Turbo Premium",
+  "model": "Cx-90 Turbo Premium",
   "year": 2026,
   "color": "",
   "price": 49000,
@@ -5191,7 +5191,7 @@
  },
  {
   "brand": "Bmw",
-  "model": "Bwm X1",
+  "model": "X1",
   "year": 2014,
   "color": "",
   "price": 8500,
@@ -5266,7 +5266,7 @@
  },
  {
   "brand": "Jaguar",
-  "model": "F Pace Prestige",
+  "model": "F-Pace Prestige",
   "year": 2018,
   "color": "",
   "price": 34500,
@@ -13306,7 +13306,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Rx-350 Premium",
+  "model": "Rx 350 Premium",
   "year": 2025,
   "color": "",
   "price": 98000,
@@ -13321,7 +13321,7 @@
  },
  {
   "brand": "Genesis",
-  "model": "Gv-80 2",
+  "model": "Gv80 2",
   "year": 2024,
   "color": "",
   "price": 68000,
@@ -13366,7 +13366,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Gx-460",
+  "model": "Gx 460",
   "year": 2018,
   "color": "",
   "price": 52000,
@@ -13381,7 +13381,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Rx-350 Premium",
+  "model": "Rx 350 Premium",
   "year": 2025,
   "color": "",
   "price": 94000,
@@ -13456,7 +13456,7 @@
  },
  {
   "brand": "Infiniti",
-  "model": "Qx-80 Luxe",
+  "model": "Qx80 Luxe",
   "year": 2021,
   "color": "",
   "price": 48000,
@@ -13531,7 +13531,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Es-300",
+  "model": "Es 300",
   "year": 2025,
   "color": "",
   "price": 5000,
@@ -13576,7 +13576,7 @@
  },
  {
   "brand": "Infiniti",
-  "model": "Qx-80 Luxe",
+  "model": "Qx80 Luxe",
   "year": 2019,
   "color": "",
   "price": 38000,
@@ -13651,7 +13651,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Es-300",
+  "model": "Es 300",
   "year": 2024,
   "color": "",
   "price": 75000,
@@ -13711,7 +13711,7 @@
  },
  {
   "brand": "Ram",
-  "model": "Dodge 1500 Rebel",
+  "model": "1500 Rebel",
   "year": 2019,
   "color": "",
   "price": 34000,
@@ -14011,7 +14011,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Es-300",
+  "model": "Es 300",
   "year": 2023,
   "color": "",
   "price": 0,
@@ -14146,7 +14146,7 @@
  },
  {
   "brand": "Kia",
-  "model": "K4Ex",
+  "model": "K4 Ex",
   "year": 2025,
   "color": "",
   "price": 28000,
@@ -14326,7 +14326,7 @@
  },
  {
   "brand": "Chevrolet",
-  "model": "Coloradopick Up",
+  "model": "Colorado Pickup",
   "year": 2021,
   "color": "",
   "price": 25000,
@@ -14386,7 +14386,7 @@
  },
  {
   "brand": "Volkswagen",
-  "model": "Jettase",
+  "model": "Jetta Se",
   "year": 2024,
   "color": "",
   "price": 28000,
@@ -14431,7 +14431,7 @@
  },
  {
   "brand": "Chevrolet",
-  "model": "Camaroyes",
+  "model": "Camaro",
   "year": 2023,
   "color": "",
   "price": 22000,
@@ -14491,7 +14491,7 @@
  },
  {
   "brand": "Genesis",
-  "model": "G-90",
+  "model": "G90",
   "year": 2019,
   "color": "",
   "price": 38000,
@@ -14776,7 +14776,7 @@
  },
  {
   "brand": "Hyundai",
-  "model": "",
+  "model": "Santa Fe Sel",
   "year": 2020,
   "color": "",
   "price": 16000,
@@ -15001,7 +15001,7 @@
  },
  {
   "brand": "Kia",
-  "model": "K4Lx",
+  "model": "K4 Lx",
   "year": 2025,
   "color": "",
   "price": 28000,
@@ -15316,7 +15316,7 @@
  },
  {
   "brand": "Genesis",
-  "model": "G-80",
+  "model": "G80",
   "year": 2020,
   "color": "",
   "price": 16000,
@@ -15361,7 +15361,7 @@
  },
  {
   "brand": "Hyundai",
-  "model": "Elantra N-Ifine",
+  "model": "Elantra N-Line",
   "year": 2023,
   "color": "",
   "price": 22000,
@@ -15526,7 +15526,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Es-350 Base",
+  "model": "Es 350 Base",
   "year": 2015,
   "color": "",
   "price": 16000,
@@ -15676,7 +15676,7 @@
  },
  {
   "brand": "Genesis",
-  "model": "Gv 70 Base",
+  "model": "Gv70 Base",
   "year": 2025,
   "color": "",
   "price": 79000,
@@ -16456,7 +16456,7 @@
  },
  {
   "brand": "Nissan",
-  "model": "Nissan Z Sport Touring",
+  "model": "Z Sport Touring",
   "year": 2023,
   "color": "",
   "price": 47500,
@@ -17416,7 +17416,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Is-350",
+  "model": "Is 350",
   "year": 2014,
   "color": "",
   "price": 16500,
@@ -18031,7 +18031,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Es-350",
+  "model": "Es 350",
   "year": 2013,
   "color": "",
   "price": 17500,
@@ -18091,7 +18091,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Hs-250 H",
+  "model": "Hs 250 H",
   "year": 2010,
   "color": "",
   "price": 9500,
@@ -18271,7 +18271,7 @@
  },
  {
   "brand": "Lexus",
-  "model": "Es-300H Hybrid",
+  "model": "Es 300H Hybrid",
   "year": 2014,
   "color": "",
   "price": 17500,
@@ -19561,7 +19561,7 @@
  },
  {
   "brand": "Toyota",
-  "model": "",
+  "model": "Avalon",
   "year": 2011,
   "color": "",
   "price": 10500,
@@ -20176,7 +20176,7 @@
  },
  {
   "brand": "Ford",
-  "model": "F150 - R",
+  "model": "F-150 - R",
   "year": 2017,
   "color": "",
   "price": 76500,
@@ -21211,7 +21211,7 @@
  },
  {
   "brand": "Toyota",
-  "model": "",
+  "model": "Avalon",
   "year": 2011,
   "color": "",
   "price": 10500,
