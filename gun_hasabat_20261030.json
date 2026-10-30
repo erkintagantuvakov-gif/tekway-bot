@@ -50,5 +50,80 @@
       "marka bos (reklama sahypasy)": 1
     },
     "time": "07:27"
+  },
+  {
+    "pdf": "Fadak Cars Auction 30-10-2026 SAJAA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 143,
+    "kept": 139,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: FIND US NOW YOU ARE ONE STEP AWAY FROM YOUR DREAM CAR AUCTION ON EVERY SATURDAY, SUNDAY, WEDNESDAY & FRIDAY.",
+      "p2: 4 Auction Days / اﻟﻤﺰاد أﻳﺎم Industrial Area 2 Branch ٢ اﻟﺼﻨﺎﻋﻴﺔ اﻟﻤﻨﻄﻘﺔ ﻓﺮع SATURDAY / اﻟﺴﺒﺖ WEDNESDAY / اﻷرﺑﻌﺎءSUNDAY / اﻷﺣﺪ Sajja Branch اﻟﺼﺠﻌﺔ ﻓﺮع https://m",
+      "p3: @FadakCarsAuction @FadakCarsAuction @FadakCarsAuction www.FadakAuctions.com NOW NOW FOLLOW US",
+      "p4: 30/OCTOBER/2026 FRIDAY AUCTION 06:15 PM Sajja Branch"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "07:33"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 30-10-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 154,
+    "kept": 150,
+    "rejected": 4,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "07:56"
+  },
+  {
+    "pdf": "30-10-2026 FRIDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 67,
+    "kept": 60,
+    "rejected": 7,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 7
+    },
+    "time": "08:00"
+  },
+  {
+    "pdf": "Friday - 30-10-2026 - GCA.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 175,
+    "kept": 171,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: 30 OCTOBER 2026 5:30 PM FRIDAY AUCTION",
+      "p2: 172",
+      "p3: @gulfcarsauction CONTACT US CONTACT US +971 568 900 900 +971 568 900 900 +971 558 800 800 +971 558 800 800 800 900 900 800 900 900 TOLL FREE TOLL FREE HOTLINE /",
+      "p90: STARTING BID 12,500 2017 MG GS 20T S C A N M E"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "08:00"
+  },
+  {
+    "pdf": "Friday 30th OCT 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 160,
+    "kept": 150,
+    "rejected": 10,
+    "tanalmadyk": [],
+    "ocr_halas": 7,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 10
+    },
+    "time": "08:18"
   }
 ]

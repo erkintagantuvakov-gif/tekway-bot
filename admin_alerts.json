@@ -434,5 +434,16 @@
     "rejected": 0,
     "reasons": {},
     "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: fatal: unable to access 'https://github.com/erkintagantuvakov-gif/tekway-bot.git/': schannel: failed to receive handshake, SSL/TLS connection failed\n"
+  },
+  {
+    "id": "20261030|PUSH|Push bolmady: fatal: unable to access 'h",
+    "date": "20261030",
+    "pdf": "-",
+    "auction": "GITHUB-A GITMEDI",
+    "pages": 0,
+    "kept": 0,
+    "rejected": 0,
+    "reasons": {},
+    "msg": "Maglumat tayyar, yone GitHub-a gitmedi. Push bolmady: fatal: unable to access 'https://github.com/erkintagantuvakov-gif/tekway-bot.git/': Failed to connect to github.com:443 over proxy 127.0.0.1 after 2097 ms: Coul"
   }
 ]
