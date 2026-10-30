@@ -1,0 +1,54 @@
+[
+  {
+    "pdf": "30-OCT-2026 KHAT AL JAZEERA CARS AUCTION.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 251,
+    "kept": 236,
+    "rejected": 15,
+    "tanalmadyk": [],
+    "ocr_halas": 6,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 15
+    },
+    "time": "07:22"
+  },
+  {
+    "pdf": "FRIDAY 30 OCT 2026.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 198,
+    "kept": 166,
+    "rejected": 32,
+    "tanalmadyk": [
+      "p1: 23 / NOVEMBER / 2024 السبت",
+      "p2: 23 / NOVEMBER / 2024 السبت",
+      "p3: 23 / NOVEMBER / 2024 السبت",
+      "p4: 23 / NOVEMBER / 2024 السبت",
+      "p5: 23 / NOVEMBER / 2024 السبت",
+      "p6: 23 / NOVEMBER / 2024 السبت"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "marka bos (reklama sahypasy)": 26,
+      "tanalmady (marka/yyl tapylmady)": 6
+    },
+    "time": "07:24"
+  },
+  {
+    "pdf": "FRIDAY GRAND AUCTION 30-OCT-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 353,
+    "kept": 346,
+    "rejected": 7,
+    "tanalmadyk": [
+      "p1: 30-OCT-2026 340",
+      "p5: EMIRATES IND. CITY SAJAA",
+      "p307: 2023 FISKER INC OCEAN ONE - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 7,500 FRI-30 OCT 5"
+    ],
+    "ocr_halas": 18,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 6,
+      "marka bos (reklama sahypasy)": 1
+    },
+    "time": "07:27"
+  }
+]
