@@ -205,6 +205,29 @@ def _norm(s):
     return re.sub(r"\s+", " ", s).strip()
 
 
+def _norm_kod(s):
+    """Model KODLARYNY birmenzesh et: 'F-150', 'F 150', 'f150' -> 'f150'.
+
+    ⚠️ 31.10.2026 — ERKIN TAPDY (hakyky mysal):
+        musderi "F150"  yazdy -> bot 1 masyn gorkezdi
+        musderi "F-150" yazdy -> bot 5 masyn gorkezdi
+    Sebabi: _norm() defisi BOSLUGA owurya ("f-150" -> "f 150"),
+    sonun uchin "f150" bilen "f 150" DURLI setir bolup galyardy.
+
+    Bu funksiya dine HARP(1-3) + SAN birleshmesini yelmeshdirya:
+        "f 150" -> "f150",  "es 350" -> "es350",  "cx 5" -> "cx5",
+        "rav 4" -> "rav4",  "x 5"    -> "x5"
+    Beyleki sozlere degmeyar, sonun uchin "gle" -> "wrangler" yaly
+    nadogry gabat gelmeler emele gelenok.
+    """
+    s = _norm(s)
+    onki = None
+    while s != onki:
+        onki = s
+        s = re.sub(r"\b([a-z]{1,3}) (\d)", r"\1\2", s)
+    return s
+
+
 # Adam ýazýan görnüş -> hakyky at.  Çepdäki söz NORMALIZE edilen bolmaly.
 SYNONYMS = {
     # --- markalar ---
@@ -324,12 +347,42 @@ def fuzzy_find(query, cars, dine_takyk=False):
     # Indi: harp+san gornushi (k5, x5, q7, cx9, i8...) gonuden gozlenya.
     if len(q) < 3:
         if re.fullmatch(r'[a-z]{1,2}\d{1,2}', q):
+            # 31.10: "cx5" <-> "Cx-5", "x5" <-> "X 5" hem tapylsyn
+            _re_q = re.compile(rf'\b{re.escape(q)}\b')
             found = [c for c in cars
-                     if re.search(rf'\b{re.escape(q)}\b',
-                                  _norm(f"{c.get('brand','')} {c.get('model','')}"))]
+                     if _re_q.search(_norm_kod(f"{c.get('brand','')} {c.get('model','')}"))
+                     or _re_q.search(_norm(f"{c.get('brand','')} {c.get('model','')}"))]
             if found:
                 return q.upper(), found
         return None, []
+
+    # ============================================================
+    # 31.10.2026 — GONI GABAT GELME (Erkin tapdy)
+    # ------------------------------------------------------------
+    # Hakyky mysal:  "F150"  -> 1 masyn,  "F-150" -> 5 masyn.
+    # Sebabi 1: _norm() defisi bosluga owurya -> "f 150" != "f150".
+    # Sebabi 2: sorag SYNONYMS-de yok bolsa, difflib vocab-dan
+    #   in menzesh sozi alyardy. "f 150" uchin ol "150" bolyardy,
+    #   netijede Lexus IS 250 / Mercedes GLB 250 yaly masynlar
+    #   chykyardy - musderi uchin dushnuksiz.
+    # Chozgut: sorag hakyky MARKA ya MODEL ady bolsa, difflib-e
+    #   asla gechilmeyar. Model adynyn dine ILKINJI 2 sozi
+    #   barlanya - "awd", "fwd", "turbo" yaly bezeg sozleri
+    #   bilen gabat gelmez yaly.
+    # ============================================================
+    qk = _norm_kod(query)
+    if len(qk) >= 2:
+        _re_q = re.compile(rf"\b{re.escape(qk)}\b")
+        goni = []
+        for c in cars:
+            if qk == _norm_kod(c.get("brand", "")):
+                goni.append(c); continue
+            m1 = " ".join(_norm(c.get("model", "")).split()[:2])
+            m2 = " ".join(_norm_kod(c.get("model", "")).split()[:2])
+            if _re_q.search(m1) or _re_q.search(m2):
+                goni.append(c)
+        if goni:
+            return qk.upper(), goni
 
     # 1. Göni sinonim
     target = SYNONYMS.get(q)
@@ -340,6 +393,13 @@ def fuzzy_find(query, cars, dine_takyk=False):
             if w in SYNONYMS:
                 target = SYNONYMS[w]
                 break
+
+    # 31.10.2026: KOD GORNUSHLI SORAG DIFFLIB-E BERILMEYA.
+    # "f250" yazylanda vocab-dan "250" tapylyp, Lexus Is 250 we
+    # Mercedes Glb 250 chykyardy. San takyk gabat gelmeli - chaklama yok.
+    # Yokardaky goni gozleg tapmadyk bolsa, diymek bazada beyle masyn yok.
+    if not target and re.search(r"\d", qk):
+        return None, []
 
     # 3. Meňzeşlik boýunça (ýalňyş harp, ýitirilen harp)
     if not target and not dine_takyk:
@@ -383,6 +443,20 @@ def fuzzy_find(query, cars, dine_takyk=False):
     else:
         found = [c for c in cars
                  if tn in _norm(f"{c.get('brand','')} {c.get('model','')}")]
+    # ---- 31.10.2026: KOD GORNUSHI (F150 == F-150) ----
+    # Yokardaky gozleg _norm() boyuncha gidya, ol defisi bosluga owurya.
+    # Sonun uchin "f150" soragy "f 150" yazylan masynlary tapmayardy.
+    # Bu yerde kod gornushi boyuncha YENE bir gezek gozlenya we
+    # netijeler BIRLESHDIRILYA (hic zat yitenok, dine gosulya).
+    tnk = _norm_kod(target)
+    if tnk and tnk != tn:
+        _re_k = re.compile(rf"\b{re.escape(tnk)}\b")
+        goshmaca = [c for c in cars
+                    if _re_k.search(_norm_kod(f"{c.get('brand','')} {c.get('model','')}"))]
+        if goshmaca:
+            _bar = {id(c) for c in found}
+            found = found + [c for c in goshmaca if id(c) not in _bar]
+
     if not found:
         # sinonim marka bolsa - dine markadan gozle
         found = [c for c in cars if tn in _norm(c.get("brand", ""))]
