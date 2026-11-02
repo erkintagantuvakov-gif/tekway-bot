@@ -1,0 +1,128 @@
+[
+  {
+    "pdf": "27-10-2026 TUESDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 65,
+    "kept": 57,
+    "rejected": 8,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 8
+    },
+    "time": "08:38"
+  },
+  {
+    "pdf": "27-OCT-2026 KHAT AL JAZEERA CARS AUCTION.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 161,
+    "kept": 155,
+    "rejected": 6,
+    "tanalmadyk": [],
+    "ocr_halas": 3,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 6
+    },
+    "time": "08:44"
+  },
+  {
+    "pdf": "Marhaba Auction Teusday 27th October 2026 - Main Branch Industrial Area 2 - Auction List_compressed.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 251,
+    "kept": 248,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p75: 2015 10 JETTA 7,500",
+      "p88: 2019 CAN-AM MAVERICK R 41,500",
+      "p153: 2017 1850 MAXIMA 14,500"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "08:44"
+  },
+  {
+    "pdf": "NCA 27TH OCTOBER VEHICELS .pdf",
+    "auction": "Nojoom Cars Auction",
+    "pages": 95,
+    "kept": 91,
+    "rejected": 4,
+    "tanalmadyk": [],
+    "ocr_halas": 1,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "08:50"
+  },
+  {
+    "pdf": "AL QARYAH TUESDAY SAJAA AUCTION 27-OCT-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 227,
+    "kept": 218,
+    "rejected": 9,
+    "tanalmadyk": [
+      "p1: 27 Oct 2026 TUESDAY SAJAA AUCTION 220",
+      "p2: أﻛﺘﻮﺑﺮ27 2026ﻣﺰاد اﻟﺼﺠﻌﺔ ﻳﻮم اﻟﺜﻼﺛﺎء 220 ﺑﺜﻨﺎ اﻟﻤﺒﺎﺷﺮ",
+      "p3: EMIRATES INDUSTRIAL CITY SAJAA",
+      "p100: 2023 FISKER INC OCEAN ONE - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 7,500 TUE-27 OCT 5"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 5,
+      "reklama: AVAILABLE FOR (bashga gun)": 4
+    },
+    "time": "08:51"
+  },
+  {
+    "pdf": "Tuesday - 27-10-2026- GCA.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 129,
+    "kept": 122,
+    "rejected": 7,
+    "tanalmadyk": [
+      "p1: 27 OCTOBER 2026 5:30 PM TUESDAY AUCTION",
+      "p2: 126",
+      "p3: @gulfcarsauction CONTACT US CONTACT US +971 568 900 900 +971 568 900 900 +971 558 800 800 +971 558 800 800 800 900 900 800 900 900 TOLL FREE TOLL FREE HOTLINE /",
+      "p8: STARTING BID 18,500 2024 MG RX5 S C A N M E",
+      "p32: STARTING BID 7,500 2021 MG MG5 S C A N M E",
+      "p36: STARTING BID 13,500 2025 MG MG5 S C A N M E",
+      "p123: STARTING BID 12,500 2017 MG GS 20T S C A N M E"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 7
+    },
+    "time": "08:52"
+  },
+  {
+    "pdf": "TUESDAY AUCTION CARS LIST 27-10-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 144,
+    "kept": 140,
+    "rejected": 4,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "09:13"
+  },
+  {
+    "pdf": "WEST CARS AUCTIONS 27-OCT-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 146,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p1: 27 OCT 26 06:00 PM TUESDAY AUCTION 146 CARS MORE THEN LIVE STREAMING 06-5267750 INDUSTRIAL AREA 2, SHARJAH-UAE WWW.WESTCARSAUCTIONS.COM GREEN LIGHT MAJORITY OF",
+      "p2: AUCTION DAYS & TIME THREE DAYS AUCTION IN A WEEK SATURDAYﻳﻮم اﻟﺴﺒﺖ TUESDAYﻳﻮم اﻟﺜﻼﺛﺎء THURSDAY 06:00 PM ﻳﻮم اﻟﺨﻤﻴﺲ",
+      "p3: CONTACT US 06-5267750 WHATSAPP 052-8231236 | 055-8558496 @WESTCARSAUCTIONS WESTCARSAUCTIONS@YAHOO.COM WWW.WESTCARSAUCTIONS.COM"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "09:13"
+  }
+]
