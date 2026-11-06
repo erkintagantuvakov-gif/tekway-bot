@@ -110,5 +110,26 @@
       "tanalmady (marka/yyl tapylmady)": 6
     },
     "time": "02:38"
+  },
+  {
+    "pdf": "FRIDAY GRAND AUCTION 06-NOV-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 356,
+    "kept": 346,
+    "rejected": 10,
+    "tanalmadyk": [
+      "p1: 06 NOV 2026",
+      "p2: ﻧﻮﻓﻤﺒﺮ6 2026",
+      "p3: EMIRATES IND. CITY SAJAA",
+      "p20: 108,500 FRI-06 NOV 5:30",
+      "p21: 148,500 FRI-06 NOV 5:30",
+      "p35: 2024 Leopard 8 2.0T Smart & Brave Flagship Edition 6-seater 2.0 AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING",
+      "p286: 2023 FISKER INC OCEAN ONE - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 6,500 FRI-02 OCT 5"
+    ],
+    "ocr_halas": 13,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 10
+    },
+    "time": "07:11"
   }
 ]
