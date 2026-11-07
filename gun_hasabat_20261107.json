@@ -51,5 +51,23 @@
       "tanalmady (marka/yyl tapylmady)": 3
     },
     "time": "10:51"
+  },
+  {
+    "pdf": "Marhaba Auctions Saturday 07 NOVEMBER 2026 Ind.Area 12 Auction LIst.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 102,
+    "kept": 98,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p14: 16,500 22020 KIA FORTE",
+      "p43: 17,500 SKODA RAPID 2018",
+      "p56: 13,000 22011 TOYOTA SIENNA",
+      "p68: 7,000 MERCEDES BENZ 350 2008"
+    ],
+    "ocr_halas": 7,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "11:06"
   }
 ]
