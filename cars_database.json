@@ -9916,7 +9916,7 @@
   },
   {
     "brand": "Bmw",
-    "model": "I435I E-Drive Electric Rwd",
+    "model": "I4 Edrive35",
     "year": 2024,
     "color": "",
     "price": 45000,
@@ -18661,7 +18661,7 @@
   },
   {
     "brand": "Kia",
-    "model": "Forte Lx Tty",
+    "model": "Forte Lx",
     "year": 2014,
     "color": "",
     "price": 9000,
@@ -18676,10 +18676,10 @@
   },
   {
     "brand": "Toyota",
-    "model": "Pedis",
+    "model": "Corolla Le",
     "year": 2000,
     "color": "",
-    "price": 2000,
+    "price": 5000,
     "auction": "Nojoom Cars Auction",
     "auction_branch": "IND 2",
     "auction_time": "19:30",
@@ -18796,7 +18796,7 @@
   },
   {
     "brand": "Mercedes-Benz",
-    "model": "Mercedes Benz 500",
+    "model": "S 500",
     "year": 2015,
     "color": "",
     "price": 21000,
@@ -19036,7 +19036,7 @@
   },
   {
     "brand": "Kia",
-    "model": "Telluride",
+    "model": "Telluride S",
     "year": 2025,
     "color": "",
     "price": 45000,
@@ -19051,10 +19051,10 @@
   },
   {
     "brand": "Kia",
-    "model": "Ona X-Line",
+    "model": "Sorento X-Line Ex",
     "year": 2025,
     "color": "",
-    "price": 95000,
+    "price": 55000,
     "auction": "Nojoom Cars Auction",
     "auction_branch": "IND 2",
     "auction_time": "19:30",
@@ -19084,7 +19084,7 @@
     "model": "Sienna Xle",
     "year": 2023,
     "color": "",
-    "price": 290000,
+    "price": 50000,
     "auction": "Nojoom Cars Auction",
     "auction_branch": "IND 2",
     "auction_time": "19:30",
@@ -19126,7 +19126,7 @@
   },
   {
     "brand": "Tesla",
-    "model": "Mc Rear-Whel",
+    "model": "Model 3 Rear-Wheel Drive",
     "year": 2023,
     "color": "",
     "price": 42000,
@@ -19201,7 +19201,7 @@
   },
   {
     "brand": "Lexus",
-    "model": "Rx 350 Sport Awd",
+    "model": "Rx 350 F Sport Awd",
     "year": 2019,
     "color": "",
     "price": 41000,
@@ -19231,7 +19231,7 @@
   },
   {
     "brand": "Bmw",
-    "model": "740 Panorama",
+    "model": "740i Panorama",
     "year": 2025,
     "color": "",
     "price": 120000,
@@ -19456,7 +19456,7 @@
   },
   {
     "brand": "Mercedes-Benz",
-    "model": "550",
+    "model": "S550",
     "year": 2014,
     "color": "",
     "price": 31500,
@@ -19501,7 +19501,7 @@
   },
   {
     "brand": "Bmw",
-    "model": "740",
+    "model": "740i",
     "year": 2023,
     "color": "",
     "price": 100000,
@@ -19561,7 +19561,7 @@
   },
   {
     "brand": "Kia",
-    "model": "Sorento",
+    "model": "Sorento S",
     "year": 2025,
     "color": "",
     "price": 41000,
@@ -19651,7 +19651,7 @@
   },
   {
     "brand": "Volkswagen",
-    "model": "Jetta 5T Se",
+    "model": "Jetta 1.5T Se",
     "year": 2025,
     "color": "",
     "price": 35000,
@@ -19696,7 +19696,7 @@
   },
   {
     "brand": "Lexus",
-    "model": "Nx 300 En",
+    "model": "Nx 300",
     "year": 2018,
     "color": "",
     "price": 33000,
@@ -19711,7 +19711,7 @@
   },
   {
     "brand": "Nissan",
-    "model": "Armada Sl Wd 4D",
+    "model": "Armada Sl 4Wd",
     "year": 2017,
     "color": "",
     "price": 31000,
@@ -19744,7 +19744,7 @@
     "model": "Sienna Ce",
     "year": 2008,
     "color": "",
-    "price": 4,
+    "price": 7000,
     "auction": "Nojoom Cars Auction",
     "auction_branch": "IND 2",
     "auction_time": "19:30",
@@ -19771,7 +19771,7 @@
   },
   {
     "brand": "Nissan",
-    "model": "Altimas Oa Fwd",
+    "model": "Altima S Fwd",
     "year": 2022,
     "color": "",
     "price": 19000,
@@ -19801,7 +19801,7 @@
   },
   {
     "brand": "Toyota",
-    "model": "Corolla Efwd 4D Sedan",
+    "model": "Corolla Le Fwd",
     "year": 2020,
     "color": "",
     "price": 17000,
@@ -19816,7 +19816,7 @@
   },
   {
     "brand": "Hyundai",
-    "model": "Santa Fe Sport 4L",
+    "model": "Santa Fe Sport 2.4L",
     "year": 2018,
     "color": "",
     "price": 11000,
@@ -19861,7 +19861,7 @@
   },
   {
     "brand": "Kia",
-    "model": "Sedona Lx Te",
+    "model": "Sedona Lx",
     "year": 2016,
     "color": "",
     "price": 12500,
@@ -23101,7 +23101,7 @@
   },
   {
     "brand": "Ford",
-    "model": "Bronco Sport Big",
+    "model": "Bronco Sport Big Bend",
     "year": 2024,
     "color": "",
     "price": 24000,
