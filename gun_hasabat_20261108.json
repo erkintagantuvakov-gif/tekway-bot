@@ -1,0 +1,72 @@
+[
+  {
+    "pdf": "SUNDAY GRAND AUCTION 08-NOV-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 305,
+    "kept": 296,
+    "rejected": 9,
+    "tanalmadyk": [
+      "p3: EMIRATES IND. CITY SAJAA",
+      "p29: 2025 Leopard Titanium - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 98,500 SUN-08 NOV 5:30",
+      "p30: 2024 Leopard 8 - AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 157,500 SUN-08 NOV 5:30",
+      "p232: 2023 FISKER INC OCEAN ONE - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 6,500 SUN-08 NOV 5"
+    ],
+    "ocr_halas": 15,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 9
+    },
+    "time": "02:39"
+  },
+  {
+    "pdf": "08-NOV-2026KHAT AL JAZEERA CARS AUCTION.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 201,
+    "kept": 168,
+    "rejected": 33,
+    "tanalmadyk": [],
+    "ocr_halas": 8,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 33
+    },
+    "time": "03:34"
+  },
+  {
+    "pdf": "SUNDAY 8 NOV 2026.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 199,
+    "kept": 163,
+    "rejected": 36,
+    "tanalmadyk": [
+      "p1: 23 / NOVEMBER / 2024 السبت",
+      "p2: 23 / NOVEMBER / 2024 السبت",
+      "p3: 23 / NOVEMBER / 2024 السبت",
+      "p4: 23 / NOVEMBER / 2024 السبت",
+      "p5: 23 / NOVEMBER / 2024 السبت",
+      "p6: 23 / NOVEMBER / 2024 السبت"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "marka bos (reklama sahypasy)": 30,
+      "tanalmady (marka/yyl tapylmady)": 6
+    },
+    "time": "03:39"
+  },
+  {
+    "pdf": "Fadak Cars Auction 8-11-2026 SAJAA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 127,
+    "kept": 123,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: FIND US NOW YOU ARE ONE STEP AWAY FROM YOUR DREAM CAR AUCTION ON EVERY SATURDAY, SUNDAY, WEDNESDAY & FRIDAY.",
+      "p2: 4 Auction Days / اﻟﻤﺰاد أﻳﺎم Industrial Area 2 Branch ٢ اﻟﺼﻨﺎﻋﻴﺔ اﻟﻤﻨﻄﻘﺔ ﻓﺮع SATURDAY / اﻟﺴﺒﺖ WEDNESDAY / اﻷرﺑﻌﺎءSUNDAY / اﻷﺣﺪ Sajja Branch اﻟﺼﺠﻌﺔ ﻓﺮع https://m",
+      "p3: @FadakCarsAuction @FadakCarsAuction @FadakCarsAuction www.FadakAuctions.com NOW NOW FOLLOW US",
+      "p4: 8/NOVEMBER/2026 SUNDAY AUCTION 06:15 PM Sajja Branch"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "03:41"
+  }
+]

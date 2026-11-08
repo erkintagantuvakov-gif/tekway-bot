@@ -1,0 +1,31 @@
+__pycache__/
+*.pyc
+
+# 28.08 - zapas nusgalar repoda gerek dal (git taryhy bar)
+cars_database.json.backup_*
+__pycache__/
+GIT_ARASSALA_BIR_GEZEK.bat
+
+# 27.09 - kone nusgalar (.bak_0918, .bak_0923_diller ...) repoda
+# gerek dal. Yerli kompyuterde galyar, GitHub-a gitmeya.
+*.bak_*
+*.backup_*
+
+# 30.09 - Telegram surat yukleyji: token we kanal ID.
+# BULAR HIC HACAN GitHub-a GITMELI DAL.
+.bot_token.txt
+.surat_kanaly.txt
+
+# 22.10 - bot yerli ishlande doreyan maglumat fayllary.
+# Hakyky nusgalary Railway /data diskinde. Repoda gerek dal.
+users.json
+yatlatmas.json
+sent_alerts.json
+searches.json
+file_ids.json
+gundelik_habar.json
+sargyt_sonky.json
+baha_gozeg.json
+data_warn.json
+sent_admin_alerts.json
+yedek/
