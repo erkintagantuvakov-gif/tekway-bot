@@ -1,0 +1,46 @@
+[
+  {
+    "pdf": "MONDAY AUCTION - IND. AREA 2 - 09-NOV-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 144,
+    "kept": 139,
+    "rejected": 5,
+    "tanalmadyk": [
+      "p1: 09-NOV-2026 JOIN OUR 140 MONDAY AUCTION",
+      "p2: 9ﻧﻮﻓﻤﺒﺮ2026 اﻧﻀﻤﻮا إﻟﻰ ﺑﺜﻨﺎ اﻟﻤﺒﺎﺷﺮ ﻣﺰاد ﻳﻮم اﻻﺛﻨﻴﻦ 140",
+      "p24: 2025 MG MG5 180DVVT Global Luxury Edition 1.5 FWD INDUSTRIAL AREA 2 SHARJAH INDUSTRIAL AREA 2 SHARJAH INDUSTRIAL AREA 2 SHARJAH STARTING BID STARTING BID 28,500"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 5
+    },
+    "time": "07:07"
+  },
+  {
+    "pdf": "Marhaba Auctions  Monday   9th November 2026 Ind.Area 12 Auction LIst.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 91,
+    "kept": 91,
+    "rejected": 0,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {},
+    "time": "07:09"
+  },
+  {
+    "pdf": "Monday Auction 9-November 2026 Marhaba Cars Auction Presentation Souq Branch.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 141,
+    "kept": 123,
+    "rejected": 18,
+    "tanalmadyk": [
+      "p28: 2012 RANG ROVER EVOQUE 18,500",
+      "p53: 2015 10 JETTA 8,500"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 18
+    },
+    "time": "07:15"
+  }
+]

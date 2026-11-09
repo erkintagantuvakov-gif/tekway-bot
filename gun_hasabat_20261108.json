@@ -68,5 +68,93 @@
       "tanalmady (marka/yyl tapylmady)": 4
     },
     "time": "03:41"
+  },
+  {
+    "pdf": "Sunday 08th NOV 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 167,
+    "kept": 156,
+    "rejected": 11,
+    "tanalmadyk": [
+      "p167: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE"
+    ],
+    "ocr_halas": 5,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 11
+    },
+    "time": "08:20"
+  },
+  {
+    "pdf": "08-11-2026 SUNDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 63,
+    "kept": 56,
+    "rejected": 7,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 7
+    },
+    "time": "08:37"
+  },
+  {
+    "pdf": "Marhaba Auction Sunday 8th November 2026 - Main Branch Industrial Area 2 - Auction List_compressed.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 290,
+    "kept": 290,
+    "rejected": 0,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {},
+    "time": "08:40"
+  },
+  {
+    "pdf": "NCA 8TH NOVEMBER VEHICELS .pdf",
+    "auction": "Nojoom Cars Auction",
+    "pages": 93,
+    "kept": 88,
+    "rejected": 5,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4,
+      "marka bos (reklama sahypasy)": 1
+    },
+    "time": "09:09"
+  },
+  {
+    "pdf": "Sunday - 08-11-2026 - GCA.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 150,
+    "kept": 142,
+    "rejected": 8,
+    "tanalmadyk": [
+      "p1: 08 NOVEMBER 2026 5:30 PM SUNDAY AUCTION",
+      "p2: 147",
+      "p3: @gulfcarsauction CONTACT US CONTACT US +971 568 900 900 +971 568 900 900 +971 558 800 800 +971 558 800 800 800 900 900 800 900 900 TOLL FREE TOLL FREE HOTLINE /",
+      "p12: STARTING BID 19,500 2021 MG MG6 PHEV S C A N M E",
+      "p18: STARTING BID 11,500 2019 MG MG6 PHEV S C A N M E",
+      "p25: STARTING BID 11,500 2019 MG MG6 PHEV S C A N M E",
+      "p73: STARTING BID 12,500 2018 MG ZS FULL OPTION S C A N M E",
+      "p79: STARTING BID 14,000 2017 MG GS 20T GREEN LIGHT S C A N M E"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 8
+    },
+    "time": "09:13"
+  },
+  {
+    "pdf": "SUNDAY AUCTION CARS LIST 08-11-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 148,
+    "kept": 144,
+    "rejected": 4,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "09:54"
   }
 ]
