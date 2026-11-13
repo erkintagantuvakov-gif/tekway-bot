@@ -120,5 +120,29 @@
       "tanalmady (marka/yyl tapylmady)": 4
     },
     "time": "09:28"
+  },
+  {
+    "pdf": "Friday 13th NOV 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 175,
+    "kept": 161,
+    "rejected": 14,
+    "tanalmadyk": [
+      "p1: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p2: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p3: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p20: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p40: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p60: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p80: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p100: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p120: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p140: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE"
+    ],
+    "ocr_halas": 4,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 14
+    },
+    "time": "09:41"
   }
 ]
