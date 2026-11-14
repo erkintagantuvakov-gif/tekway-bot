@@ -61,5 +61,20 @@
       "tanalmady (marka/yyl tapylmady)": 3
     },
     "time": "02:00"
+  },
+  {
+    "pdf": "Saturday Auction 14-November 2026 Marhaba Cars Auction Presentation Souq Branch.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 132,
+    "kept": 118,
+    "rejected": 14,
+    "tanalmadyk": [
+      "p25: 2012 RANG ROVER EVOQUE 19,500"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 14
+    },
+    "time": "08:50"
   }
 ]
