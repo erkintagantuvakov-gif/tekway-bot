@@ -2926,9 +2926,23 @@ async def check_parser_alerts(bot):
                 pass
             return False
 
+        # 14.11.2026 DUZEDIS (Pawel) — HER GUN GAYTALANYAN HABAR
+        # Mesele: Railway her push-dan son bot-y gaytadan achya, sonda
+        # SENT_ADMIN_FILE (wagtlaycha diskde) yitya we ENE AHLI kone
+        # duyduryshlar gaytadan ugradylya. "GITHUB-A GITMEDI" duyduryshy
+        # bolsa hic haçan "cozulen" hasaplanmaya (ol auksion dal), shonun
+        # ucin awgustdan bari her gun Erkine gelip durdy.
+        # Indi: 2 gunden kone duydurysh ugradylmaya - dymyp yapylya.
+        # Shu gunki hakyky mesele (auksion islenmedi) onki yaly gelya.
+        _bu_gun = datetime.now().strftime("%Y%m%d")
+        _chak = (datetime.now() - timedelta(days=2)).strftime("%Y%m%d")
+
         yeni = []
         for a in alerts:
             if not a.get("id") or a["id"] in sent:
+                continue
+            if str(a.get("date", "")) < _chak:
+                sent.add(a["id"])          # kone - dymyp yap
                 continue
             if _cozulenmi(a):
                 sent.add(a["id"])          # dymyp ýap - eýýäm düzeldilipdir
