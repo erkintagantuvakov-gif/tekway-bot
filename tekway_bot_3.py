@@ -4667,13 +4667,23 @@ async def gundelik_habar_ugrat(app, diňe_uid=None):
 
     users = load_users()
     gitdi = bolmady = 0
+    # 14.11.2026 (Pawel) — Erkin: "hasabatda 220 ulanyjy, habar 191 adama
+    # gitdi - name ucin?". Sebabi: ugratmazdan on USSYZ atlanyanlar bar
+    # (habary ochuren, on blok eden, suzgujine gora 0 masyn). Olar hic
+    # yerde gorunmeyardi. Indi admin habarynda ayratyn gorkezilya.
+    _at_ochuk = _at_blok = _at_bos = 0
     for uid, u in list(users.items()):
-        if u.get("habar_ochuk") or u.get("bloklady"):
+        if u.get("habar_ochuk"):
+            _at_ochuk += 1
+            continue
+        if u.get("bloklady"):
+            _at_blok += 1
             continue
         # her ulanyja OZ dilinde we OZ yyl suzgujine gora
         ulang = u.get("lang") if u.get("lang") in ("tm", "ru", "en") else DEFAULT_LANG
         t = gundelik_habar_tekst(suzgucle(cars, uid), today, ulang)
         if not t:
+            _at_bos += 1
             continue
         kb = _habar_duwmeler(ulang)
         try:
@@ -4690,7 +4700,13 @@ async def gundelik_habar_ugrat(app, diňe_uid=None):
         # ⚠️ Telegram sekuntda ~30 habar gechirya. 25-e chenli sakla.
         await asyncio.sleep(0.05)
     save_users(users)
+    _habar_atlanan.update({"jemi": len(users), "ochuk": _at_ochuk,
+                           "blok": _at_blok, "bos": _at_bos})
     return gitdi, bolmady, "ok"
+
+
+# 14.11.2026: sonky ugratmada kim atlandy (admin hasabaty ucin)
+_habar_atlanan = {}
 
 
 async def gundelik_habar_loop(app):
@@ -4717,7 +4733,12 @@ async def gundelik_habar_loop(app):
                         ADMIN_ID,
                         f"📣 *Gündelik habar ugradyldy*\n\n"
                         f"✅ {g} adama gitdi\n"
-                        f"⚠️ {b} bolmady (blok eden ýa öçüren)",
+                        f"⚠️ {b} bolmady (şu gezek ýalňyşlyk)\n\n"
+                        f"👥 Jemi ulanyjy: {_habar_atlanan.get('jemi', 0)}\n"
+                        f"   🔕 habary öçüren: {_habar_atlanan.get('ochuk', 0)}\n"
+                        f"   🚫 boty blok eden: {_habar_atlanan.get('blok', 0)}\n"
+                        f"   📭 ýyl süzgüjine görä 0 maşyn: "
+                        f"{_habar_atlanan.get('bos', 0)}",
                         parse_mode="Markdown")
                 except Exception:
                     pass
