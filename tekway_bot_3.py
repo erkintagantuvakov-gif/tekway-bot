@@ -2555,6 +2555,48 @@ def _users_gozlegler():
         [InlineKeyboardButton("⬅ Yza", callback_data="usr:stat")]])
 
 
+async def top_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/top — in kop ulanyan musderiler (dine admin).
+
+    14.11.2026 (Pawel) — Erkin: "imenno haysy ulanyjy kop ulananyny
+    aytmady". /users-de ol maglumat bardy, yone IKI duwme basmaly we
+    name gozleyani gorkezilmeyardi. Bu komanda bir gezekde berya:
+    kim, nace gozleg, nace gun giren, sonky haçan, NAME gozleyar.
+    Sol sanaw - in gyzgyn musderi sanawy.
+    """
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("⛔ Bu komanda diňe admin üçin.")
+        return
+    from collections import Counter
+    users = load_users()
+    if not users:
+        await update.message.reply_text("📊 Entek ulanyjy ýok.")
+        return
+    y = load_yatlatmas()
+    items = sorted(users.items(), key=lambda x: -x[1].get("searches", 0))[:15]
+
+    t = "🔝 *IŇ KÖP ULANÝANLAR*\n_(gözleg sany boýunça)_\n\n"
+    for i, (uid, u) in enumerate(items, 1):
+        if not u.get("searches"):
+            break
+        ad = esc(u.get("name", "?"))[:20]
+        un = f" @{esc(u['username'])[:15]}" if u.get("username") else ""
+        gun = len(u.get("days", []))
+        _ls = str(u.get("last_seen", ""))[:10].split("-")
+        sg = f"{_ls[2]}.{_ls[1]}" if len(_ls) == 3 else "—"
+        yat = len(y.get(str(uid), []) or [])
+        t += f"*{i}. {ad}*{un}\n"
+        t += f"    🔍 {u.get('searches', 0)} gözleg · 📅 {gun} gün · 🕐 {sg}\n"
+        qc = Counter(q.upper() for q in (u.get("queries") or []))
+        if qc:
+            t += "    🚗 " + esc(", ".join(w for w, _ in qc.most_common(3))) + "\n"
+        if yat:
+            t += f"    🔔 {yat} ýatlatma\n"
+        t += "\n"
+    t += "_Bu adamlar maşyn gözläp ýör — iň mümkin müşderiler._"
+    await update.message.reply_text(t[:4000], parse_mode="Markdown")
+
+
 async def users_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Ulanyjylar - dine ADMIN. Diňe san karty, sanaw düwmede."""
     if update.effective_user.id != ADMIN_ID:
@@ -4856,6 +4898,7 @@ def main():
     app.add_handler(CommandHandler("zakazlar", zakazlar_command))
     app.add_handler(CommandHandler("zakaz", zakaz_command))
     app.add_handler(CommandHandler("leads", leads_command))
+    app.add_handler(CommandHandler("top", top_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     print("✅ Dubai Auksion | TEK AUTO MARKET boty işläp başlady!")
