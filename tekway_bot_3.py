@@ -39,6 +39,13 @@ CARS_DB_FILE = Path("cars_database.json")
 # Alert fayllary - Railway Volume bar bolsa /data
 _DATA_DIR = Path("/data") if Path("/data").exists() else Path(".")
 ALERTS_FILE = _DATA_DIR / "yatlatmas.json"
+# 14.11.2026 (Pawel) — GYZYKLANMA (lead) YAZGYSY.
+# On "Su masyny gyzyklanyan" duwmesi gonumel WhatsApp salgysydy:
+# bot ona basylanyny BILENOKDY. Kim basyp, sonra yazmadyka - Erkin
+# asla gormeyardi, hasabat hem yokdy. Indi: duwme callback, basylan
+# bada su fayla yazylya + Erkine Telegramda habar gidya + sonra
+# musderia WhatsApp duwmesi gorkezilya.
+LEADS_FILE = _DATA_DIR / "leads.json"
 SENT_FILE = _DATA_DIR / "sent_alerts.json"
 USERS_FILE = _DATA_DIR / "users.json"
 
@@ -1000,6 +1007,18 @@ TEXTS = {
         "tm": "🚗 Şu maşyny gyzyklanýan",
         "ru": "🚗 Интересует эта машина",
     },
+    "lead_ok": {
+        "tm": "✅ Gyzyklanmaňyz bellige alyndy.\n\n"
+              "Indi WhatsApp-da ýazyşalyň — düwmä basyň 👇",
+        "ru": "✅ Ваш интерес записан.\n\n"
+              "Теперь напишите нам в WhatsApp — нажмите кнопку 👇",
+    },
+    "lead_gone": {
+        "tm": "📭 Bu maşyn indi bazada ýok (baza täzelendi).\n\n"
+              "WhatsApp-a ýazyp sorap bilersiňiz 👇",
+        "ru": "📭 Этой машины больше нет в базе (база обновилась).\n\n"
+              "Можете спросить в WhatsApp 👇",
+    },
     "wa_hello": {
         "tm": "Salam! Şu maşyny gyzyklanýan:",
         "ru": "Здравствуйте! Меня интересует эта машина:",
@@ -1345,6 +1364,8 @@ TEXTS_EN = {
     "cap_home": "🏠 Delivered: ~*{usd:,} USD*",
     "cap_code": "🆔 Code: `{code}`",
     "wa_btn": "🚗 I am interested in this car",
+    "lead_ok": "✅ Your interest is saved.\n\nNow write to us on WhatsApp 👇",
+    "lead_gone": "📭 This car is no longer in the database.\n\nAsk us on WhatsApp 👇",
     "wa_hello": "Hello! I am interested in this car:",
     "wa_code": "🆔 Code: {code}",
     "wa_price": "💰 Starting bid: {usd:,} USD ({aed} AED)",
@@ -1563,7 +1584,8 @@ def _wa_nireden(uid, lang=DEFAULT_LANG):
         return ""
 
 
-def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
+def wa_text_for_car(car, lang=DEFAULT_LANG, uid=None):
+    """WhatsApp-a gidyan taýýar tekst (kod, masyn, auksion, baha, surat)."""
     year = car.get("year", "")
     brand = car.get("brand", "")
     model = car.get("model", "")
@@ -1598,9 +1620,32 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
             text += "\n"
         text += _yurt
 
+    return text
+
+
+def wa_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
+    """WhatsApp salgysy bolan duwme (lead yazylandan SON gorkezilya)."""
+    text = wa_text_for_car(car, lang, uid)
     wa_url = f"https://wa.me/971522371195?text={quote(text)}"
     return InlineKeyboardMarkup([[
         InlineKeyboardButton(T(lang, "wa_btn"), url=wa_url),
+    ]])
+
+
+def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
+    """Masyn kartynyn duwmesi.
+
+    14.11.2026 (Pawel) — ON: gonumel WhatsApp salgysy (url duwme).
+    Telegram url duwmelerin basylanyny bota AYTMAYAR — sonun ucin:
+      - kim basyp sonra yazmadyka gorunmeyardi,
+      - haysy masyna nace gyzyklanma bolany hic yerde yazylmayardy.
+    INDI: callback duwme -> bot yazga alya, Erkine habar berya, sonra
+    musderia WhatsApp duwmesini gorkezya. Musderia 1 artykmac basmak
+    dusya - onun yerine her gyzyklanma hasaba alynya.
+    """
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton(T(lang, "wa_btn"),
+                             callback_data=f"lead:{get_car_code(car)}"),
     ]])
 
 
@@ -4036,6 +4081,129 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 # ============================================================
 # CALLBACK
 # ============================================================
+# ============================================================
+# GYZYKLANMA (LEAD) — 14.11.2026 Pawel
+# ============================================================
+def _lead_yaz(user, car):
+    """Gyzyklanmany leads.json-a yazya. Yalnys bolsa — dymyp gecya."""
+    try:
+        bary = _json_oka(LEADS_FILE, [])
+        if not isinstance(bary, list):
+            bary = []
+        indi = datetime.now(DUBAI_TZ)
+        bary.append({
+            "ts": indi.strftime("%Y-%m-%d %H:%M"),
+            "date": indi.strftime("%Y%m%d"),
+            "uid": user.id,
+            "name": (user.full_name or "")[:60],
+            "username": user.username or "",
+            "country": user_country(user.id) or "",
+            "code": get_car_code(car),
+            "car": f"{car.get('year','')} {car.get('brand','')} {car.get('model','')}".strip(),
+            "auction": car.get("auction", ""),
+            "price": car.get("price", 0),
+        })
+        # fayl ulalmasyn: sonky 2000 yazgy yeterlik
+        if len(bary) > 2000:
+            bary = bary[-2000:]
+        _yedekle(LEADS_FILE)
+        _json_yaz(LEADS_FILE, bary, indent=1)
+        return len(bary)
+    except Exception as e:
+        logger.error(f"lead yazylmady: {e}")
+        return 0
+
+
+async def _lead_callback(q, context, d):
+    """Musderi "Su masyny gyzyklanyan" duwmesine basdy."""
+    kod = d[5:]
+    user = q.from_user
+    lang = user_lang(user.id)
+    car = None
+    try:
+        for c in load_cars():
+            if get_car_code(c) == kod:
+                car = c
+                break
+    except Exception as e:
+        logger.error(f"lead: baza okalmady: {e}")
+
+    if not car:
+        await q.message.reply_text(
+            T(lang, "lead_gone"),
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton(T(lang, "batch_wa"), url=TEKWAY_WHATSAPP)]]))
+        return
+
+    # 1) yazga al
+    _lead_yaz(user, car)
+
+    # 2) Erkine habar
+    try:
+        _yurt = _wa_nireden(user.id, "tm")
+        _usd = aed_to_usd(car.get("price", 0)) if car.get("price") else 0
+        _kim = esc(user.full_name or "?")
+        if user.username:
+            _kim += f" (@{esc(user.username)})"
+        _txt = (
+            f"🟢 *GYZYKLANMA*\n\n"
+            f"🆔 `{esc(kod)}`\n"
+            f"🚗 {esc(car.get('year',''))} {esc(car.get('brand',''))} "
+            f"{esc(car.get('model',''))}\n"
+            f"🏢 {esc(auksion_ady_yer(car))}\n"
+        )
+        if _usd:
+            _txt += f"💰 {_usd:,} USD ({car.get('price',0)} AED)\n"
+        _txt += f"\n👤 {_kim}\n"
+        if _yurt:
+            _txt += f"{esc(_yurt)}\n"
+        _txt += f"🕐 {datetime.now(DUBAI_TZ).strftime('%H:%M')}\n\n"
+        _txt += "_Musderi WhatsApp duwmesini gordi. Gunun jemi: /leads_"
+        await context.bot.send_message(ADMIN_ID, _txt, parse_mode="Markdown")
+    except Exception as e:
+        logger.error(f"lead habary gitmedi: {e}")
+
+    # 3) musderia WhatsApp duwmesi
+    await q.message.reply_text(
+        T(lang, "lead_ok"),
+        reply_markup=wa_keyboard_for_car(car, lang, uid=user.id))
+
+
+async def leads_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/leads — shu gunki gyzyklanmalar (dine admin)."""
+    if update.effective_user.id != ADMIN_ID:
+        return
+    bary = _json_oka(LEADS_FILE, [])
+    if not isinstance(bary, list):
+        bary = []
+    arg = (context.args[0] if context.args else "").strip()
+    gun = datetime.now(DUBAI_TZ).strftime("%Y%m%d")
+    if arg in ("hemmesi", "all"):
+        sel, bas = bary[-40:], "SONKY 40 GYZYKLANMA"
+    else:
+        sel = [x for x in bary if x.get("date") == gun]
+        bas = f"ŞU GÜNKI GYZYKLANMALAR ({gun[6:8]}.{gun[4:6]})"
+    if not sel:
+        await update.message.reply_text(
+            "📭 Şu gün gyzyklanma ýok.\n\nHemmesi: `/leads hemmesi`",
+            parse_mode="Markdown")
+        return
+    txt = f"🟢 *{bas}* — {len(sel)} sany\n\n"
+    for x in sel[-30:]:
+        txt += (f"`{esc(str(x.get('code','')))}` {esc(str(x.get('car','')))}\n"
+                f"   👤 {esc(str(x.get('name','')))} · {x.get('ts','')[-5:]}\n")
+    _masyn = {}
+    for x in sel:
+        _masyn[x.get("car", "?")] = _masyn.get(x.get("car", "?"), 0) + 1
+    _kop = sorted(_masyn.items(), key=lambda t: -t[1])[:3]
+    if len(sel) > 2 and _kop and _kop[0][1] > 1:
+        txt += "\n🔥 *Iň köp soralan:*\n"
+        for a, n in _kop:
+            if n > 1:
+                txt += f"• {esc(a)} — {n}\n"
+    await update.message.reply_text(txt[:4000], parse_mode="Markdown")
+
+
 async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     # 03.09.2026 duzedis: musderi KONE habaryn duwmesine bassa (mes. duyunki
@@ -4048,6 +4216,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if "query is too old" not in str(_e).lower():
             logger.warning("q.answer(): %s", _e)
     d = q.data or ""
+
+    # 14.11.2026: gyzyklanma duwmesi (musderi)
+    if d.startswith("lead:"):
+        await _lead_callback(q, context, d)
+        return
 
     # zakaz düwmeleri (diňe işgärler)
     if d.startswith(("zk:", "zkg:", "zkk:", "zks:", "zkm:")):
@@ -4661,6 +4834,7 @@ def main():
     # Koneler — yatda galanlar ucin ishlap dur
     app.add_handler(CommandHandler("zakazlar", zakazlar_command))
     app.add_handler(CommandHandler("zakaz", zakaz_command))
+    app.add_handler(CommandHandler("leads", leads_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     print("✅ Dubai Auksion | TEK AUTO MARKET boty işläp başlady!")
