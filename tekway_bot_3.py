@@ -11,6 +11,7 @@ import logging
 import os
 import hashlib
 import re
+import threading
 import time
 from pathlib import Path
 from urllib.parse import quote
@@ -34,6 +35,23 @@ from telegram.ext import (
 TOKEN = os.environ.get("BOT_TOKEN", "")
 TEKWAY_WHATSAPP = "https://wa.me/971522371195"
 TEKWAY_TELEGRAM = "https://t.me/+971522371195"
+
+# ============================================================
+# 17.11.2026 (Pawel) — BIR BASYSDA: WhatsApp acylya + Erkine habar
+# ------------------------------------------------------------
+# Telegram duwmesi ya URL bolya (WhatsApp acya, bot bilmeya),
+# ya callback bolya (bot bilya, WhatsApp acanok). Ikisi birden
+# BIR duwmede bolanok - bu Telegramyn duzgun.
+# Cozgut: duwme BIZIN OZ salgymyza gidya (Railway web):
+#     /l/<kod>?u=<uid>
+#       -> lead yazylya + Erkine Telegram habar
+#       -> derrew WhatsApp-a gecirilya (302 redirect)
+# Musderi ucin 1 basys: WhatsApp acylya, habar hem gelya.
+# PUBLIC_URL goyulmasa - gonumel wa.me duwmesi ishlar (onki yaly),
+# habar gelmez, yone hic zat dowulmeya.
+# ============================================================
+PUBLIC_URL = os.environ.get("PUBLIC_URL", "").rstrip("/")
+WEB_PORT = int(os.environ.get("PORT", "8080"))
 CARS_DB_FILE = Path("cars_database.json")
 
 # Alert fayllary - Railway Volume bar bolsa /data
@@ -1643,10 +1661,17 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
     musderia WhatsApp duwmesini gorkezya. Musderia 1 artykmac basmak
     dusya - onun yerine her gyzyklanma hasaba alynya.
     """
-    return InlineKeyboardMarkup([[
-        InlineKeyboardButton(T(lang, "wa_btn"),
-                             callback_data=f"lead:{get_car_code(car)}"),
-    ]])
+    kod = get_car_code(car)
+    # 17.11.2026 — PUBLIC_URL bar bolsa: 1 basys (WhatsApp + habar)
+    if PUBLIC_URL:
+        _u = f"{PUBLIC_URL}/l/{quote(str(kod))}"
+        if uid:
+            _u += f"?u={uid}&s={_lead_imza(kod, uid)}"
+        return InlineKeyboardMarkup([[
+            InlineKeyboardButton(T(lang, "wa_btn"), url=_u),
+        ]])
+    # PUBLIC_URL yok — gonumel WhatsApp (onki yaly, 1 basys, habarsyz)
+    return wa_keyboard_for_car(car, lang, uid=uid)
 
 
 # ============================================================
@@ -4156,6 +4181,167 @@ def _lead_yaz(user, car):
         return 0
 
 
+def _lead_admin_tekst(user, car, kod, acdy=False):
+    """Erkine gidyan habaryn teksti. Ikisinde-de (callback we web) bir."""
+    _yurt = _wa_nireden(user.id, "tm")
+    _usd = aed_to_usd(car.get("price", 0)) if car.get("price") else 0
+    _kim = esc(user.full_name or "?")
+    if user.username:
+        _kim += f" (@{esc(user.username)})"
+    t = (
+        f"\U0001F7E2 *GYZYKLANMA*\n\n"
+        f"\U0001F194 `{esc(kod)}`\n"
+        f"\U0001F697 {esc(car.get('year',''))} {esc(car.get('brand',''))} "
+        f"{esc(car.get('model',''))}\n"
+        f"\U0001F3E2 {esc(auksion_ady_yer(car))}\n"
+    )
+    if _usd:
+        t += f"\U0001F4B0 {_usd:,} USD ({car.get('price',0)} AED)\n"
+    t += f"\n\U0001F464 {_kim}\n"
+    if _yurt:
+        t += f"{esc(_yurt)}\n"
+    t += f"\U0001F550 {datetime.now(DUBAI_TZ).strftime('%H:%M')}\n\n"
+    t += ("_Musderi WhatsApp-a gecdi — hazir saňa yazar. Gunun jemi: /leads_"
+          if acdy else
+          "_Musderi WhatsApp duwmesini gordi. Gunun jemi: /leads_")
+    return t
+
+
+def _lead_imza(kod, uid):
+    """Salgynyn bizinkidigini barlamak ucin gysga imza (6 harp).
+
+    Munsuz biri salgyny bilse, galp "gyzyklanma" ugradyp bilerdi.
+    Acar hokmunde bot tokeni ulanylya - ol dine serwerde bar.
+    """
+    h = hashlib.sha256(f"{kod}|{uid}|{TOKEN}".encode("utf-8")).hexdigest()
+    return h[:6]
+
+
+# Gaytalama goragy: ayny adam ayny masyna 90 sekuntda 1 gezek.
+_lead_sonky = {}
+
+
+def _lead_gaytalandy(kod, uid):
+    indi = time.time()
+    acar = (kod, uid)
+    on = _lead_sonky.get(acar, 0)
+    _lead_sonky[acar] = indi
+    if len(_lead_sonky) > 5000:
+        for k, v in list(_lead_sonky.items()):
+            if indi - v > 3600:
+                _lead_sonky.pop(k, None)
+    return (indi - on) < 90
+
+
+class _WebUser:
+    """users.json-dan ýasalan ýönekeý ulanyjy (telegram User däl)."""
+
+    def __init__(self, uid):
+        self.id = uid
+        try:
+            u = load_users().get(str(uid), {})
+        except Exception:
+            u = {}
+        self.full_name = (u.get("name") or "").strip() or f"ID {uid}"
+        self.username = (u.get("username") or "").strip()
+
+
+def _tg_ugrat(chat_id, text):
+    """Telegram-a gönümel habar (web sapagyndan — async däl)."""
+    import urllib.request
+    data = json.dumps({"chat_id": chat_id, "text": text,
+                       "parse_mode": "Markdown"}).encode("utf-8")
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+        data=data, headers={"Content-Type": "application/json"})
+    urllib.request.urlopen(req, timeout=12).read()
+
+
+def _web_lead(kod, uid, imza=""):
+    """Lead yazya + Erkine habar berya. WhatsApp salgysyny gaytarya.
+
+    Imza yalnys bolsa - WhatsApp yene-de acylya (musderi zyyan gormeya),
+    yone lead yazylmaya we habar gitmeya.
+    """
+    car = None
+    try:
+        for c in load_cars():
+            if get_car_code(c) == kod:
+                car = c
+                break
+    except Exception as e:
+        logger.error(f"web lead: baza okalmady: {e}")
+    if not car:
+        return TEKWAY_WHATSAPP
+    _dogry = bool(uid) and imza == _lead_imza(kod, uid)
+    if not _dogry or _lead_gaytalandy(kod, uid):
+        try:
+            lang = user_lang(uid) if uid else DEFAULT_LANG
+        except Exception:
+            lang = DEFAULT_LANG
+        return ("https://wa.me/971522371195?text="
+                + quote(wa_text_for_car(car, lang, uid=uid or None)))
+    user = _WebUser(uid)
+    try:
+        _lead_yaz(user, car)
+    except Exception as e:
+        logger.error(f"web lead yazylmady: {e}")
+    try:
+        _tg_ugrat(ADMIN_ID, _lead_admin_tekst(user, car, kod, acdy=True))
+    except Exception as e:
+        logger.error(f"web lead habary gitmedi: {e}")
+    try:
+        lang = user_lang(uid) if uid else DEFAULT_LANG
+    except Exception:
+        lang = DEFAULT_LANG
+    return ("https://wa.me/971522371195?text="
+            + quote(wa_text_for_car(car, lang, uid=uid or None)))
+
+
+def _web_server_baslat():
+    """Kicijik HTTP serwer (stdlib — goshmaca kitaphana gerek dal)."""
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import urlparse, parse_qs
+
+    class _H(BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_GET(self):
+            pr = urlparse(self.path)
+            if pr.path.startswith("/l/"):
+                kod = pr.path[3:].strip("/")
+                qs = parse_qs(pr.query)
+                try:
+                    uid = int(qs.get("u", ["0"])[0])
+                except (ValueError, TypeError):
+                    uid = 0
+                imza = (qs.get("s", [""])[0] or "")[:16]
+                try:
+                    yer = _web_lead(kod, uid, imza)
+                except Exception as e:
+                    logger.error(f"web lead yalnys: {e}")
+                    yer = TEKWAY_WHATSAPP
+                self.send_response(302)
+                self.send_header("Location", yer)
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(b"TEK AUTO MARKET bot OK")
+
+    try:
+        srv = ThreadingHTTPServer(("0.0.0.0", WEB_PORT), _H)
+    except Exception as e:
+        logger.error(f"web serwer achylmady: {e}")
+        return
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    print(f"\U0001F310 Web serwer: port {WEB_PORT} | PUBLIC_URL="
+          + (PUBLIC_URL or "YOK (gonumel WhatsApp duwmesi)"))
+
+
 async def _lead_callback(q, context, d):
     """Musderi "Su masyny gyzyklanyan" duwmesine basdy."""
     kod = d[5:]
@@ -4182,25 +4368,7 @@ async def _lead_callback(q, context, d):
 
     # 2) Erkine habar
     try:
-        _yurt = _wa_nireden(user.id, "tm")
-        _usd = aed_to_usd(car.get("price", 0)) if car.get("price") else 0
-        _kim = esc(user.full_name or "?")
-        if user.username:
-            _kim += f" (@{esc(user.username)})"
-        _txt = (
-            f"🟢 *GYZYKLANMA*\n\n"
-            f"🆔 `{esc(kod)}`\n"
-            f"🚗 {esc(car.get('year',''))} {esc(car.get('brand',''))} "
-            f"{esc(car.get('model',''))}\n"
-            f"🏢 {esc(auksion_ady_yer(car))}\n"
-        )
-        if _usd:
-            _txt += f"💰 {_usd:,} USD ({car.get('price',0)} AED)\n"
-        _txt += f"\n👤 {_kim}\n"
-        if _yurt:
-            _txt += f"{esc(_yurt)}\n"
-        _txt += f"🕐 {datetime.now(DUBAI_TZ).strftime('%H:%M')}\n\n"
-        _txt += "_Musderi WhatsApp duwmesini gordi. Gunun jemi: /leads_"
+        _txt = _lead_admin_tekst(user, car, kod)
         await context.bot.send_message(ADMIN_ID, _txt, parse_mode="Markdown")
     except Exception as e:
         logger.error(f"lead habary gitmedi: {e}")
@@ -4901,6 +5069,7 @@ def main():
     app.add_handler(CommandHandler("top", top_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    _web_server_baslat()
     print("✅ Dubai Auksion | TEK AUTO MARKET boty işläp başlady!")
     app.run_polling()
 
