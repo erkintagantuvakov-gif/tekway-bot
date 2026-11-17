@@ -1661,16 +1661,13 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
     musderia WhatsApp duwmesini gorkezya. Musderia 1 artykmac basmak
     dusya - onun yerine her gyzyklanma hasaba alynya.
     """
-    kod = get_car_code(car)
-    # 17.11.2026 — PUBLIC_URL bar bolsa: 1 basys (WhatsApp + habar)
-    if PUBLIC_URL:
-        _u = f"{PUBLIC_URL}/l/{quote(str(kod))}"
-        if uid:
-            _u += f"?u={uid}&s={_lead_imza(kod, uid)}"
-        return InlineKeyboardMarkup([[
-            InlineKeyboardButton(T(lang, "wa_btn"), url=_u),
-        ]])
-    # PUBLIC_URL yok — gonumel WhatsApp (onki yaly, 1 basys, habarsyz)
+    # 17.11.2026 (Erkin) — ONKI YALY GAYDYP GELDI.
+    # 14.11: callback duwme (bot yazga alyardy, emma musderi 2 gezek
+    #        basmaly bolyardy -> Erkin halamady).
+    # 17.11: serwer arkaly gecirme (1 basys + habar) -> Erkin halamady,
+    #        Railway-de domen sazlamak amatsyz.
+    # INDI: gonumel WhatsApp salgysy. 1 basys, WhatsApp acylya,
+    #       tekst tayyar. Hic hili aralyk adim yok.
     return wa_keyboard_for_car(car, lang, uid=uid)
 
 
@@ -5069,7 +5066,6 @@ def main():
     app.add_handler(CommandHandler("top", top_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    _web_server_baslat()
     print("✅ Dubai Auksion | TEK AUTO MARKET boty işläp başlady!")
     app.run_polling()
 

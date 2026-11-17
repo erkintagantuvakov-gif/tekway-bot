@@ -1,1 +1,1 @@
-web: python tekway_bot_3.py
+worker: python tekway_bot_3.py
