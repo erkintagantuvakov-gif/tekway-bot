@@ -22,9 +22,11 @@ from telegram import (Update, InlineKeyboardButton, InlineKeyboardMarkup,
 from telegram.error import Forbidden
 from telegram.ext import (
     Application,
+    ApplicationHandlerStop,
     CommandHandler,
     MessageHandler,
     CallbackQueryHandler,
+    TypeHandler,
     filters,
     ContextTypes,
 )
@@ -3899,7 +3901,27 @@ AUCTIONS = {
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text.strip()
+    # ============================================================
+    # 19.11.2026 (Pawel) — "AttributeError: 'NoneType' has no 'text'"
+    # ------------------------------------------------------------
+    # Telegram hemme tekst habaryny "update.message" diyip ibermeya:
+    #   - habar DUZEDILENDE -> update.edited_message doldurylya,
+    #                          update.message = None
+    #   - KANALA yazylanda  -> update.channel_post, message = None
+    # Kod "update.message.text" diyip okayardy -> bot yykylyardy we
+    # Erkine "Botda yalnyslyk" traceback-y gidyardi (19.11, 23:53).
+    #
+    # Indi 2 gorag bar:
+    #   1) main()-de TypeHandler duzedilen/kanal habarlaryny asla
+    #      goybermeya (ahli handler ucin, komandalar hem),
+    #   2) shu yerde-de barlanya - gorag gosha bolsun.
+    # ============================================================
+    # Asakdaky kod "update.message" ulanya - sonun ucin edil shony
+    # barlayas (effective_message dal): None bolsa dymyp cykyas.
+    msg = update.message
+    if msg is None or not (msg.text or "").strip():
+        return
+    text = msg.text.strip()
 
     # --- ISHGAR DUWMELERI (24.08) ---
     # Panel duwmesine basylanda Telegram adaty TEKST iberya.
@@ -5024,11 +5046,25 @@ async def habar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ============================================================
 # IŞLET
 # ============================================================
+async def _atlanmaly_update(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Duzedilen habarlary we kanal yazgylaryny ret edya (19.11.2026).
+
+    Olarda update.message = None bolya, kod bolsa ony garasya.
+    group=-1-de dur, sonun ucin beyleki handler-lerden ON ishleya.
+    """
+    if (update.edited_message or update.channel_post
+            or update.edited_channel_post):
+        raise ApplicationHandlerStop
+
+
 def main():
     if not TOKEN:
         print("❌ BOT_TOKEN tapylmady!")
         return
     app = Application.builder().token(TOKEN).post_init(post_init).job_queue(None).build()
+    # 19.11.2026 (Pawel): duzedilen habar / kanal yazgysy hic bir
+    # handler-e barmasyn - olarda "update.message" None bolya.
+    app.add_handler(TypeHandler(Update, _atlanmaly_update), group=-1)
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("today", today_command))
@@ -5065,7 +5101,8 @@ def main():
     app.add_handler(CommandHandler("leads", leads_command))
     app.add_handler(CommandHandler("top", top_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.UpdateType.MESSAGE,
+                                   handle_message))
     print("✅ Dubai Auksion | TEK AUTO MARKET boty işläp başlady!")
     app.run_polling()
 
