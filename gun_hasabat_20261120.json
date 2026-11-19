@@ -103,5 +103,27 @@
       "tanalmady (marka/yyl tapylmady)": 16
     },
     "time": "01:46"
+  },
+  {
+    "pdf": "FRIDAY 20 NOV 2026.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 189,
+    "kept": 156,
+    "rejected": 33,
+    "tanalmadyk": [
+      "p1: 23 / NOVEMBER / 2024 السبت",
+      "p2: 23 / NOVEMBER / 2024 السبت",
+      "p3: 23 / NOVEMBER / 2024 السبت",
+      "p4: 23 / NOVEMBER / 2024 السبت",
+      "p5: 23 / NOVEMBER / 2024 السبت",
+      "p6: 23 / NOVEMBER / 2024 السبت",
+      "p7: 23 / NOVEMBER / 2024 السبت"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "marka bos (reklama sahypasy)": 26,
+      "tanalmady (marka/yyl tapylmady)": 7
+    },
+    "time": "01:59"
   }
 ]
