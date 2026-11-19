@@ -125,5 +125,18 @@
       "tanalmady (marka/yyl tapylmady)": 7
     },
     "time": "01:59"
+  },
+  {
+    "pdf": "20-11-2026 FRIDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 68,
+    "kept": 63,
+    "rejected": 5,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 5
+    },
+    "time": "02:51"
   }
 ]
