@@ -34,5 +34,18 @@
       "marka bos (reklama sahypasy)": 1
     },
     "time": "01:02"
+  },
+  {
+    "pdf": "Marhaba Auction Thursday 19th November 2026 - Main Branch Industrial Area 2 - Auction List_compressed.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 277,
+    "kept": 264,
+    "rejected": 13,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 13
+    },
+    "time": "08:59"
   }
 ]
