@@ -1,0 +1,107 @@
+[
+  {
+    "pdf": "20-NOV-2026 KHAT AL JAZEERA CARS AUCTION.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 263,
+    "kept": 234,
+    "rejected": 29,
+    "tanalmadyk": [],
+    "ocr_halas": 7,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 29
+    },
+    "time": "00:59"
+  },
+  {
+    "pdf": "Fadak Cars Auction 20-11-2026 SAJAA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 134,
+    "kept": 130,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: FIND US NOW YOU ARE ONE STEP AWAY FROM YOUR DREAM CAR AUCTION ON EVERY SATURDAY, SUNDAY, WEDNESDAY & FRIDAY.",
+      "p2: 4 Auction Days / اﻟﻤﺰاد أﻳﺎم Industrial Area 2 Branch ٢ اﻟﺼﻨﺎﻋﻴﺔ اﻟﻤﻨﻄﻘﺔ ﻓﺮع SATURDAY / اﻟﺴﺒﺖ WEDNESDAY / اﻷرﺑﻌﺎءSUNDAY / اﻷﺣﺪ Sajja Branch اﻟﺼﺠﻌﺔ ﻓﺮع https://m",
+      "p3: @FadakCarsAuction @FadakCarsAuction @FadakCarsAuction www.FadakAuctions.com NOW NOW FOLLOW US",
+      "p4: 20/NOVEMBER/2026 FRIDAY AUCTION 06:15 PM Sajja Branch"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "01:00"
+  },
+  {
+    "pdf": "Friday - 20-11-2026 - GCA.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 163,
+    "kept": 160,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p1: 20 NOVEMBER 2026 5:30 PM FRIDAY AUCTION",
+      "p2: 160",
+      "p3: @gulfcarsauction CONTACT US CONTACT US +971 568 900 900 +971 568 900 900 +971 558 800 800 +971 558 800 800 800 900 900 800 900 900 TOLL FREE TOLL FREE HOTLINE /"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "01:01"
+  },
+  {
+    "pdf": "Friday 20th NOV 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 190,
+    "kept": 177,
+    "rejected": 13,
+    "tanalmadyk": [
+      "p1: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p2: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p19: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p39: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p59: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p79: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p99: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p119: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p139: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p159: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE"
+    ],
+    "ocr_halas": 1,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 13
+    },
+    "time": "01:24"
+  },
+  {
+    "pdf": "FRIDAY AUCTION CARS LIST 20-11-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 146,
+    "kept": 142,
+    "rejected": 4,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "01:42"
+  },
+  {
+    "pdf": "GREEN FRIDAY GRAND AUCTION 20-NOV-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 362,
+    "kept": 346,
+    "rejected": 16,
+    "tanalmadyk": [
+      "p1: SPECIAL AUCTION SPECIAL OFFER 20 NOV 2026",
+      "p2: ﺧﺎص ﻣﺰاد ﺧﺎص ﻋﺮض 20ﻧﻮﻓﻤﺒﺮ2026",
+      "p3: EMIRATES IND. CITY SAJAA",
+      "p91: 2025 Leopard Titanium - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 98,500 FRI-20 NOV 5:30",
+      "p92: 2025 Leopard Titanium 1.5 AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 98,500 FRI-20 NOV 5:",
+      "p346: 2023 FISKER INC OCEAN ONE - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 6,500 FRI-20 NOV 5"
+    ],
+    "ocr_halas": 13,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 16
+    },
+    "time": "01:46"
+  }
+]
