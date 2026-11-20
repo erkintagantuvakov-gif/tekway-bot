@@ -3317,15 +3317,23 @@ async def post_init(app):
             except Exception as e:
                 logger.warning("Menyu (%s) goyulmady: %s", _lc, e)
 
-        # Ishgarler uchin — sargyt komandalary hem bar
+        # ============================================================
+        # 20.11.2026 (Erkin) — "Sargyt komandanam ayyr, ahli zat
+        # knopkada bolsun."
+        # Menyuda /sargyt we /today ayryldy - olar eyyam panelde
+        # duwme: "📋 Sargytlar", "➕ Zakaz goş", "🔄 Täzele", "📅 Şu gün".
+        #
+        # /start GALYAR - ol HOWPSUZLYK duwmesi: panel ýitse
+        # (Telegram ony kate ýygnaýar) yzyna getirmegin yeke-tak
+        # yoly. Komandalaryn OZI hem ishlap dur (yatda galanlar
+        # uchin), dine menyuda gorunmeya.
+        # ============================================================
         _ishgarler = set(ZK.STAFF_IDS) if ZK else set()
         _ishgarler.add(str(ADMIN_ID))
         for _uid in _ishgarler:
             try:
                 await app.bot.set_my_commands([
-                    BotCommand("sargyt", "📋 Açyk sargytlar"),
-                    BotCommand("today", "📅 Şu günki auksionlar"),
-                    BotCommand("start", "Düwmeleri yzyna getir"),
+                    BotCommand("start", "⌨️ Düwmeleri yzyna getir"),
                     BotCommand("help", "Kömek"),
                 ], scope=BotCommandScopeChat(chat_id=int(_uid)))
             except Exception as e:
