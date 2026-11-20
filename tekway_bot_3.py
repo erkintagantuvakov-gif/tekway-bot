@@ -3661,7 +3661,7 @@ def ishgar_klawiatura(lang=DEFAULT_LANG):
 # ============================================================
 ZAKAZ_GOS_KOMEK = (
     "📝 *Täze zakaz goşmak*\n\n"
-    "`/zakaz_gos At | Isleýän maşyny | Býujet | Telefon | Kanal`\n\n"
+    "`/zakaz_gos At | Isleýän maşyny | Býujet | Telefon | Kanal | Bellik`\n\n"
     "Mysal:\n"
     "`/zakaz_gos Merdan | Toyota Camry 2021-2023 | 18000 | "
     "+99365123456 | WhatsApp`\n\n"
@@ -3690,14 +3690,18 @@ ZAKAZ_GOS_KOMEK = (
 _ZG = {}                     # {uid: {"adim": str, "d": {...}, "wagt": ts}}
 _ZG_MOHLET = 30 * 60         # 30 minut
 
-_ZG_ADIMLAR = ["at", "isleg", "byujet", "telefon", "kanal"]
+_ZG_ADIMLAR = ["at", "isleg", "byujet", "telefon", "kanal", "bellik"]
 _ZG_SORAG = {
-    "at":      ("👤 *1/5 · Müşderiniň ady*\n\nAdyny ýaz.\n_Mysal: Merdan_", False),
-    "isleg":   ("🚗 *2/5 · Nähili maşyn?*\n\nMarka, model, ýyl.\n"
+    "at":      ("👤 *1/6 · Müşderiniň ady*\n\nAdyny ýaz.\n_Mysal: Merdan_", False),
+    "isleg":   ("🚗 *2/6 · Nähili maşyn?*\n\nMarka, model, ýyl.\n"
                 "_Mysal: Toyota Camry 2021-2023_", False),
-    "byujet":  ("💰 *3/5 · Býujet*\n\nNäçe dollar?\n_Mysal: 18000 ýa 15-20 müň_", True),
-    "telefon": ("📞 *4/5 · Telefon*\n\n_Mysal: +99365123456_", True),
-    "kanal":   ("📥 *5/5 · Zakaz nireden geldi?*", True),
+    "byujet":  ("💰 *3/6 · Býujet*\n\nNäçe dollar?\n_Mysal: 18000 ýa 15-20 müň_", True),
+    "telefon": ("📞 *4/6 · Telefon*\n\n_Mysal: +99365123456_", True),
+    "kanal":   ("📥 *5/6 · Zakaz nireden geldi?*", True),
+    # 20.11 (Erkin): "belki dushundirmeli zatlar bardyr" — erkin yazgy
+    "bellik":  ("📝 *6/6 · Bellik*\n\nGoşmaça düşündiriş barmy?\n"
+                "_Mysal: diňe ak reňk · ýanyp-ýanmadygy möhüm däl ·_\n"
+                "_tölegi iki bölekde · Aşgabada eltilmeli_", True),
 }
 _ZG_KANALLAR = ["WhatsApp", "Imo", "TikTok", "Telegram", "Instagram", "Tanyş"]
 
@@ -3735,6 +3739,8 @@ def _zg_jemi(d):
          f"💰 {esc(d.get('byujet') or '—')}",
          f"📞 {esc(d.get('telefon') or '—')}",
          f"📥 {esc(d.get('kanal') or '—')}"]
+    if d.get("bellik"):
+        s.append(f"📝 _{esc(d['bellik'])}_")
     return "\n".join(s)
 
 
@@ -3790,7 +3796,8 @@ async def zg_tekst(update, context, text):
     yg = _ZG.get(uid)
     if not yg or yg["adim"] == "tassyk":
         return
-    yg["d"][yg["adim"]] = text.strip()[:200]
+    _cak = 1000 if yg["adim"] == "bellik" else 200
+    yg["d"][yg["adim"]] = text.strip()[:_cak]
     await _zg_indiki(uid, update.message.reply_text)
 
 
@@ -3818,7 +3825,7 @@ async def _zg_callback(q, context, d):
         _ZG.pop(uid, None)
         ok, netije = await ZK.notion_dore(
             dd.get("at", ""), dd.get("isleg", ""), dd.get("byujet", ""),
-            dd.get("telefon", ""), dd.get("kanal", ""))
+            dd.get("telefon", ""), dd.get("kanal", ""), dd.get("bellik", ""))
         if not ok:
             await q.message.reply_text(f"⚠️ Goşulmady: {netije}")
             return
@@ -3853,6 +3860,7 @@ async def zakaz_gos_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     byujet = b[2] if len(b) > 2 else ""
     telefon = b[3] if len(b) > 3 else ""
     kanal = b[4] if len(b) > 4 else ""
+    bellik = b[5] if len(b) > 5 else ""
     if not at:
         await update.message.reply_text(ZAKAZ_GOS_KOMEK, parse_mode="Markdown")
         return
@@ -3863,7 +3871,8 @@ async def zakaz_gos_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if kanal:
         kanal = _kanallar.get(kanal.lower().strip(), kanal)
 
-    ok, netije = await ZK.notion_dore(at, isleg, byujet, telefon, kanal)
+    ok, netije = await ZK.notion_dore(at, isleg, byujet, telefon, kanal,
+                                      bellik)
     if not ok:
         await update.message.reply_text(f"⚠️ Goşulmady: {netije}")
         return
@@ -3877,6 +3886,8 @@ async def zakaz_gos_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         jogap.append(f"📞 {esc(telefon)}")
     if kanal:
         jogap.append(f"📥 {esc(kanal)}")
+    if bellik:
+        jogap.append(f"📝 _{esc(bellik)}_")
     jogap.append("\n_Status: Täze. Sanaw: /sargyt_")
     kb = None
     if netije:
