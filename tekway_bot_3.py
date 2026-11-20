@@ -3282,6 +3282,7 @@ async def post_init(app):
         logger.warning("zg_oka: %s", _e)
     if ZK is not None and ZK.isleyarmi():
         ZK._hb_oka()          # 26.08: onki habarlar diskden okalya
+        _tz_oka()
         asyncio.create_task(zakaz_gozegcilik(app))
         _alyj = (ZK.TOPAR_CHAT_ID or ", ".join(sorted(ZK.STAFF_IDS)) or "—")
         logger.info("ZAKAZ moduly isjen (Notion baglandy)")
@@ -3903,6 +3904,12 @@ async def _zg_callback(q, context, d):
             "✅ *Zakaz goşuldy*\n\n" + _zg_jemi(dd).split("\n", 2)[2]
             + "\n\n_Status: Täze · Sanaw: 📋 Sargytlar_",
             parse_mode="Markdown", reply_markup=kb)
+        # 20.11: topara "🆕 TÄZE ZAKAZ" habaryny 15 minut garashman,
+        # shol bada ugradya (funksiyanyn ozi gaytalamazlygy barlaya).
+        try:
+            await _taze_zakaz_habar(context.application)
+        except Exception as e:
+            logger.error("taze zakaz habar (wizard): %s", e)
         return
 
 
@@ -4262,19 +4269,148 @@ async def _sargyt_habar_isle(app, hasabat=None):
     return ugradyldy
 
 
+# =====================================================================
+#  TAZE ZAKAZ HABARY  (20.11.2026)
+# =====================================================================
+#  ON NAHILIDI:
+#    Her 30 minutda bot ACHYK sargytlaryn hemmesini auksion bazasy
+#    bilen deneshdirip, taze gabatlama tapsa "🔔 SARGYT UCIN MASYN
+#    TAPYLDY" habaryny ugradyardy.
+#
+#  NAM UCHIN AYRYLDY (Erkin, 20.11):
+#    "her zakaz un seyle masyn tapyldy dp habar gelse, zakaz 10-20
+#     yetse beter kop habar gelyar we unsuni bolyar."
+#    10 sargyt x gunde 5 katalog = gunde onlarca habar. Peydaly
+#    habar spam-yn ichinde yitya.
+#
+#  INDI NAHILI:
+#    1. Habar DINE TAZE ZAKAZ goshulanda gelya (gunde 1-3 gezek).
+#    2. Masyn gozlemek EL BILEN: sargyt kartyndaky
+#       "🔎 AUKSIONLARDAN GÖZLE" duwmesi (callback zkg:<kod>).
+#       Ol hemishe SHU GUNKI bazadan gozleya - gijigen habar yok.
+#    3. /sargytbarla komandasy (dine admin) onki awtomat logikany
+#       el bilen ishledip bilya - diagnostika uchin galdyryldy.
+# =====================================================================
+
+_TZ_FAYL = _DATA_DIR / "zakaz_gorlen.json"
+_tz_gorlen = set()          # {sargyt kody} - habary ugradylanlar
+
+
+def _tz_oka():
+    """Railway her push-da tazeden bashlaya - sanaw fayldan dikeldilya."""
+    global _tz_gorlen
+    try:
+        d = json.loads(_TZ_FAYL.read_text(encoding="utf-8"))
+        _tz_gorlen = set(d.get("kodlar") or [])
+        logger.info("zakaz_gorlen: %d kod okaldy", len(_tz_gorlen))
+        return True
+    except Exception:
+        _tz_gorlen = set()
+        return False
+
+
+def _tz_yaz():
+    try:
+        _TZ_FAYL.write_text(json.dumps(
+            {"wagt": datetime.now().isoformat(),
+             "kodlar": sorted(_tz_gorlen)}, ensure_ascii=False),
+            encoding="utf-8")
+    except Exception as e:
+        logger.error("_tz_yaz: %s", e)
+
+
+def _tz_duwmeler(kod):
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔎 AUKSIONLARDAN GÖZLE",
+                              callback_data=f"zkg:{kod}")],
+        [InlineKeyboardButton("📋 Sargyt kartyny aç",
+                              callback_data=f"zk:{kod}")],
+    ])
+
+
+async def _taze_zakaz_habar(app, hasabat=None):
+    """Notion-da TAZE sargyt peyda bolsa topara habar berya.
+    Masyn gozlemeya - dine 'taze zakaz geldi' diyip aydya."""
+    def _y(t):
+        if hasabat is not None:
+            hasabat.append(t)
+
+    if not _zk_bar():
+        _y("❌ Sargyt moduly ÖÇÜK (NOTION_TOKEN ýok)")
+        return 0
+    _y("✅ Sargyt moduly açyk")
+
+    alyjylar = ([ZK.TOPAR_CHAT_ID] if ZK.TOPAR_CHAT_ID
+                else sorted(set(ZK.STAFF_IDS) | {str(ADMIN_ID)}))
+    if not alyjylar:
+        _y("❌ Alyjy ýok")
+        return 0
+
+    try:
+        zakazlar = await ZK.zakazlary_al(mejbury=True)
+    except Exception as e:
+        _y(f"❌ Notion okalmady: {esc(str(e)[:80])}")
+        return 0
+    _y(f"📋 Notion-da {len(zakazlar)} sargyt")
+
+    # ILKINJI GEZEK: fayl yok bolsa HIC HABAR UGRATMA, dine belle.
+    # Yogsa deploy edilen badyna 20 sany "taze zakaz" habary gider.
+    if not _TZ_FAYL.exists():
+        for z in zakazlar:
+            _tz_gorlen.add(z["kod"])
+        _tz_yaz()
+        _y(f"ℹ️ Ilkinji gezek — {len(zakazlar)} sargyt bellendi, habar ýok")
+        return 0
+
+    taze = [z for z in zakazlar if z["kod"] not in _tz_gorlen]
+    _y(f"🆕 Täze sargyt: {len(taze)}")
+    if not taze:
+        return 0
+
+    ugradyldy = 0
+    for z in taze:
+        setirler = ["🆕 *TÄZE ZAKAZ*", "", ZK._kart(z)]
+        if z.get("telefon"):
+            setirler.append(f"📞 {esc(z['telefon'])}")
+        if z.get("kanal"):
+            setirler.append(f"📥 {esc(z['kanal'])}")
+        if z.get("bellik"):
+            setirler.append(f"📝 _{esc(z['bellik'])}_")
+        _tekst = "\n".join(setirler)
+        _kb = _tz_duwmeler(z["kod"])
+        _gitdi = False
+        for _al in alyjylar:
+            try:
+                await app.bot.send_message(chat_id=int(_al), text=_tekst,
+                                           parse_mode="Markdown",
+                                           reply_markup=_kb)
+                ugradyldy += 1
+                _gitdi = True
+            except Exception as e:
+                logger.error("taze zakaz habar (%s): %s", _al, e)
+                _y(f"   ❌ {_al}: {esc(str(e)[:60])}")
+        # Habar gitmedik bolsa belleme - indiki gezek gaytalap synansyn
+        if _gitdi:
+            _tz_gorlen.add(z["kod"])
+        await asyncio.sleep(1)
+    _tz_yaz()
+    _y(f"📨 Jemi {ugradyldy} habar iberildi")
+    return ugradyldy
+
+
 async def zakaz_gozegcilik(app):
-    """AWTOMAT: her 30 minutda açyk sargytlara gabat gelýän täze
-    maşyn bar bolsa habar berýär. Işgär hiç zat barlamaly däl."""
+    """AWTOMAT: her 15 minutda Notion-da TÄZE sargyt bar bolsa
+    topara habar berýär. Maşyn gözlemek — el bilen, düwme arkaly."""
     await asyncio.sleep(120)
+    _tz_oka()
     while True:
         try:
-            # 20.09: gije sargyt habary ugradylmaýar - 08:45-den soň.
-            # (/sargytbarla el bilen islendik wagt işleýär.)
+            # 20.09: gije habar ugradylmaýar - 08:45-den soň.
             if habar_wagtymy():
-                await _sargyt_habar_isle(app)
+                await _taze_zakaz_habar(app)
         except Exception as e:
             logger.error("zakaz_gozegcilik: %s", e)
-        await asyncio.sleep(1800)   # 30 minutda bir
+        await asyncio.sleep(900)   # 15 minutda bir
 
 
 async def sargytbarla_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -4282,12 +4418,18 @@ async def sargytbarla_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     her ädimiň netijesini görkezýär. Diňe admin."""
     if update.effective_user.id != ADMIN_ID:
         return
-    hasabat = []
+    hasabat = ["*1) Täze zakaz habary (awtomat)*"]
+    try:
+        await _taze_zakaz_habar(context.application, hasabat)
+    except Exception as e:
+        hasabat.append(f"❌ ÝALŇYŞLYK: {esc(str(e)[:120])}")
+        logger.exception("sargytbarla/taze")
+    hasabat.append("\n*2) Maşyn gabatlama (indi awtomat DÄL)*")
     try:
         await _sargyt_habar_isle(context.application, hasabat)
     except Exception as e:
         hasabat.append(f"❌ ÝALŇYŞLYK: {esc(str(e)[:120])}")
-        logger.exception("sargytbarla")
+        logger.exception("sargytbarla/gabat")
     await update.message.reply_text(
         "🔍 *SARGYT HABAR BARLAGY*\n\n" + "\n".join(hasabat),
         parse_mode="Markdown")
