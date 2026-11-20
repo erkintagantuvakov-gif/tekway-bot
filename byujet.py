@@ -64,16 +64,22 @@ def _munmi(t):
     return False
 
 
-def oka(tekst, ansat_walyuta="AED"):
+def oka(tekst, ansat_walyuta="USD"):
     """
     Byujet tekstini okaya.
 
     ansat_walyuta — walyuta yazylmadyk bolsa nahili hasaplamaly.
-      'AED' saylandy, sebabi YALNYSHSAK ZYYANY AZ:
-        AED diyip okasak (hakykatda USD bolsa)  -> az masyn gorkezilya
-        USD diyip okasak (hakykatda AED bolsa)  -> mushderа gotermejek
-                                                   gymmat masyn hodurlenya
-      Ikinjisi has erbet — shonun ucin seresap tarapy saylandy.
+
+    ⚠️ 20.11.2026 — ADATY WALYUTA 'AED' -> 'USD' UYTGEDILDI.
+      24.08-de 'AED' saylanypdy ("yalnyshsak zyyany az" diyen pikir
+      bilen). Praktikada ters bolup cykdy: byujeti ERKIN yazya,
+      ol bolsa HEMISHE DOLLARDA pikir edya.
+      20.11-de ST-12 zakazynda: Erkin "8000 gapa cenli" yazdy
+      (=$8000), bot ony 8000 AED diyip okap "≈ $2 178" gorkezdi -
+      byujet 4 esse pes bolup, suzguc nadogry ishlardi.
+      Sorag hem "Näçe dollar?" diyip sorayar - sonun ucin adaty
+      walyuta USD bolmaly. AED yazmak islese tekste 'AED' ya
+      'dirhem' goshsa bolya, bot ony tanayar.
 
     Yzyna dict:
       asyl      — Erkinin yazan teksti (kartda shol gornushde gorkezilya)
@@ -160,6 +166,7 @@ if __name__ == "__main__":
         "10-12 mun dollar", "10-12 müň $", "10 - 12 mun dollar",
         "25 mun dirhem", "40000", "8000", "$10 000 - 12 000",
         "12k usd", "120 000 AED", "2021-2023 Camry ucin 15 mun dollar",
+        "8000 gapa cenli", "8000 AED gapa cenli", "15-18 mun",
         "", "bilemok",
     ]
     print(f"{'YAZYLAN':<34} {'WAL':<5} {'ANYK':<5} {'USD aralyk':<20} KARTDA")

@@ -3753,7 +3753,8 @@ _ZG_SORAG = {
     "at":      ("👤 *1/6 · Müşderiniň ady*\n\nAdyny ýaz.\n_Mysal: Merdan_", False),
     "isleg":   ("🚗 *2/6 · Nähili maşyn?*\n\nMarka, model, ýyl.\n"
                 "_Mysal: Toyota Camry 2021-2023_", False),
-    "byujet":  ("💰 *3/6 · Býujet*\n\nNäçe dollar?\n_Mysal: 18000 ýa 15-20 müň_", True),
+    "byujet":  ("💰 *3/6 · Býujet*\n\nNäçe dollar?\n_Mysal: 18000 ýa 15-20 müň_\n"
+                "_Dirhemde aýtsa: 30000 AED_", True),
     "telefon": ("📞 *4/6 · Telefon*\n\n_Mysal: +99365123456_", True),
     "kanal":   ("📥 *5/6 · Zakaz nireden geldi?*", True),
     # 20.11 (Erkin): "belki dushundirmeli zatlar bardyr" — erkin yazgy
