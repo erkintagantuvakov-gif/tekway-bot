@@ -67,8 +67,29 @@ STAFF_IDS = {s.strip() for s in _raw_staff.replace(";", ",").split(",") if s.str
 
 USD_RATE = 3.67
 
-# Işlenmeli hasap edilýän statuslar (gutaranlar sanawda görünmeýär)
-ACIK_STATUS = {"Täze", "Gözlenýär", "Tapyldy", "Auksionda"}
+# ============================================================
+# STATUS TOPARLARY
+# ------------------------------------------------------------
+# 20.11.2026 (Erkin bilen ylalashyldy): on statuslar AUKSIONDA
+# gutaryardy. Emma hakyky ish shondan son bashlayar - tolег,
+# konteyner, yol, gelmek, tabshyrmak. Musderi "masynym nirede?"
+# diyende jogap hic yerde yazylgy daldi.
+#
+# GOZLEG  - bot her gun auksion bazasy bilen GABATLAYAR
+# YOLDA   - masyn alyndy, indi logistika (gabatlama gerek dal)
+# YAPYK   - gutardy
+# ============================================================
+GOZLEG_STATUS = {"Täze", "Gözlenýär", "Tapyldy", "Auksionda"}
+YOL_STATUS = {"Alyndy", "Töleg edildi", "Konteýnerde", "Ýolda", "Geldi"}
+YAPYK_STATUS = {"Tabşyryldy", "Utuldy", "Ýatyryldy"}
+
+# Yzygiderlik - "indiki adim" duwmesi uchin
+STATUS_TERTIP = ["Täze", "Gözlenýär", "Tapyldy", "Auksionda", "Alyndy",
+                 "Töleg edildi", "Konteýnerde", "Ýolda", "Geldi",
+                 "Tabşyryldy"]
+
+# Kone at - gabatlama we sanaw uchin (dine GOZLEG toparyny alya)
+ACIK_STATUS = GOZLEG_STATUS
 
 # Keş — Notion-a her gezek soramaz ýaly
 _cache = {"wagt": None, "zakazlar": []}
@@ -350,6 +371,61 @@ async def notion_yaz(page_id, meydan, bahasy):
     except Exception as e:
         logger.error("Notion ýazmady: %s", e)
         return False
+
+
+async def notion_dore(at, isleg, byujet="", telefon="", kanal="",
+                      bellik=""):
+    """Notion-da TAZE zakaz setirini doredyar.
+
+    20.11.2026: on zakaz dine Notion-yn ozunde el bilen goshulyardy.
+    Erkin musderi bilen WhatsApp-da gepleship, son Notion acyp
+    gaytadan yazmalydy - shol artykmac adim sebapli sistema 26.08-den
+    bari ulanylmady (bazada dine 7 setir, hemmesi "Ýatyryldy").
+    Indi Telegramdan goshup bolya.
+
+    Yzyna: (True, url) ya (False, sebap)
+    """
+    if not isleyarmi():
+        return False, "Notion baglanyshygy ýok (NOTION_TOKEN goýulmadyk)."
+    props = {
+        "Müşderiniň ady": {"title": [{"text": {"content": str(at)[:200]}}]},
+        "Status": {"select": {"name": "Täze"}},
+    }
+    if isleg:
+        props["Isleýän maşyny"] = {
+            "rich_text": [{"text": {"content": str(isleg)[:1900]}}]}
+    if byujet:
+        props["Býujet"] = {
+            "rich_text": [{"text": {"content": str(byujet)[:200]}}]}
+    if telefon:
+        props["Telefon"] = {"phone_number": str(telefon)[:60]}
+    if kanal:
+        props["Kanal"] = {"select": {"name": str(kanal)}}
+    if bellik:
+        props["Bellik"] = {
+            "rich_text": [{"text": {"content": str(bellik)[:1900]}}]}
+    try:
+        async with httpx.AsyncClient(timeout=25) as cl:
+            r = await cl.post(
+                "https://api.notion.com/v1/pages",
+                headers=_hdr(),
+                json={"parent": {"database_id": ZAKAZ_DB},
+                      "properties": props})
+            if r.status_code in (200, 201):
+                _cache["wagt"] = None        # keş täzelensin
+                try:
+                    return True, r.json().get("url", "")
+                except Exception:
+                    return True, ""
+            logger.error("Notion zakaz doretmedi %s: %s",
+                         r.status_code, r.text[:300])
+            # Kanal ady sanawda yok bolsa Notion 400 beryar
+            if r.status_code == 400 and "kanal" in (r.text or "").lower():
+                return False, "Kanal ady nädogry (WhatsApp/Imo/TikTok/Telegram/Instagram/Tanyş)."
+            return False, f"Notion ret etdi ({r.status_code})."
+    except Exception as e:
+        logger.error("Notion zakaz doretmedi: %s", e)
+        return False, f"Baglanyşyk ýalňyşlygy: {e}"
 
 
 # ============================================================
@@ -651,8 +727,45 @@ def _byujet_yaz(b):
     return f"${n:,.0f}".replace(",", " ") if n else "—"
 
 
+NYSHAN = {"Täze": "🆕", "Gözlenýär": "🔍", "Tapyldy": "📸",
+          "Auksionda": "🔨", "Alyndy": "✅", "Töleg edildi": "💳",
+          "Konteýnerde": "📦", "Ýolda": "🚢", "Geldi": "🏁",
+          "Tabşyryldy": "🤝", "Utuldy": "❌", "Ýatyryldy": "🚫"}
+
+
+def _kart(z):
+    k = [f"{NYSHAN.get(z['status'], '•')} *{z['kod']}*  ·  {z['status']}",
+         f"👤 {z['at']}",
+         f"🚗 {z['isleg'] or '—'}",
+         f"💰 {_byujet_yaz(z)}"]
+    if z.get("masyn_kody"):
+        k.append(f"🔖 `{z['masyn_kody']}`")
+    return "\n".join(k)
+
+
 def sanaw_teksti(zakazlar):
-    """/zakazlar üçin sanaw."""
+    """/zakazlar üçin sanaw — IKI topar: gözlegde we ýolda."""
+    gozleg = [z for z in zakazlar if z["status"] in GOZLEG_STATUS]
+    yolda = [z for z in zakazlar if z["status"] in YOL_STATUS]
+    if not gozleg and not yolda:
+        return "✅ *Açyk sargyt ýok.*\n\nHemmesi gutaryldy ýa ýatyryldy."
+
+    tertip = {s: i for i, s in enumerate(STATUS_TERTIP)}
+    gozleg.sort(key=lambda z: (tertip.get(z["status"], 99), z.get("gosulan", "")))
+    yolda.sort(key=lambda z: (tertip.get(z["status"], 99), z.get("gosulan", "")))
+
+    bolekler = []
+    if gozleg:
+        bolekler.append(f"🔎 *GÖZLEGDE*  ·  {len(gozleg)}")
+        bolekler += [_kart(z) for z in gozleg]
+    if yolda:
+        bolekler.append(f"🚢 *ÝOLDA*  ·  {len(yolda)}")
+        bolekler += [_kart(z) for z in yolda]
+    return "\n\n".join(bolekler)
+
+
+def _sanaw_teksti_kone(zakazlar):
+    """Könesi — ätiýaçlyk üçin saklandy (20.11)."""
     acyk = [z for z in zakazlar if z["status"] in ACIK_STATUS]
     if not acyk:
         return "✅ *Açyk sargyt ýok.*\n\nHemmesi gutaryldy ýa ýatyryldy."

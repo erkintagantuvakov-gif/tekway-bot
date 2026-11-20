@@ -3493,14 +3493,26 @@ def _zk_duwmeler(z, tapylan=0):
         setirler.append([InlineKeyboardButton(
             "🔎 AUKSIONLARDAN GÖZLE", callback_data=f"zkg:{z['kod']}")])
     # 2) STATUS bellemek — Notion-da yagdayy uytgedya
-    setirler.append([
-        InlineKeyboardButton("→ Gözlenýär", callback_data=f"zks:{z['kod']}:Gözlenýär"),
-        InlineKeyboardButton("→ Tapyldy", callback_data=f"zks:{z['kod']}:Tapyldy"),
-    ])
-    setirler.append([
-        InlineKeyboardButton("→ Auksionda", callback_data=f"zks:{z['kod']}:Auksionda"),
-        InlineKeyboardButton("→ Alyndy", callback_data=f"zks:{z['kod']}:Alyndy"),
-    ])
+    # 20.11.2026: on 4 sany berk duwme bardy (Gozlenyar/Tapyldy/
+    # Auksionda/Alyndy) - masyn alnandan sonky yol (tolег, konteyner,
+    # yol, geldi, tabshyryldy) hic yerde bellenmeyardi. Indi duwmeler
+    # HAZIRKI statusdan gelip cykya: indiki 2 adim gorkezilya.
+    _tert = getattr(ZK, "STATUS_TERTIP", [])
+    _cur = z.get("status") or "Täze"
+    try:
+        _i = _tert.index(_cur)
+    except ValueError:
+        _i = -1
+    _indiki = _tert[_i + 1:_i + 3] if _i >= 0 else _tert[1:3]
+    if _indiki:
+        setirler.append([
+            InlineKeyboardButton(f"→ {st}", callback_data=f"zks:{z['kod']}:{st}")
+            for st in _indiki])
+    if _cur in getattr(ZK, "GOZLEG_STATUS", set()):
+        setirler.append([
+            InlineKeyboardButton("❌ Utuldy", callback_data=f"zks:{z['kod']}:Utuldy"),
+            InlineKeyboardButton("🚫 Ýatyryldy", callback_data=f"zks:{z['kod']}:Ýatyryldy"),
+        ])
     if z.get("url"):
         setirler.append([InlineKeyboardButton("🔗 Notion-da aç", url=z["url"])])
     return InlineKeyboardMarkup(setirler)
@@ -3629,6 +3641,82 @@ def ishgar_klawiatura(lang=DEFAULT_LANG):
         is_persistent=True,
         input_field_placeholder=ph,
     )
+
+
+# ============================================================
+# 20.11.2026 (Pawel) — TELEGRAMDAN ZAKAZ GOSHMAK
+# ------------------------------------------------------------
+# Mesele: zakaz dine Notion-yn ozunde el bilen goshulyardy.
+# Erkin musderi bilen WhatsApp-da gepleship, son Notion acyp
+# gaytadan yazmalydy. Shol artykmac adim sebapli sistema
+# 26.08-den bari ulanylmady (bazada 7 setir, hemmesi yatyrylan).
+# Indi: /zakaz_gos At | Isleg | Byujet | Telefon | Kanal
+# ============================================================
+ZAKAZ_GOS_KOMEK = (
+    "📝 *Täze zakaz goşmak*\n\n"
+    "`/zakaz_gos At | Isleýän maşyny | Býujet | Telefon | Kanal`\n\n"
+    "Mysal:\n"
+    "`/zakaz_gos Merdan | Toyota Camry 2021-2023 | 18000 | "
+    "+99365123456 | WhatsApp`\n\n"
+    "Diňe *At* hökman, galany islege bagly:\n"
+    "`/zakaz_gos Merdan | Camry 2022`\n\n"
+    "_Kanal: WhatsApp · Imo · TikTok · Telegram · Instagram · Tanyş_"
+)
+
+
+async def zakaz_gos_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/zakaz_gos — Notion-da täze zakaz döredýär (diňe işgärler)."""
+    uid = update.effective_user.id
+    if not _zk_rugsat(uid):
+        await update.message.reply_text("⛔ Bu diňe TEK topary üçin.")
+        return
+    if not _zk_bar():
+        await update.message.reply_text(
+            "⚙️ Zakaz sistemasy birikdirilmedik (NOTION_TOKEN ýok).")
+        return
+
+    setir = " ".join(context.args or []).strip()
+    if not setir:
+        await update.message.reply_text(ZAKAZ_GOS_KOMEK, parse_mode="Markdown")
+        return
+
+    b = [x.strip() for x in setir.split("|")]
+    at = b[0] if len(b) > 0 else ""
+    isleg = b[1] if len(b) > 1 else ""
+    byujet = b[2] if len(b) > 2 else ""
+    telefon = b[3] if len(b) > 3 else ""
+    kanal = b[4] if len(b) > 4 else ""
+    if not at:
+        await update.message.reply_text(ZAKAZ_GOS_KOMEK, parse_mode="Markdown")
+        return
+
+    _kanallar = {"whatsapp": "WhatsApp", "imo": "Imo", "tiktok": "TikTok",
+                 "telegram": "Telegram", "instagram": "Instagram",
+                 "tanys": "Tanyş", "tanyş": "Tanyş"}
+    if kanal:
+        kanal = _kanallar.get(kanal.lower().strip(), kanal)
+
+    ok, netije = await ZK.notion_dore(at, isleg, byujet, telefon, kanal)
+    if not ok:
+        await update.message.reply_text(f"⚠️ Goşulmady: {netije}")
+        return
+
+    jogap = ["✅ *Zakaz goşuldy*", f"👤 {esc(at)}"]
+    if isleg:
+        jogap.append(f"🚗 {esc(isleg)}")
+    if byujet:
+        jogap.append(f"💰 {esc(byujet)}")
+    if telefon:
+        jogap.append(f"📞 {esc(telefon)}")
+    if kanal:
+        jogap.append(f"📥 {esc(kanal)}")
+    jogap.append("\n_Status: Täze. Sanaw: /sargyt_")
+    kb = None
+    if netije:
+        kb = InlineKeyboardMarkup([[
+            InlineKeyboardButton("🔗 Notion-da aç", url=netije)]])
+    await update.message.reply_text("\n".join(jogap),
+                                    parse_mode="Markdown", reply_markup=kb)
 
 
 async def sargyt_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -5206,6 +5294,8 @@ def main():
 
     # ESASY: /sargyt — sanaw hem, bir sargyt hem, tazelemek hem
     app.add_handler(CommandHandler("sargyt", sargyt_command))
+    app.add_handler(CommandHandler("zakaz_gos", zakaz_gos_command))
+    app.add_handler(CommandHandler("sargyt_gos", zakaz_gos_command))
     app.add_handler(CommandHandler("sargytlar", sargyt_command))
     # Koneler — yatda galanlar ucin ishlap dur
     app.add_handler(CommandHandler("zakazlar", zakazlar_command))
