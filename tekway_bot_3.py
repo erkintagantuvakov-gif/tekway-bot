@@ -3624,6 +3624,9 @@ ISHGAR_DUWME = {
     "📋 Orders": "sanaw",
     "🔄 Refresh": "tazele",
     "📅 Today": "bugun",
+    "➕ Zakaz goş": "zakaz_gos",
+    "➕ Заказ": "zakaz_gos",
+    "➕ New order": "zakaz_gos",
 }
 
 _ISHGAR_PANEL = {
@@ -3631,12 +3634,16 @@ _ISHGAR_PANEL = {
     "ru": ("📋 Заказы", "🔄 Обновить", "📅 Сегодня", "Напишите марку машины…"),
     "en": ("📋 Orders", "🔄 Refresh", "📅 Today", "Type a car make…"),
 }
+# 20.11.2026: panele 4-nji duwme — zakaz goshmak
+_ZG_DUWME = {"tm": "➕ Zakaz goş", "ru": "➕ Заказ", "en": "➕ New order"}
 
 
 def ishgar_klawiatura(lang=DEFAULT_LANG):
     a, b, c, ph = _ISHGAR_PANEL.get(lang) or _ISHGAR_PANEL["tm"]
+    zg = _ZG_DUWME.get(lang) or _ZG_DUWME["tm"]
     return ReplyKeyboardMarkup(
-        [[KeyboardButton(a)], [KeyboardButton(b), KeyboardButton(c)]],
+        [[KeyboardButton(a), KeyboardButton(zg)],
+         [KeyboardButton(b), KeyboardButton(c)]],
         resize_keyboard=True,
         is_persistent=True,
         input_field_placeholder=ph,
@@ -3664,6 +3671,166 @@ ZAKAZ_GOS_KOMEK = (
 )
 
 
+# ============================================================
+# 20.11.2026 (Erkin) — SORAG-JOGAP BILEN ZAKAZ GOSHMAK
+# ------------------------------------------------------------
+# Erkin: "/zakaz_gos komanda bilen goshmak praktichni dal.
+#         Knopka owureli, bot sorag bersin: ilki at, son masyn,
+#         son byujet..."
+#
+# Nahili ishleyar:
+#   Panelde "➕ Zakaz goş" duwmesi -> bot adim-adim sorayar:
+#     1) at -> 2) masyn -> 3) byujet -> 4) telefon -> 5) kanal
+#     -> 6) gorkezip tassyklatyar -> Notion-a yazya
+#   Her adimda "⏭ Geç" we "❌ Goýbolsun" duwmesi bar.
+#
+# Yagday YATDA saklanya (_ZG). Railway tazelense yitya - zyyany
+# yok, Erkin taze baslayar. 30 minutdan son ozi ocyar.
+# ============================================================
+_ZG = {}                     # {uid: {"adim": str, "d": {...}, "wagt": ts}}
+_ZG_MOHLET = 30 * 60         # 30 minut
+
+_ZG_ADIMLAR = ["at", "isleg", "byujet", "telefon", "kanal"]
+_ZG_SORAG = {
+    "at":      ("👤 *1/5 · Müşderiniň ady*\n\nAdyny ýaz.\n_Mysal: Merdan_", False),
+    "isleg":   ("🚗 *2/5 · Nähili maşyn?*\n\nMarka, model, ýyl.\n"
+                "_Mysal: Toyota Camry 2021-2023_", False),
+    "byujet":  ("💰 *3/5 · Býujet*\n\nNäçe dollar?\n_Mysal: 18000 ýa 15-20 müň_", True),
+    "telefon": ("📞 *4/5 · Telefon*\n\n_Mysal: +99365123456_", True),
+    "kanal":   ("📥 *5/5 · Zakaz nireden geldi?*", True),
+}
+_ZG_KANALLAR = ["WhatsApp", "Imo", "TikTok", "Telegram", "Instagram", "Tanyş"]
+
+
+def _zg_arassala():
+    """Konelen yagdaylary ocur."""
+    indi = time.time()
+    for u in [u for u, v in _ZG.items() if indi - v.get("wagt", 0) > _ZG_MOHLET]:
+        _ZG.pop(u, None)
+
+
+def _zg_klawiatura(adim):
+    setirler = []
+    if adim == "kanal":
+        hatar = []
+        for k in _ZG_KANALLAR:
+            hatar.append(InlineKeyboardButton(k, callback_data=f"zg:kanal:{k}"))
+            if len(hatar) == 3:
+                setirler.append(hatar)
+                hatar = []
+        if hatar:
+            setirler.append(hatar)
+    son = []
+    if _ZG_SORAG.get(adim, ("", False))[1]:
+        son.append(InlineKeyboardButton("⏭ Geç", callback_data="zg:gec"))
+    son.append(InlineKeyboardButton("❌ Goýbolsun", callback_data="zg:bes"))
+    setirler.append(son)
+    return InlineKeyboardMarkup(setirler)
+
+
+def _zg_jemi(d):
+    s = ["📝 *Zakaz taýýar — ýazaýynmy?*", "",
+         f"👤 {esc(d.get('at') or '—')}",
+         f"🚗 {esc(d.get('isleg') or '—')}",
+         f"💰 {esc(d.get('byujet') or '—')}",
+         f"📞 {esc(d.get('telefon') or '—')}",
+         f"📥 {esc(d.get('kanal') or '—')}"]
+    return "\n".join(s)
+
+
+def _zg_tassyk_kb():
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton("✅ Ýaz", callback_data="zg:yaz"),
+        InlineKeyboardButton("❌ Goýbolsun", callback_data="zg:bes"),
+    ]])
+
+
+async def _zg_sora(ugrat, adim):
+    """Indiki sorag. ugrat — reply_text funksiyasy."""
+    tekst, _ = _ZG_SORAG[adim]
+    await ugrat(tekst, parse_mode="Markdown",
+                reply_markup=_zg_klawiatura(adim))
+
+
+async def zg_basla(update, context):
+    """Panel duwmesi ya /zakaz_gos — sorag-jogaby bashlayar."""
+    uid = update.effective_user.id
+    if not _zk_rugsat(uid):
+        await update.message.reply_text("⛔ Bu diňe TEK topary üçin.")
+        return
+    if not _zk_bar():
+        await update.message.reply_text(
+            "⚙️ Zakaz sistemasy birikdirilmedik (NOTION_TOKEN ýok).")
+        return
+    _zg_arassala()
+    _ZG[uid] = {"adim": "at", "d": {}, "wagt": time.time()}
+    await _zg_sora(update.message.reply_text, "at")
+
+
+async def _zg_indiki(uid, ugrat):
+    """Indiki adima gec ya jemi gorkez."""
+    yg = _ZG.get(uid)
+    if not yg:
+        return
+    i = _ZG_ADIMLAR.index(yg["adim"])
+    if i + 1 < len(_ZG_ADIMLAR):
+        yg["adim"] = _ZG_ADIMLAR[i + 1]
+        yg["wagt"] = time.time()
+        await _zg_sora(ugrat, yg["adim"])
+    else:
+        yg["adim"] = "tassyk"
+        yg["wagt"] = time.time()
+        await ugrat(_zg_jemi(yg["d"]), parse_mode="Markdown",
+                    reply_markup=_zg_tassyk_kb())
+
+
+async def zg_tekst(update, context, text):
+    """Ulanyjy sorag-jogapda tekst ýazdy."""
+    uid = update.effective_user.id
+    yg = _ZG.get(uid)
+    if not yg or yg["adim"] == "tassyk":
+        return
+    yg["d"][yg["adim"]] = text.strip()[:200]
+    await _zg_indiki(uid, update.message.reply_text)
+
+
+async def _zg_callback(q, context, d):
+    """zg: duwmeleri."""
+    uid = q.from_user.id
+    yg = _ZG.get(uid)
+    if d == "zg:bes":
+        _ZG.pop(uid, None)
+        await q.message.reply_text("❌ Goýbolsun edildi.")
+        return
+    if not yg:
+        await q.message.reply_text(
+            "⏳ Wagt geçdi. Täzeden başla: ➕ Zakaz goş")
+        return
+    if d == "zg:gec":
+        await _zg_indiki(uid, q.message.reply_text)
+        return
+    if d.startswith("zg:kanal:"):
+        yg["d"]["kanal"] = d.split(":", 2)[2]
+        await _zg_indiki(uid, q.message.reply_text)
+        return
+    if d == "zg:yaz":
+        dd = yg["d"]
+        _ZG.pop(uid, None)
+        ok, netije = await ZK.notion_dore(
+            dd.get("at", ""), dd.get("isleg", ""), dd.get("byujet", ""),
+            dd.get("telefon", ""), dd.get("kanal", ""))
+        if not ok:
+            await q.message.reply_text(f"⚠️ Goşulmady: {netije}")
+            return
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton(
+            "🔗 Notion-da aç", url=netije)]]) if netije else None
+        await q.message.reply_text(
+            "✅ *Zakaz goşuldy*\n\n" + _zg_jemi(dd).split("\n", 2)[2]
+            + "\n\n_Status: Täze · Sanaw: 📋 Sargytlar_",
+            parse_mode="Markdown", reply_markup=kb)
+        return
+
+
 async def zakaz_gos_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """/zakaz_gos — Notion-da täze zakaz döredýär (diňe işgärler)."""
     uid = update.effective_user.id
@@ -3677,8 +3844,8 @@ async def zakaz_gos_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     setir = " ".join(context.args or []).strip()
     if not setir:
-        await update.message.reply_text(ZAKAZ_GOS_KOMEK, parse_mode="Markdown")
-        return
+        # 20.11: argumentsiz bolsa SORAG-JOGAP bashlanya (Erkin halady)
+        return await zg_basla(update, context)
 
     b = [x.strip() for x in setir.split("|")]
     at = b[0] if len(b) > 0 else ""
@@ -4122,11 +4289,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Panel duwmesine basylanda Telegram adaty TEKST iberya.
     # Shol tekstleri masyn gozlegine gecirmeli DAL — ilki shu barlag.
     if text in ISHGAR_DUWME and _zk_rugsat(update.effective_user.id):
+        _ZG.pop(update.effective_user.id, None)   # sorag-jogap bes edilyar
         isi = ISHGAR_DUWME[text]
+        if isi == "zakaz_gos":
+            return await zg_basla(update, context)
         if isi == "bugun":
             return await today_command(update, context)
         context.args = ["tazele"] if isi == "tazele" else []
         return await sargyt_command(update, context)
+
+    # 20.11.2026: zakaz sorag-jogaby acyk bolsa - tekst shona gidya,
+    # masyn gozlegine DAL. (Panel duwmeleri yokarda alynya.)
+    if update.effective_user.id in _ZG:
+        _zg_arassala()
+        if update.effective_user.id in _ZG:
+            return await zg_tekst(update, context, text)
 
     tl = text.lower()
     tu = text.upper()
@@ -4640,6 +4817,14 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if "query is too old" not in str(_e).lower():
             logger.warning("q.answer(): %s", _e)
     d = q.data or ""
+
+    # 20.11.2026: zakaz sorag-jogap duwmeleri (dine ishgarler)
+    if d.startswith("zg:"):
+        if not _zk_rugsat(q.from_user.id):
+            await q.message.reply_text("⛔ Bu diňe TEK topary üçin.")
+            return
+        await _zg_callback(q, context, d)
+        return
 
     # 20.11.2026: "Teksti al" (dine admin)
     if d.startswith("ugrat:"):
