@@ -1652,6 +1652,58 @@ def wa_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
     ]])
 
 
+# ============================================================
+# 20.11.2026 (Pawel) — "MÜŞDERÄ UGRAT" (diňe admin)
+# ------------------------------------------------------------
+# Erkin: "men bir masyny basga musdera ugratjak bolsam ilki
+# telegramdan galareya skacat edyan, son WhatsApp-dan iberyan".
+# 4-5 adim.
+#
+# INDI: kartyn asagynda (DINE Erkin goryar) "Musderia ugrat"
+# duwmesi. Basanda WhatsApp acylya, "kime iberjek" sanawy
+# cykya - musderini saylayan, tekst TAYYAR dur.
+#
+# Nam ucin surat DAL-de ssylka: wa.me ssylkasy dine TEKST
+# gotereyar, surat gotereyan API tolegli (Meta onayy gerek).
+# Emma WhatsApp ssylkanyn OZI suratyn onizlemesini gorkezya -
+# musderi masyny goryar. Erkin "ssylka bolsa-da bolyar" diydi.
+#
+# Telefon ucin "wa.me/?text=..." (nomer YOK) - WhatsApp "kime?"
+# diyip sorayar. Nomer yazmaly dal.
+# ============================================================
+def wa_ugrat_tekst(car, lang=DEFAULT_LANG):
+    """Musderia gidyan teklip teksti (Erkin iberyar)."""
+    year = car.get("year", "")
+    brand = car.get("brand", "")
+    model = car.get("model", "")
+    price = car.get("price", 0)
+    kod = get_car_code(car)
+
+    t = f"\U0001F697 {year} {brand} {model}\n"
+    t += f"\U0001F3E2 {auksion_ady_yer(car)}\n"
+    _ws = _auksion_wagt_setiri(car, lang=lang)
+    if _ws:
+        t += _ws + "\n"
+    if price:
+        t += f"\U0001F4B0 Başlangyç baha: {aed_to_usd(price):,} USD ({price:,} AED)\n"
+    else:
+        t += "\U0001F4B0 Başlangyç baha: auksionda belli bolar\n"
+    t += f"\U0001F194 Kod: {kod}\n"
+
+    img = (car.get("image_path") or "").replace("\\", "/")
+    if img and not (car.get("telegram_file_id") or "").strip():
+        t += ("\U0001F4F8 https://raw.githubusercontent.com/"
+              "erkintagantuvakov-gif/tekway-bot/main/" + img + "\n")
+    t += "\nTEK AUTO MARKET · Dubaý auksionlary"
+    return t
+
+
+def ugrat_duwmesi(car, lang=DEFAULT_LANG):
+    """WhatsApp 'kime iberjek' ekranyny acyan duwme (nomer yok)."""
+    url = "https://wa.me/?text=" + quote(wa_ugrat_tekst(car, lang))
+    return InlineKeyboardButton("\U0001F4F2 Müşderä ugrat", url=url)
+
+
 def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
     """Masyn kartynyn duwmesi.
 
@@ -1663,6 +1715,20 @@ def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
     musderia WhatsApp duwmesini gorkezya. Musderia 1 artykmac basmak
     dusya - onun yerine her gyzyklanma hasaba alynya.
     """
+    # 20.11.2026: admin ucin "Musderia ugrat" duwmesi gosulya.
+    # Musderiler ony GORMEYAR - dine ADMIN_ID.
+    if uid is not None and str(uid) == str(ADMIN_ID):
+        try:
+            return InlineKeyboardMarkup([
+                [InlineKeyboardButton(
+                    T(lang, "wa_btn"),
+                    url="https://wa.me/971522371195?text="
+                        + quote(wa_text_for_car(car, lang, uid)))],
+                [ugrat_duwmesi(car, lang)],
+            ])
+        except Exception as e:
+            logger.error(f"ugrat duwmesi yasalmady: {e}")
+
     # 17.11.2026 (Erkin) — ONKI YALY GAYDYP GELDI.
     # 14.11: callback duwme (bot yazga alyardy, emma musderi 2 gezek
     #        basmaly bolyardy -> Erkin halamady).
