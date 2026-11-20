@@ -1699,9 +1699,50 @@ def wa_ugrat_tekst(car, lang=DEFAULT_LANG):
 
 
 def ugrat_duwmesi(car, lang=DEFAULT_LANG):
-    """WhatsApp 'kime iberjek' ekranyny acyan duwme (nomer yok)."""
-    url = "https://wa.me/?text=" + quote(wa_ugrat_tekst(car, lang))
-    return InlineKeyboardButton("\U0001F4F2 Müşderä ugrat", url=url)
+    """20.11 (Erkin): url duwme GONI bir WhatsApp-a gecip gidyardi.
+
+    Erkinin telefonynda IKI WhatsApp bar, ustesine kate imo-dan hem
+    iberyar. Android "haysy programma?" diyip soranok - default-y
+    ulanya. Shonun ucin indi duwme TEKSTI BERYAR: bot tayyar teksti
+    kod blogunda iberyar, Telegramda ona bir gezek basanda TEKST
+    GOCURILYAR. Son islendik yere (WhatsApp 1, WhatsApp 2, imo,
+    Instagram) yelmeshdirip bolya.
+    Çalt yol gerek bolsa - jogabyn asagynda WhatsApp duwmesi hem bar.
+    """
+    return InlineKeyboardButton("\U0001F4CB Teksti al",
+                                callback_data=f"ugrat:{get_car_code(car)}")
+
+
+async def _ugrat_callback(q, context, d):
+    """Admin 'Teksti al' duwmesine basdy - tayyar teksti goyberyar."""
+    if str(q.from_user.id) != str(ADMIN_ID):
+        try:
+            await q.answer("Bu duwme dine admin ucin", show_alert=True)
+        except Exception:
+            pass
+        return
+    kod = d[6:]
+    car = None
+    try:
+        for c in load_cars():
+            if get_car_code(c) == kod:
+                car = c
+                break
+    except Exception as e:
+        logger.error(f"ugrat: baza okalmady: {e}")
+    if not car:
+        await q.message.reply_text("\U0001F4ED Bu maşyn bazada ýok.")
+        return
+    t = wa_ugrat_tekst(car, "tm")
+    # Kod blogy: Telegramda ustune basanda TEKST GOCURILYAR
+    await q.message.reply_text(
+        "\U0001F4CB *Teksti nusgalamak üçin üstüne bas:*\n\n```\n" + t + "\n```",
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton(
+                "\U0001F4F2 Göni WhatsApp-da aç",
+                url="https://wa.me/?text=" + quote(t)),
+        ]]))
 
 
 def auction_keyboard_for_car(car, lang=DEFAULT_LANG, uid=None):
@@ -4511,6 +4552,11 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if "query is too old" not in str(_e).lower():
             logger.warning("q.answer(): %s", _e)
     d = q.data or ""
+
+    # 20.11.2026: "Teksti al" (dine admin)
+    if d.startswith("ugrat:"):
+        await _ugrat_callback(q, context, d)
+        return
 
     # 14.11.2026: gyzyklanma duwmesi (musderi)
     if d.startswith("lead:"):
