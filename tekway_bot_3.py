@@ -3272,6 +3272,14 @@ async def post_init(app):
     asyncio.create_task(data_watch_loop(app))
     asyncio.create_task(gundelik_habar_loop(app))
     asyncio.create_task(baha_gozeg_loop(app))
+    # 20.11.2026: yarym galan zakaz sorag-jogaplary diskden okalya
+    # (Railway restart-dan son dowam etsin)
+    try:
+        _zg_oka()
+        if _ZG:
+            logger.info("Zakaz sorag-jogaby dowam edyar: %d adam", len(_ZG))
+    except Exception as _e:
+        logger.warning("zg_oka: %s", _e)
     if ZK is not None and ZK.isleyarmi():
         ZK._hb_oka()          # 26.08: onki habarlar diskden okalya
         asyncio.create_task(zakaz_gozegcilik(app))
@@ -3712,6 +3720,34 @@ ZAKAZ_GOS_KOMEK = (
 _ZG = {}                     # {uid: {"adim": str, "d": {...}, "wagt": ts}}
 _ZG_MOHLET = 30 * 60         # 30 minut
 
+# ⚠️ 20.11.2026 — YAGDAY DISKDE SAKLANYA
+# Erkin 2-nji adimde "Forte 2022-2023" yazdy, bot ony MASYN GOZLEGI
+# diyip kabul etdi. Sebabi: shol pursatda Railway taze deploy bilen
+# TAZEDEN ISHLEDI (her push-da sheyle bolya - her gije hem!) we
+# yatdaky _ZG bosady. Bot sorag berenini unutdy.
+# Indi: yagday /data papkada yatyar, restart-dan son dowam edyar.
+_ZG_FAYL = _DATA_DIR / "zakaz_sorag.json"
+
+
+def _zg_oka():
+    """Bot ishlande diskden okaya (Railway restart-dan son dowam etsin)."""
+    global _ZG
+    try:
+        bary = _json_oka(_ZG_FAYL, {})
+        if isinstance(bary, dict):
+            _ZG = {int(k): v for k, v in bary.items() if isinstance(v, dict)}
+    except Exception as e:
+        logger.warning("zakaz sorag yagdayy okalmady: %s", e)
+    _zg_arassala()
+
+
+def _zg_sakla():
+    """Her uytgeshmeden son diske yazya."""
+    try:
+        _json_yaz(_ZG_FAYL, {str(k): v for k, v in _ZG.items()}, indent=1)
+    except Exception as e:
+        logger.warning("zakaz sorag yagdayy yazylmady: %s", e)
+
 _ZG_ADIMLAR = ["at", "isleg", "byujet", "telefon", "kanal", "bellik"]
 _ZG_SORAG = {
     "at":      ("👤 *1/6 · Müşderiniň ady*\n\nAdyny ýaz.\n_Mysal: Merdan_", False),
@@ -3731,8 +3767,10 @@ _ZG_KANALLAR = ["WhatsApp", "Imo", "TikTok", "Telegram", "Instagram", "Tanyş"]
 def _zg_arassala():
     """Konelen yagdaylary ocur."""
     indi = time.time()
-    for u in [u for u, v in _ZG.items() if indi - v.get("wagt", 0) > _ZG_MOHLET]:
+    kone = [u for u, v in _ZG.items() if indi - v.get("wagt", 0) > _ZG_MOHLET]
+    for u in kone:
         _ZG.pop(u, None)
+    return bool(kone)
 
 
 def _zg_klawiatura(adim):
@@ -3792,6 +3830,7 @@ async def zg_basla(update, context):
         return
     _zg_arassala()
     _ZG[uid] = {"adim": "at", "d": {}, "wagt": time.time()}
+    _zg_sakla()
     await _zg_sora(update.message.reply_text, "at")
 
 
@@ -3804,10 +3843,12 @@ async def _zg_indiki(uid, ugrat):
     if i + 1 < len(_ZG_ADIMLAR):
         yg["adim"] = _ZG_ADIMLAR[i + 1]
         yg["wagt"] = time.time()
+        _zg_sakla()
         await _zg_sora(ugrat, yg["adim"])
     else:
         yg["adim"] = "tassyk"
         yg["wagt"] = time.time()
+        _zg_sakla()
         await ugrat(_zg_jemi(yg["d"]), parse_mode="Markdown",
                     reply_markup=_zg_tassyk_kb())
 
@@ -3820,6 +3861,7 @@ async def zg_tekst(update, context, text):
         return
     _cak = 1000 if yg["adim"] == "bellik" else 200
     yg["d"][yg["adim"]] = text.strip()[:_cak]
+    _zg_sakla()
     await _zg_indiki(uid, update.message.reply_text)
 
 
@@ -3829,6 +3871,7 @@ async def _zg_callback(q, context, d):
     yg = _ZG.get(uid)
     if d == "zg:bes":
         _ZG.pop(uid, None)
+        _zg_sakla()
         await q.message.reply_text("❌ Goýbolsun edildi.")
         return
     if not yg:
@@ -3840,11 +3883,13 @@ async def _zg_callback(q, context, d):
         return
     if d.startswith("zg:kanal:"):
         yg["d"]["kanal"] = d.split(":", 2)[2]
+        _zg_sakla()
         await _zg_indiki(uid, q.message.reply_text)
         return
     if d == "zg:yaz":
         dd = yg["d"]
         _ZG.pop(uid, None)
+        _zg_sakla()
         ok, netije = await ZK.notion_dore(
             dd.get("at", ""), dd.get("isleg", ""), dd.get("byujet", ""),
             dd.get("telefon", ""), dd.get("kanal", ""), dd.get("bellik", ""))
@@ -4322,7 +4367,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Panel duwmesine basylanda Telegram adaty TEKST iberya.
     # Shol tekstleri masyn gozlegine gecirmeli DAL — ilki shu barlag.
     if text in ISHGAR_DUWME and _zk_rugsat(update.effective_user.id):
-        _ZG.pop(update.effective_user.id, None)   # sorag-jogap bes edilyar
+        if _ZG.pop(update.effective_user.id, None):
+            _zg_sakla()                           # sorag-jogap bes edilyar
         isi = ISHGAR_DUWME[text]
         if isi == "zakaz_gos":
             return await zg_basla(update, context)
@@ -4339,7 +4385,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # 20.11.2026: zakaz sorag-jogaby acyk bolsa - tekst shona gidya,
     # masyn gozlegine DAL. (Panel duwmeleri yokarda alynya.)
     if update.effective_user.id in _ZG:
-        _zg_arassala()
+        if _zg_arassala():
+            _zg_sakla()
         if update.effective_user.id in _ZG:
             return await zg_tekst(update, context, text)
 
