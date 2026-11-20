@@ -2218,7 +2218,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             _l = lang_of(update.effective_user.id)
             await update.message.reply_text(
                 T(_l, "staff_panel"), parse_mode="Markdown",
-                reply_markup=ishgar_klawiatura(_l))
+                reply_markup=ishgar_klawiatura(_l, update.effective_user.id))
     except Exception:
         pass
     uid = update.effective_user.id
@@ -3545,7 +3545,7 @@ async def zakazlar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not zakazlar:
         await update.message.reply_text(
             "📭 Notion-da açyk sargyt ýok.",
-            reply_markup=ishgar_klawiatura())
+            reply_markup=ishgar_klawiatura(uid=uid))
         return
 
     # ⚠️ 24.08: Erkin "panel gitdi" diydi — ol ýazgy meýdanyna
@@ -3553,7 +3553,7 @@ async def zakazlar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Çözgüt: goşmaça habar ibermän, paneli SANAW habaryna dakýas.
     # Şeýdip her gezek sargyt görende panel özi yzyna gelýär.
     await _send_md_safe(update.message, ZK.sanaw_teksti(zakazlar),
-                        reply_markup=ishgar_klawiatura())
+                        reply_markup=ishgar_klawiatura(uid=uid))
 
     acyk = [z for z in zakazlar if z["status"] in ZK.ACIK_STATUS]
     if acyk:
@@ -3635,6 +3635,9 @@ ISHGAR_DUWME = {
     "➕ Zakaz goş": "zakaz_gos",
     "➕ Заказ": "zakaz_gos",
     "➕ New order": "zakaz_gos",
+    # 20.11.2026 (Erkin): "olary hem duwma owur" — /stats we /leads
+    "📊 Hasabat": "hasabat",
+    "🟢 Gyzyklanmalar": "leads",
 }
 
 _ISHGAR_PANEL = {
@@ -3646,12 +3649,23 @@ _ISHGAR_PANEL = {
 _ZG_DUWME = {"tm": "➕ Zakaz goş", "ru": "➕ Заказ", "en": "➕ New order"}
 
 
-def ishgar_klawiatura(lang=DEFAULT_LANG):
+def ishgar_klawiatura(lang=DEFAULT_LANG, uid=None):
+    """Isgar paneli. Admin bolsa 3-nji hatar hem gosulya.
+
+    20.11.2026 (Erkin): "ahli zat knopkada bolsun" —
+    /stats we /leads komandalary hem duwma owruldi. Olar DINE
+    admin uchin ishleyar, sonun uchin dine admine gorkezilya
+    (isgar basyp "dine admin uchin" diyen jogaby almaz yaly).
+    """
     a, b, c, ph = _ISHGAR_PANEL.get(lang) or _ISHGAR_PANEL["tm"]
     zg = _ZG_DUWME.get(lang) or _ZG_DUWME["tm"]
+    setirler = [[KeyboardButton(a), KeyboardButton(zg)],
+                [KeyboardButton(b), KeyboardButton(c)]]
+    if uid is not None and str(uid) == str(ADMIN_ID):
+        setirler.append([KeyboardButton("📊 Hasabat"),
+                         KeyboardButton("🟢 Gyzyklanmalar")])
     return ReplyKeyboardMarkup(
-        [[KeyboardButton(a), KeyboardButton(zg)],
-         [KeyboardButton(b), KeyboardButton(c)]],
+        setirler,
         resize_keyboard=True,
         is_persistent=True,
         input_field_placeholder=ph,
@@ -4312,6 +4326,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         isi = ISHGAR_DUWME[text]
         if isi == "zakaz_gos":
             return await zg_basla(update, context)
+        if isi == "hasabat":
+            return await stats_command(update, context)
+        if isi == "leads":
+            context.args = []
+            return await leads_command(update, context)
         if isi == "bugun":
             return await today_command(update, context)
         context.args = ["tazele"] if isi == "tazele" else []
@@ -4924,7 +4943,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             if _zk_rugsat(q.from_user.id):
                 await q.message.reply_text(T(lang, "staff_panel"), parse_mode="Markdown",
-                                           reply_markup=ishgar_klawiatura(lang))
+                                           reply_markup=ishgar_klawiatura(lang, q.from_user.id))
         except Exception:
             pass
 
