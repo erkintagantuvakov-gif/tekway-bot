@@ -15,5 +15,21 @@
       "tanalmady (marka/yyl tapylmady)": 4
     },
     "time": "00:49"
+  },
+  {
+    "pdf": "Marhaba Auctions  Monday   23th November 2026 Ind.Area 12 Auction LIst.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 79,
+    "kept": 77,
+    "rejected": 2,
+    "tanalmadyk": [
+      "p22: 13,500",
+      "p73: 15,500"
+    ],
+    "ocr_halas": 2,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 2
+    },
+    "time": "00:54"
   }
 ]
