@@ -89,5 +89,89 @@
       "tanalmady (marka/yyl tapylmady)": 7
     },
     "time": "01:08"
+  },
+  {
+    "pdf": "22-11-2026 SUNDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 66,
+    "kept": 61,
+    "rejected": 5,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 5
+    },
+    "time": "08:28"
+  },
+  {
+    "pdf": "NCA 22TH NOVEMBER VEHICELS .pdf",
+    "auction": "Nojoom Cars Auction",
+    "pages": 81,
+    "kept": 74,
+    "rejected": 7,
+    "tanalmadyk": [
+      "p1: N O J O O M C A R S A U C T I O Nﻧﺠوم ﻟﻤﺰاد اﻟﺴﯿارات 22TH NOVEMBER 2026 AUCTION AUCTION AUCTION INDUSTRIAL AREA 2, SHARJAH UAE NOJOOMCARS.AUCTION2023@GMAIL.COM",
+      "p2: N O J O O M C A R S A U C T I O N 7:00 PM 7:00 PM AUCTION ﻧﺠوم ﻟﻤﺰاد اﻟﺴﯿارات INDUSTRIAL AREA 2, SHARJAH UAE NOJOOMCARS.AUCTION2023@GMAIL.COM مزاد مزاد ًمساًمسا",
+      "p3: N O J O O M C A R S A U C T I O Nﻧﺠوم ﻟﻤﺰاد اﻟﺴﯿارات INDUSTRIAL AREA 2, SHARJAH UAE NOJOOMCARS.AUCTION2023@GMAIL.COM SUNDAY TUESDAY THURSDAY NEVER MISS A DEAL W",
+      "p4: N O J O O M C A R S A U C T I O Nﻧﺠوم ﻟﻤﺰاد اﻟﺴﯿارات VEHICLES IN THIS AUCTION VEHICLES IN THIS AUCTION أكثر من أكثر من السیا رۃ ٠٧ السیا رۃ INDUSTRIAL AREA 2, S",
+      "p14: LOT ﻧﺠوم ﻟﻤﺰاد اﻟﺴﯿاراتN O J O O M C A R S A U C T I O N MODEL 2025 CAR KIA SOUL LX 31000 Below avg AED PRICE 10",
+      "p54: LOT ﻧﺠوم ﻟﻤﺰاد اﻟﺴﯿاراتN O J O O M C A R S A U C T I O N MODEL 2022 CAR TOYOTA SIENNA XLE AED 50,000 Below avg AED PRICE 50",
+      "p62: LOT ﻧﺠوم ﻟﻤﺰاد اﻟﺴﯿاراتN O J O O M C A R S A U C T I O N MODEL 2023 CAR BMW X7 M60I 130000 Below avg AED PRICE 58"
+    ],
+    "ocr_halas": 1,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 7
+    },
+    "time": "08:34"
+  },
+  {
+    "pdf": "SUNDAY AUCTION CARS LIST 22-11-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 147,
+    "kept": 143,
+    "rejected": 4,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "08:51"
+  },
+  {
+    "pdf": "Marhaba Auction Sunday 22nd November 2026 - Main Branch Industrial Area 2 - Auction List_compressed.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 279,
+    "kept": 273,
+    "rejected": 6,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 6
+    },
+    "time": "08:52"
+  },
+  {
+    "pdf": "Sunday 22nd NOV 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 163,
+    "kept": 152,
+    "rejected": 11,
+    "tanalmadyk": [
+      "p1: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p2: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p20: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p40: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p60: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p80: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p100: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p120: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p140: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p162: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE"
+    ],
+    "ocr_halas": 3,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 11
+    },
+    "time": "09:11"
   }
 ]
