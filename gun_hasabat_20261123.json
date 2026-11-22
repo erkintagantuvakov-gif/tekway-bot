@@ -31,5 +31,18 @@
       "tanalmady (marka/yyl tapylmady)": 2
     },
     "time": "00:54"
+  },
+  {
+    "pdf": "Monday Auction 23-November 2026 Marhaba Cars Auction Presentation Souq Branch.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 151,
+    "kept": 135,
+    "rejected": 16,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 16
+    },
+    "time": "01:04"
   }
 ]
