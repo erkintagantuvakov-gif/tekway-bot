@@ -4695,6 +4695,46 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ============================================================
 # YALNYSHLYK TUTUJY
 # ============================================================
+# --- tor yalnyshlyklaryny sanamak (22.11.2026) ---
+_TOR_PENJIRE = 300      # 5 minut
+_TOR_CAK     = 10       # shondan kop bolsa - hakyky kesilme
+_TOR_DYMMA   = 3600     # habardan son 1 sagat gaytalanmaya
+_tor_wagtlar = []
+_tor_sonky_habar = 0.0
+
+
+def _tor_yalnysh_belle(context):
+    """Tor yalnyshlygyny bellya. Kop gaytalansa admine 1 setir yazya."""
+    global _tor_sonky_habar
+    indi = time.time()
+    _tor_wagtlar.append(indi)
+    while _tor_wagtlar and indi - _tor_wagtlar[0] > _TOR_PENJIRE:
+        _tor_wagtlar.pop(0)
+    if len(_tor_wagtlar) < _TOR_CAK:
+        return
+    if indi - _tor_sonky_habar < _TOR_DYMMA:
+        return
+    _tor_sonky_habar = indi
+    n = len(_tor_wagtlar)
+    _tor_wagtlar.clear()
+
+    async def _habar():
+        try:
+            await context.bot.send_message(
+                ADMIN_ID,
+                "📡 *Aragatnaşyk durnuksyz*\n\n"
+                f"Soňky 5 minutda {n} gezek Telegram serwerine ýetip bolmady.\n"
+                "Bot özi gaýtadan birigýär — kod ýalňyşlygy däl.\n\n"
+                "_Dowam etse Railway-y bir gezek täzeden işletmeli._",
+                parse_mode="Markdown")
+        except Exception:
+            pass
+    try:
+        asyncio.create_task(_habar())
+    except Exception:
+        pass
+
+
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     """
     ⚠️ 24.08 SAPAGY — NAM UCHIN BU GEREK:
@@ -4719,12 +4759,27 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
         logger.info("Kone callback (zyyansyz): %s", e)
         return
 
+    # ------------------------------------------------------------------
+    # TOR YALNYSHLYKLARY (NetworkError / TimedOut / ConnectError)
+    # ------------------------------------------------------------------
     # 20.09.2026: "NetworkError: Bad Gateway" gije 05:12-de Erkine geldi.
-    # Bu Telegram serweriniň wagtlaýyn näsazlygy - bot özi gaýtadan
-    # birikýär, hiç zat etmeli däl. Admine traceback ugradylmaýar.
+    #   Shonda "update yok bolsa dymmaly" diyen duzgun goyuldy.
+    # 22.11.2026: YETERLIK BOLMADY. Erkine ýene uly traceback geldi
+    #   ("httpx.ConnectError"). Sebabi: ulanyjy duwma basanda, bot
+    #   JOGAP IBERJEK bolanda tor uzulse, update BAR bolyar - shonun
+    #   uchin yokarky duzgun ishlemedi.
+    #
+    # Hakykat: tor yalnyshlygy KOD YALNYSHLYGY DAL. Bot ozi gaytadan
+    # birikya, dyzedilmeli zat yok. Traceback ugratmagyn peydasy yok -
+    # ustesine shol pursatda tor yokka ol habaryn ozi hem gitmeya.
+    #
+    # Indi: hemishe dymylya. YONE sanalya - eger 5 minudyn ichinde
+    # 10-dan kop bolsa, bu eyyam hakyky kesilme - admine BIR gysga
+    # setir ugradylya (traceback dal), sonra 1 sagat gaytalanmaya.
     from telegram.error import NetworkError, TimedOut
-    if isinstance(e, (NetworkError, TimedOut)) and not isinstance(update, Update):
+    if isinstance(e, (NetworkError, TimedOut)):
         logger.warning("Wagtlayyn tor yalnyshlygy (zyyansyz): %s", e)
+        _tor_yalnysh_belle(context)
         return
 
     logger.error("Tutulmadyk yalnyshlyk: %s", e, exc_info=e)
