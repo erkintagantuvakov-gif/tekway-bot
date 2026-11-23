@@ -1,0 +1,110 @@
+[
+  {
+    "pdf": "Marhaba Auction Tuesday 24th November 2026 - Main Branch Industrial Area 2 - Auction List_compressed.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 254,
+    "kept": 238,
+    "rejected": 16,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 16
+    },
+    "time": "00:55"
+  },
+  {
+    "pdf": "TUESDAY SAJAA AUCTION - 24 NOV 2026.pdf.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 182,
+    "kept": 171,
+    "rejected": 11,
+    "tanalmadyk": [
+      "p1: 170+ 24 NOV 2026 TUESDAY SAJAA AUCTION",
+      "p2: 170 ﻧﻮﻓﻤﺒﺮ24 2026 ﻣﺰاد اﻟﺼﺠﻌﺔ ﻳﻮم اﻟﺜﻼﺛﺎء اﻟﺒﺚ ﻣﺒﺎﺷﺮ +",
+      "p3: EMIRATES INDUSTRIAL CITY SAJAA",
+      "p6: AVAILABLE FOR FRIDAY 27 NOV 2026 SPECIAL CAR",
+      "p51: 2025 Leopard Titanium - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 98,500 TUE-24 NOV 5:30",
+      "p72: 2025 Leopard Titanium 1.5 AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 98,500 TUE-24 NOV 5:",
+      "p159: 2023 FISKER INC OCEAN ONE - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 6,500 TUE-24 NOV 5"
+    ],
+    "ocr_halas": 4,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 7,
+      "reklama: AVAILABLE FOR (bashga gun)": 4
+    },
+    "time": "01:00"
+  },
+  {
+    "pdf": "24-NOV-2026 KHAT AL JAZEERA CARS AUCTION.pdf",
+    "auction": "KHAT AL JAZEERA CARS AUCTION",
+    "pages": 162,
+    "kept": 138,
+    "rejected": 24,
+    "tanalmadyk": [],
+    "ocr_halas": 1,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 24
+    },
+    "time": "01:09"
+  },
+  {
+    "pdf": "24-NOV-2026.pdf",
+    "auction": "West Cars Auctions",
+    "pages": 149,
+    "kept": 146,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p1: 24 NOV 26 06:00 PM TUESDAY AUCTION 146 CARS MORE THEN LIVE STREAMING 06-5267750 INDUSTRIAL AREA 2, SHARJAH-UAE WWW.WESTCARSAUCTIONS.COM GREEN LIGHT MAJORITY OF",
+      "p2: AUCTION DAYS & TIME THREE DAYS AUCTION IN A WEEK SATURDAYﻳﻮم اﻟﺴﺒﺖ TUESDAYﻳﻮم اﻟﺜﻼﺛﺎء THURSDAY 06:00 PM ﻳﻮم اﻟﺨﻤﻴﺲ",
+      "p3: CONTACT US 06-5267750 WHATSAPP 052-8231236 | 055-8558496 @WESTCARSAUCTIONS WESTCARSAUCTIONS@YAHOO.COM WWW.WESTCARSAUCTIONS.COM"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "01:09"
+  },
+  {
+    "pdf": "Tuesday - 24-11-2026 - GCA.pdf",
+    "auction": "Gulf Cars Auction",
+    "pages": 127,
+    "kept": 124,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p1: 24 NOVEMBER 2026 5:30 PM TUESDAY AUCTION",
+      "p2: 124",
+      "p3: @gulfcarsauction CONTACT US CONTACT US +971 568 900 900 +971 568 900 900 +971 558 800 800 +971 558 800 800 800 900 900 800 900 900 TOLL FREE TOLL FREE HOTLINE /"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "01:09"
+  },
+  {
+    "pdf": "24-11-2026 TUESDAY AUCTION.pdf",
+    "auction": "Al Buraq Cars Auction",
+    "pages": 65,
+    "kept": 61,
+    "rejected": 4,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "01:14"
+  },
+  {
+    "pdf": "TUESDAY AUCTION CARS LIST 24-11-2026.pdf",
+    "auction": "Al Bashayera Auction",
+    "pages": 151,
+    "kept": 147,
+    "rejected": 4,
+    "tanalmadyk": [],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "01:31"
+  }
+]
