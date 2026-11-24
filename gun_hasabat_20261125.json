@@ -13,5 +13,61 @@
       "tanalmady (marka/yyl tapylmady)": 2
     },
     "time": "00:54"
+  },
+  {
+    "pdf": "WEDNESDAY AUCTION - 25-NOV-2026.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 107,
+    "kept": 103,
+    "rejected": 4,
+    "tanalmadyk": [
+      "p1: WEDNESDAY AUCTION 100 + JOIN OUR 25-NOV-2026 PM",
+      "p2: 25ﻧﻮﻓﻤﺒﺮ2026 اﻧﻀﻤﻮا إﻟﻰ ﺑﺜﻨﺎ اﻟﻤﺒﺎﺷﺮ PM 100 + ﻣﺰاد ﻳﻮم ا رﺑﻌﺎء",
+      "p7: 2024 Leopard 8 - INDUSTRIAL AREA 2 SHARJAH INDUSTRIAL AREA 2 SHARJAH INDUSTRIAL AREA 2 SHARJAH STARTING BID STARTING BID 138,500 WED-25 NOV 5:30"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 4
+    },
+    "time": "01:02"
+  },
+  {
+    "pdf": "Fadak Cars Auction 25-11-2026 INDUSTRIAL AREA BRANCH.pdf",
+    "auction": "Fadak Cars Auction",
+    "pages": 85,
+    "kept": 80,
+    "rejected": 5,
+    "tanalmadyk": [
+      "p1: FIND US NOW YOU ARE ONE STEP AWAY FROM YOUR DREAM CAR AUCTION ON EVERY SATURDAY, SUNDAY, WEDNESDAY & FRIDAY.",
+      "p2: 4 Auction Days / اﻟﻤﺰاد أﻳﺎم Industrial Area 2 Branch ٢ اﻟﺼﻨﺎﻋﻴﺔ اﻟﻤﻨﻄﻘﺔ ﻓﺮع SATURDAY / اﻟﺴﺒﺖ WEDNESDAY / اﻷرﺑﻌﺎءSUNDAY / اﻷﺣﺪ Sajja Branch اﻟﺼﺠﻌﺔ ﻓﺮع https://m",
+      "p3: @FadakCarsAuction @FadakCarsAuction @FadakCarsAuction www.FadakAuctions.com NOW NOW FOLLOW US",
+      "p4: 25/NOVEMBER/2026 WEDNESDAY AUCTION 06:00PM Industrial Area 2 Branch"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 5
+    },
+    "time": "01:02"
+  },
+  {
+    "pdf": "WEDNESDAY 25 NOV 2026.pdf",
+    "auction": "Al Nukhbah Cars Auction",
+    "pages": 189,
+    "kept": 160,
+    "rejected": 29,
+    "tanalmadyk": [
+      "p1: 23 / NOVEMBER / 2024 السبت",
+      "p2: 23 / NOVEMBER / 2024 السبت",
+      "p3: 23 / NOVEMBER / 2024 السبت",
+      "p4: 23 / NOVEMBER / 2024 السبت",
+      "p5: 23 / NOVEMBER / 2024 السبت",
+      "p6: 23 / NOVEMBER / 2024 السبت"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "marka bos (reklama sahypasy)": 23,
+      "tanalmady (marka/yyl tapylmady)": 6
+    },
+    "time": "01:05"
   }
 ]
