@@ -1048,6 +1048,16 @@ TEXTS = {
         "tm": "💰 Başlanýan bahasy: {usd:,} USD ({aed} AED)",
         "ru": "💰 Стартовая цена: {usd:,} USD ({aed} AED)",
     },
+    # 25.11.2026 (Pawel) — KONE SSYLKA MESELESI.
+    #   Musderi duwma basanda WhatsApp teksti ONUN telefonynda DRAFT
+    #   bolup galyar — ol ony 3 gun sonam iberip bilyar (24.11-de
+    #   21.11-in masyny geldi). Bot ol wagt "indi bazada yok" diyip
+    #   bilenok, sebabi tekst eyyam yasalan. Sonun ucin tekstin
+    #   ozune senesi yazylya.
+    "wa_expire": {
+        "tm": "⚠️ Bu baha diňe {d} auksiony üçin. Başga günde baha üýtgeýär.",
+        "ru": "⚠️ Эта цена только для аукциона {d}. В другой день цена меняется.",
+    },
     # --- sanaw ---
     "batch_shown": {
         "tm": "📋 *{sent}/{total}* görkezildi.  Ýene *{left}* maşyn bar.\n\n"
@@ -1389,6 +1399,7 @@ TEXTS_EN = {
     "wa_hello": "Hello! I am interested in this car:",
     "wa_code": "🆔 Code: {code}",
     "wa_price": "💰 Starting bid: {usd:,} USD ({aed} AED)",
+    "wa_expire": "⚠️ This price is only for the {d} auction. It changes on other days.",
     "batch_shown": "📋 Showing *{sent}/{total}*.  *{left}* more cars.\n\n"
                    "_Be more specific to narrow it down — for example `Camry 2023`._",
     "batch_more": "⬇️ Show {n} more",
@@ -1623,6 +1634,10 @@ def wa_text_for_car(car, lang=DEFAULT_LANG, uid=None):
     if price:
         usd = aed_to_usd(price)
         text += T(lang, "wa_price", usd=usd, aed=price) + "\n"
+    # 25.11.2026: senesi tekstin ozunde dursun (yokardaky bellige seret)
+    _sn = auksion_senesi(car)
+    if _sn:
+        text += T(lang, "wa_expire", d=_sn) + "\n"
     # ⚠️ 30.09.2026 — SURAT SALGYSY DIŇE REPODA BAR BOLSA
     #   Surat Telegram-a göçürilse (telegram_file_id bar bolsa) ol
     #   GitHub-a ÝÜKLENMEÝÄR — şonuň üçin salgy ölen bolardy.
