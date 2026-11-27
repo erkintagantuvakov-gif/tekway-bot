@@ -128,5 +128,44 @@
       "tanalmady (marka/yyl tapylmady)": 1
     },
     "time": "06:39"
+  },
+  {
+    "pdf": "Friday 27th NOV 2026 Marhaba Auctions Presentation Al Sajaa Branch 4 Sharjah UAE_compressed.pdf",
+    "auction": "Marhaba Auctions (Sajaa)",
+    "pages": 175,
+    "kept": 169,
+    "rejected": 6,
+    "tanalmadyk": [
+      "p1: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p2: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p3: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p4: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p174: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE",
+      "p175: STARTING BID : AED 0 15,500 2021 KIA SPORTAGE"
+    ],
+    "ocr_halas": 3,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 6
+    },
+    "time": "11:16"
+  },
+  {
+    "pdf": "FRIDAY SPECIAL AUCTION 27-NOV-2026-2.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 290,
+    "kept": 270,
+    "rejected": 20,
+    "tanalmadyk": [
+      "p3: EMIRATES IND. CITY SAJAA",
+      "p36: 2023 CAN-AM Maverick X3 MAX X MR TURBO RR - AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 38,500",
+      "p112: 2025 Leopard Titanium 1.5 AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 98,500 FRI-27 NOV 5:",
+      "p127: 2025 Leopard Titanium - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 98,500 FRI-27 NOV 5:30",
+      "p256: 2023 FISKER INC OCEAN ONE - AWD AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH AL SAJAA INDUSTRIAL SHARJAH STARTING BID STARTING BID 6,500 FRI-27 NOV 5"
+    ],
+    "ocr_halas": 10,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 20
+    },
+    "time": "11:20"
   }
 ]
