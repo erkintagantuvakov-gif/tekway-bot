@@ -1,0 +1,36 @@
+[
+  {
+    "pdf": "SATURDAY AUCTION - IND AREA 2 - 28 NOV 2026pdf.pdf",
+    "auction": "Al Qaryah Auctions",
+    "pages": 112,
+    "kept": 107,
+    "rejected": 5,
+    "tanalmadyk": [
+      "p1: SATURDAY AUCTION 100 + JOIN OUR 28-NOV-2026 PM",
+      "p2: 28ﻧﻮﻓﻤﺒﺮ2026 اﻧﻀﻤﻮا إﻟﻰ ﺑﺜﻨﺎ اﻟﻤﺒﺎﺷﺮ PM 100 + ﻣﺰاد ﻳﻮم اﻟﺴﺒﺖ",
+      "p14: 2024 Leopard 8 - INDUSTRIAL AREA 2 SHARJAH INDUSTRIAL AREA 2 SHARJAH INDUSTRIAL AREA 2 SHARJAH STARTING BID STARTING BID 138,500 SAT-28 NOV 5:30"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 5
+    },
+    "time": "00:50"
+  },
+  {
+    "pdf": "Marhaba Auctions Saturday 28th November 2026 Ind.Area 12 Auction LIst.pdf",
+    "auction": "Marhaba Auctions",
+    "pages": 103,
+    "kept": 100,
+    "rejected": 3,
+    "tanalmadyk": [
+      "p6: 2014LAND ROVER RANGE ROVER SPORT AUTOBIOGRAPHY 500",
+      "p10: 2014LAND ROVER RANGE ROVER VOGUE 500",
+      "p81: 2012LAND ROVER RANGE ROVER EVOQUE 500"
+    ],
+    "ocr_halas": 0,
+    "sebapler": {
+      "tanalmady (marka/yyl tapylmady)": 3
+    },
+    "time": "00:51"
+  }
+]
